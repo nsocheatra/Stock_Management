@@ -40,4 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# prisma / sqlite databases
+*.db
+*.db-shm
+*.db-wal
+
 /src/generated/prisma
