@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+*.md
+AGENTS.md
+CLAUDE.md
+.env
+.env.*
+dev.db
+dev.db-shm
+dev.db-wal
+test.db
+.next
+npm-debug.log*

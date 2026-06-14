@@ -1,0 +1,147 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Noto+Sans+Khmer:wght@300;400;500;600;700&display=swap');
+@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --font-plus-jakarta: 'Plus Jakarta Sans', 'Noto Sans Khmer', sans-serif;
+  --font-khmer: 'Noto Sans Khmer', sans-serif;
+  --bg-main: #f4f4f5;
+  --bg-sidebar: rgba(255, 255, 255, 0.85);
+  --bg-card: #ffffff;
+  --text-primary: #18181b;
+  --text-secondary: #71717a;
+  --text-muted: #a1a1aa;
+  --border-color: #e4e4e7;
+  --border-subtle: #f4f4f5;
+  --glow-1: rgba(139, 92, 246, 0.04);
+  --glow-2: rgba(99, 102, 241, 0.04);
+  --sidebar-border: #e4e4e7;
+  --scrollbar-thumb: #d4d4d8;
+  --scrollbar-thumb-hover: #a1a1aa;
+  --header-bg: rgba(255, 255, 255, 0.7);
+  --row-hover: rgba(0, 0, 0, 0.03);
+  --input-bg: #ffffff;
+  --input-border: #d4d4d8;
+  --input-text: #18181b;
+  --input-placeholder: #a1a1aa;
+  --label-text: #71717a;
+  --cancel-btn-border: #d4d4d8;
+  --cancel-btn-text: #71717a;
+  --cancel-btn-hover-bg: #f4f4f5;
+  --cancel-btn-hover-text: #18181b;
+  --select-option-bg: #ffffff;
+  --select-option-text: #18181b;
+}
+
+.dark {
+  --bg-main: #09090b;
+  --bg-sidebar: rgba(9, 9, 11, 0.8);
+  --bg-card: rgba(24, 24, 27, 0.35);
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --border-color: rgba(63, 63, 70, 0.25);
+  --border-subtle: rgba(24, 24, 27, 0.2);
+  --glow-1: rgba(139, 92, 246, 0.1);
+  --glow-2: rgba(99, 102, 241, 0.1);
+  --sidebar-border: #27272a;
+  --scrollbar-thumb: #27272a;
+  --scrollbar-thumb-hover: #3f3f46;
+  --header-bg: rgba(9, 9, 11, 0.4);
+  --row-hover: rgba(24, 24, 27, 0.3);
+  --input-bg: rgba(24, 24, 27, 0.6);
+  --input-border: #27272a;
+  --input-text: #f4f4f5;
+  --input-placeholder: #52525b;
+  --label-text: #a1a1aa;
+  --cancel-btn-border: #27272a;
+  --cancel-btn-text: #a1a1aa;
+  --cancel-btn-hover-bg: rgba(24, 24, 27, 0.4);
+  --cancel-btn-hover-text: #ffffff;
+  --select-option-bg: #18181b;
+  --select-option-text: #fafafa;
+}
+
+body {
+  font-family: var(--font-plus-jakarta);
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+
+.bg-surface { background: var(--bg-card); }
+.bg-surface-blur { background: var(--bg-card); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.bg-header { background: var(--header-bg); }
+.text-default { color: var(--text-primary); }
+.text-muted { color: var(--text-secondary); }
+.text-faint { color: var(--text-muted); }
+.text-heading { color: var(--text-primary); }
+.border-surface { border-color: var(--border-color); }
+.border-subtle { border-color: var(--border-subtle); }
+.hover-surface:hover { background: var(--row-hover); }
+.divide-surface > * + * { border-color: var(--border-subtle); }
+.surface-inset { background: var(--bg-card); border: 1px solid var(--border-color); }
+
+.input-field {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 0.75rem;
+  color: var(--input-text);
+  font-size: 0.875rem;
+  outline: none;
+  transition: all 0.2s;
+}
+.input-field:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.15);
+}
+.input-field::placeholder {
+  color: var(--input-placeholder);
+}
+
+.input-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--label-text);
+  margin-bottom: 0.5rem;
+}
+
+.select-option {
+  background: var(--select-option-bg);
+  color: var(--select-option-text);
+}
+
+.cancel-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--cancel-btn-border);
+  color: var(--cancel-btn-text);
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.cancel-btn:hover {
+  background: var(--cancel-btn-hover-bg);
+  color: var(--cancel-btn-hover-text);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}

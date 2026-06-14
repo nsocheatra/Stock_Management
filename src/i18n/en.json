@@ -1,0 +1,712 @@
+{
+  "app": {
+    "title": "Stock Manager",
+    "fullTitle": "Stock Management System",
+    "description": "Manage products, stock, and suppliers"
+  },
+  "nav": {
+    "pos": "POS",
+    "dashboard": "Dashboard",
+    "customers": "Customers",
+    "products": "Products",
+    "inventory": "Inventory",
+    "fbLive": "FB Live",
+    "suppliers": "Suppliers",
+    "reports": "Reports",
+    "settings": "Settings",
+    "users": "Users",
+    "logout": "Logout"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "search": "Search",
+    "actions": "Actions",
+    "loading": "Loading...",
+    "noData": "No data",
+    "type": "Type",
+    "name": "Name",
+    "phone": "Phone",
+    "address": "Address",
+    "email": "Email",
+    "credit": "Credit",
+    "date": "Date",
+    "note": "Note",
+    "copied": "Copied!"
+  },
+  "pos": {
+    "title": "Point of Sale",
+    "subtitle": "Scan barcode or search products to process sales. Select a customer to apply pricing.",
+    "walkIn": "Walk-in Customer (Retail)",
+    "wholesale": "Wholesale",
+    "retail": "Retail",
+    "searchPlaceholder": "Search by name, SKU, or scan barcode...",
+    "scanning": "Scanning...",
+    "itemsLeft": "{qty} left",
+    "noMatch": "No products match your search",
+    "cart": "Cart",
+    "items": "{count} items",
+    "cartEmpty": "Cart is empty",
+    "cartEmptyHint": "Search products above to add items",
+    "previewReceipt": "Preview Receipt",
+    "subtotal": "Subtotal ({count} items)",
+    "completeSale": "Complete Sale — ${total}",
+    "saleSuccess": "Sale completed successfully!",
+    "saleFailed": "Sale failed",
+    "showCart": "Show Cart",
+    "minimizeCart": "Minimize Cart"
+  },
+  "receipt": {
+    "title": "Receipt Preview",
+    "tel": "Tel: {phone}",
+    "thankYou": "Thank you!",
+    "thankYouPurchase": "Thank you for your purchase!",
+    "item": "Item",
+    "qty": "Qty",
+    "price": "Price",
+    "total": "Total",
+    "totalLabel": "TOTAL",
+    "print": "Print Receipt"
+  },
+  "products": {
+    "title": "Products Directory",
+    "subtitle": "Monitor, adjust safety stock levels, and assign suppliers.",
+    "add": "Add Product",
+    "new": "New Product",
+    "edit": "Edit Product",
+    "empty": "No products registered yet",
+    "emptyHint": "Start populate your warehouse index",
+    "emptyCta": "Add your first product →",
+    "deleteConfirm": "Are you sure you want to delete this product?",
+    "fields": {
+      "name": "Name",
+      "sku": "SKU",
+      "barcode": "Barcode",
+      "price": "Price (legacy, used for calculations)",
+      "costPrice": "Cost Price ($)",
+      "sellingPrice": "Selling Price ($)",
+      "originalPrice": "Original Price ($)",
+      "wholesalePrice": "Wholesale Price ($)",
+      "unitPrice": "Unit Price ($)",
+      "pricePerCase": "Price per Case ($)",
+      "quantity": "Quantity",
+      "category": "Category",
+      "minStock": "Min Stock Level",
+      "description": "Description",
+      "imageUrl": "Image URL",
+      "supplier": "Supplier"
+    },
+    "placeholders": {
+      "name": "e.g. Wireless Mouse",
+      "sku": "Auto-generated",
+      "barcode": "Scan or enter barcode",
+      "price": "0.00",
+      "category": "e.g. Electronics",
+      "minStock": "5",
+      "description": "Brief product notes or details...",
+      "imageUrl": "https://example.com/product.jpg"
+    },
+    "noSupplier": "No supplier",
+    "imageError": "Could not load image",
+    "table": {
+      "image": "Image",
+      "productName": "Product Name",
+      "sku": "SKU",
+      "barcode": "Barcode",
+      "category": "Category",
+      "cost": "Cost",
+      "selling": "Selling",
+      "original": "Original",
+      "wholesale": "Wholesale",
+      "unit": "Unit",
+      "perCase": "Per Case",
+      "quantity": "Quantity",
+      "supplier": "Supplier"
+    },
+    "stockBadge": "{qty} / {min} min"
+  },
+  "customers": {
+    "title": "Customers",
+    "subtitle": "Manage wholesale and retail customers.",
+    "add": "Add Customer",
+    "new": "New Customer",
+    "edit": "Edit Customer",
+    "empty": "No customers yet",
+    "emptyHint": "Add wholesale and retail customers",
+    "emptyCta": "Add your first customer →",
+    "deleteConfirm": "Delete this customer?",
+    "fields": {
+      "name": "Name",
+      "type": "Type",
+      "phone": "Phone",
+      "address": "Address",
+      "credit": "Credit ($)"
+    },
+    "placeholders": {
+      "name": "e.g. John Doe",
+      "phone": "e.g. +1 234 567 890",
+      "address": "e.g. 123 Main Street"
+    },
+    "types": {
+      "retailer": "Retailer",
+      "wholesaler": "Wholesaler"
+    },
+    "table": {
+      "name": "Name",
+      "type": "Type",
+      "phone": "Phone",
+      "address": "Address",
+      "credit": "Credit"
+    }
+  },
+  "stock": {
+    "title": "Inventory Management",
+    "subtitle": "Monitor stock levels, track movements, and manage inventory.",
+    "stockIn": "Stock In",
+    "stockOut": "Stock Out",
+    "stockInEntry": "Stock In Entry",
+    "stockOutEntry": "Stock Out Entry",
+    "kpi": {
+      "totalProducts": "Total Products",
+      "totalStock": "Total Stock",
+      "lowStock": "Low Stock",
+      "inventoryValue": "Inventory Value"
+    },
+    "lowStockAlert": "{count} product(s) {be} below minimum stock level.",
+    "viewProducts": "View products",
+    "table": {
+      "product": "Product",
+      "sku": "SKU",
+      "barcode": "Barcode",
+      "category": "Category",
+      "price": "Price",
+      "onHand": "On Hand",
+      "minStock": "Min Stock",
+      "value": "Value"
+    },
+    "empty": "No products in inventory",
+    "emptyCta": "Add your first product",
+    "recentMovements": "Recent Movements",
+    "viewAll": "View all",
+    "noMovements": "No movements recorded yet",
+    "form": {
+      "selectProduct": "Select Product",
+      "quantity": "Quantity {outHint}",
+      "outHint": "(must not exceed current stock)",
+      "date": "Date",
+      "note": "Note / Reference",
+      "selectPlaceholder": "Select product to update",
+      "qtyPlaceholder": "Enter quantity",
+      "notePlaceholder": "e.g. Purchase order #9213",
+      "productOption": "{name} ({sku}) - Current Stock: {qty}",
+      "add": "Add Stock Entry",
+      "remove": "Remove Stock Entry"
+    }
+  },
+  "suppliers": {
+    "title": "Suppliers Directory",
+    "subtitle": "Manage vendor contact information and associated inventory catalog.",
+    "add": "Add Supplier",
+    "new": "New Supplier",
+    "edit": "Edit Supplier",
+    "empty": "No suppliers registered yet",
+    "emptyHint": "Vendor entries will map catalog index fields.",
+    "deleteConfirm": "Are you sure you want to delete this supplier? All associated products will be unassigned.",
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address"
+    },
+    "placeholders": {
+      "name": "e.g. Acme Corp",
+      "email": "e.g. contact@acme.com",
+      "phone": "e.g. +1 (555) 019-2834",
+      "address": "Corporate headquarters location..."
+    },
+    "indexedCatalog": "Indexed Catalog",
+    "products": "{count} product(s)"
+  },
+  "reports": {
+    "title": "Intelligence & Reports",
+    "subtitle": "Audit statistics, category allocation, and stock shortages.",
+    "kpi": {
+      "stockIn": "Total Stock Ingested",
+      "stockOut": "Total Stock Dispatched",
+      "activeSuppliers": "Active Suppliers"
+    },
+    "sales": {
+      "title": "Wholesale & Retail Sales",
+      "wholesale": "Wholesale",
+      "wholesaleTransactions": "{count} transaction(s)",
+      "retail": "Retail",
+      "retailTransactions": "{count} transaction(s)",
+      "totalRevenue": "Total Revenue"
+    },
+    "recentTransactions": "Recent Transactions",
+    "table": {
+      "customer": "Customer",
+      "type": "Type",
+      "items": "Items",
+      "total": "Total",
+      "date": "Date"
+    },
+    "walkIn": "Walk-in",
+    "allocation": {
+      "byProduct": "Stock Allocation by Product",
+      "byCategory": "Stock Allocation by Category",
+      "noData": "No data recorded"
+    },
+    "shortages": {
+      "title": "Critical Inventory Shortages",
+      "product": "Product Name",
+      "currentStock": "Current Stock",
+      "minStock": "Min safety stock",
+      "units": "{qty} units",
+      "safetyLimit": "{min} safety limit",
+      "allSecure": "All inventory safety limits are secure",
+      "noShortages": "No products are currently under safety stock thresholds."
+    }
+  },
+  "login": {
+    "title": "Stock Manager",
+    "subtitle": "Sign in to manage your inventory",
+    "login": "Login",
+    "pin": "PIN",
+    "email": "Email",
+    "password": "Password",
+    "emailPlaceholder": "admin@system.local",
+    "passwordPlaceholder": "Enter password",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "cashierPin": "Cashier PIN",
+    "pinPlaceholder": "****",
+    "quickLogin": "Quick Login",
+    "quickLoginLoading": "Signing in...",
+    "invalidPin": "Invalid PIN",
+    "loginFailed": "Login failed",
+    "defaultHint": "Default: admin@system.local / admin123"
+  },
+  "dashboard": {
+    "title": "Dashboard Overview",
+    "subtitle": "Real-time indicators and recent warehousing movements.",
+    "kpi": {
+      "totalProducts": "Total Products",
+      "suppliers": "Suppliers",
+      "lowStock": "Low Stock Items",
+      "recentMovements": "Recent Movements"
+    },
+    "charts": {
+      "stockLevels": "Stock Levels by Product",
+      "noProducts": "No products registered yet",
+      "recentActivities": "Recent Stock Activities",
+      "noMovements": "No movements logged yet"
+    },
+    "noReference": "No reference note"
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Configure printer and Telegram bot notifications.",
+    "messengerMoved": "Facebook Messenger chatbot settings have moved to",
+    "fbLiveSettings": "FB Live → Settings",
+    "printer": {
+      "title": "Receipt Printer Settings",
+      "type": "Printer Type",
+      "typeOptions": {
+        "browser": "Browser Print (window.print)",
+        "thermal": "ESC/POS Thermal Printer",
+        "network": "Network Printer (IP)"
+      },
+      "paperWidth": "Paper Width (mm)",
+      "paperOptions": {
+        "58": "58mm (thermal mini)",
+        "80": "80mm (standard)",
+        "76": "76mm (dot matrix)"
+      },
+      "storeName": "Store Name",
+      "storePhone": "Store Phone",
+      "storeAddress": "Store Address",
+      "receiptHeader": "Receipt Header",
+      "receiptFooter": "Receipt Footer",
+      "copies": "Copies",
+      "autoPrint": "Auto-print after sale"
+    },
+    "telegram": {
+      "title": "Telegram Bot",
+      "setupTitle": "Setup instructions:",
+      "steps": [
+        "1. Message @BotFather on Telegram to create a bot",
+        "2. Copy the bot token and paste it below",
+        "3. Start a chat with your bot, then message /start",
+        "4. Set the webhook URL to: {url}/api/telegram-webhook",
+        "5. Enable the bot below and save",
+        "6. Test with the button at the bottom"
+      ],
+      "botToken": "Bot Token",
+      "botTokenPlaceholder": "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11",
+      "chatIds": "Authorized Chat IDs (comma separated)",
+      "chatIdsPlaceholder": "123456789,987654321",
+      "chatIdsHint": "Message @userinfobot on Telegram to get your chat ID",
+      "enable": "Enable Telegram Bot",
+      "lowStockAlerts": "Low stock alerts",
+      "dailySummary": "Daily summary reports",
+      "test": "Test Telegram Notification",
+      "sending": "sending...",
+      "sent": "sent! check your Telegram"
+    },
+    "saveSuccess": "Settings saved successfully!",
+    "saveSettings": "Save Settings"
+  },
+  "fbLive": {
+    "main": {
+      "title": "Facebook Live Auto-Ordering",
+      "subtitle": "Link keywords to products and auto-process orders from live comments.",
+      "live": "Live",
+      "pending": "{count} pending",
+      "linkKeyword": "Link Keyword to Product",
+      "simulate": "Simulate Comment",
+      "simulateHint": "Test your keyword setup by simulating a Facebook comment.",
+      "orderFeed": "Order Feed",
+      "orders": "{count} orders",
+      "processed": "processed",
+      "cancelled": "cancelled",
+      "pendingStatus": "pending",
+      "noOrders": "No orders yet",
+      "noOrdersHint": "Link keywords and simulate comments to test",
+      "fields": {
+        "keyword": "Keyword",
+        "product": "Product",
+        "qtyPerOrder": "Qty per order"
+      },
+      "keywordPlaceholder": "e.g. #product1",
+      "productPlaceholder": "Select product...",
+      "productOption": "{name} ({sku}) — {qty} in stock",
+      "addKeyword": "Add Keyword",
+      "activeKeywords": "Active Keywords",
+      "simulate": {
+        "customerName": "Customer Name",
+        "commentText": "Comment Text",
+        "customerPlaceholder": "Test User",
+        "commentPlaceholder": "e.g. I want #product1 please!",
+        "simulateBtn": "Simulate Comment",
+        "matched": "✅ {product} x{qty} via #{matched} — Auto-reply: '{reply}'",
+        "noMatch": "No keyword found in comment",
+        "failed": "Failed",
+        "activeKeywords": "Active keywords: #{keyword} ..."
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Configure Facebook Live auto-ordering and Messenger chatbot.",
+      "liveTab": "Live Auto-Ordering",
+      "chatbotTab": "Messenger Chatbot",
+      "live": {
+        "signIn": "Sign in with your Facebook Account",
+        "description": "As Instagram is a part of Meta (ex. Facebook) ecosystem, sign in with your Facebook account to create automation. By continuing, Rika System will receive ongoing access to the information you share and Meta will record when Rika System accesses it.",
+        "learnMore": "Learn more about this sharing and the settings you have",
+        "liveListening": "Live Listening",
+        "pageName": "Facebook Page Name",
+        "pageNamePlaceholder": "e.g. My Store",
+        "pageId": "Facebook Page ID",
+        "pageIdPlaceholder": "e.g. 123456789",
+        "pageToken": "Page Access Token",
+        "pageTokenPlaceholder": "EAAxxx...",
+        "keywordMatchMode": "Keyword Match Mode",
+        "matchModes": {
+          "contains": "Contains (e.g. #product matches any comment with #product)",
+          "exact": "Exact match (comment must be exactly the keyword)",
+          "startsWith": "Starts with (comment starts with keyword)"
+        },
+        "webhookUrl": "Webhook Callback URL",
+        "verifyToken": "Verify Token",
+        "verifyTokenHint": "Enter this token as the Verify Token in your Facebook App webhook settings.",
+        "autoReplySuccess": "Auto-Reply Template (on success)",
+        "autoReplySuccessHint": "Use {{name}}, {{product}}, {{qty}} as placeholders",
+        "autoReplyNoMatch": "Auto-Reply Template (no match)",
+        "save": "Save Live Settings"
+      },
+      "chatbot": {
+        "title": "Facebook Messenger Chatbot",
+        "steps": [
+          "1. Go to developers.facebook.com and create an app",
+          "2. Add the Messenger product",
+          "3. Generate a Page Access Token for your Facebook Page",
+          "4. Set the webhook callback URL to: {url}/api/messenger-webhook",
+          "5. Use the Verify Token shown below when setting up webhooks",
+          "6. Subscribe to messages and messaging_postbacks events",
+          "7. Enable the bot below and save"
+        ],
+        "pageToken": "Page Access Token",
+        "pageTokenPlaceholder": "EAAxxx...",
+        "verifyToken": "Webhook Verify Token",
+        "greeting": "Greeting Message",
+        "greetingHint": "Sent when a user starts a conversation or types 'menu'.",
+        "notFoundMessage": "Product Not Found Message",
+        "enable": "Enable Messenger Chatbot",
+        "save": "Save Chatbot Settings"
+      },
+      "status": {
+        "saved": "Settings saved successfully!",
+        "connected": "Facebook account connected successfully! Your first Page has been auto-selected.",
+        "idSecretRequired": "Please save your Facebook App ID and App Secret before signing in with Facebook.",
+        "codeExchangeFailed": "Failed to exchange authorization code. Check your App ID and App Secret.",
+        "denied": "You denied the Facebook login request. Please try again and grant the requested permissions.",
+        "unexpectedError": "An unexpected error occurred during Facebook login. Please try again."
+      },
+      "facebookLogin": {
+        "connected": "Facebook Account",
+        "connectedBadge": "Connected",
+        "pagesAvailable": "{count} Pages available",
+        "active": "Active",
+        "businesses": "{count} Businesses",
+        "switchAccount": "Sign in with a different Facebook account",
+        "noPages": "No Pages found. Make sure your Facebook App has the Pages API product added and you have admin/editor access to at least one Facebook Page.",
+        "notConnected": "Sign in to grant access to your Facebook Pages and Businesses, then select the Page to use for auto-ordering.",
+        "appId": "App ID",
+        "appIdPlaceholder": "Facebook App ID",
+        "appSecret": "App Secret",
+        "appSecretPlaceholder": "Facebook App Secret",
+        "signIn": "Sign in with Facebook",
+        "saving": "Saving...",
+        "validationError": "Please enter both App ID and App Secret.",
+        "saveError": "Failed to save settings.",
+        "note": "Clicking above will save your App ID & App Secret first, then redirect to Facebook for authorization."
+      }
+    },
+    "inbox": {
+      "title": "Inbox",
+      "unread": "{count} unread",
+      "conversations": "{count} conversations",
+      "searchPlaceholder": "Search...",
+      "noConversations": "No conversations",
+      "noConversationsHint": "Messages from Facebook Messenger will appear here",
+      "selectConversation": "Select a conversation",
+      "selectConversationHint": "Choose a conversation from the left to view and reply",
+      "id": "ID: {id}",
+      "tag": "Tag",
+      "assign": "Assign",
+      "tagPlaceholder": "e.g. support, vip, complaint",
+      "assignPlaceholder": "Assignee name",
+      "replyPlaceholder": "Type your reply...",
+      "justNow": "just now",
+      "minutesAgo": "{n}m ago",
+      "hoursAgo": "{n}h ago",
+      "daysAgo": "{n}d ago"
+    },
+    "broadcasts": {
+      "title": "Broadcasts",
+      "subtitle": "Create and send broadcast messages to your Messenger conversations.",
+      "sent": "Messages Sent",
+      "reached": "Reached",
+      "newCampaign": "New Campaign",
+      "campaignName": "Campaign Name",
+      "campaignNamePlaceholder": "e.g. Summer Sale Announcement",
+      "message": "Message",
+      "templates": "Templates",
+      "messagePlaceholder": "Type your broadcast message...",
+      "schedule": "Schedule (optional)",
+      "recipients": "Will be sent to {count} conversations",
+      "scheduleBroadcast": "Schedule Broadcast",
+      "saveDraft": "Save as Draft",
+      "saveAsTemplate": "Save as template",
+      "templateNamePlaceholder": "Template name",
+      "templateMessagePlaceholder": "Template message...",
+      "saveTemplate": "Save Template",
+      "campaigns": "Campaigns ({count})",
+      "templatesCount": "{count} templates",
+      "statuses": {
+        "draft": "draft",
+        "sending": "sending",
+        "sent": "sent",
+        "failed": "failed"
+      },
+      "delivery": "{sent}/{total} delivered",
+      "send": "Send",
+      "sending_": "Sending...",
+      "noCampaigns": "No campaigns yet",
+      "noCampaignsHint": "Create your first broadcast campaign",
+      "useTemplate": "Use"
+    },
+    "automation": {
+      "title": "Automation",
+      "subtitle": "Auto-reply rules, quick replies, and built-in commands for your Messenger chatbot.",
+      "rulesActive": "Rules Active",
+      "triggered": "Triggered",
+      "categories": {
+        "general": "General",
+        "greeting": "Greeting",
+        "support": "Support",
+        "sales": "Sales"
+      },
+      "active": "{count} active",
+      "builtInCommands": "Built-in Commands",
+      "alwaysActive": "Always active",
+      "commands": {
+        "menu": "menu, start, help — Main menu with quick replies",
+        "products": "products, list — List all products",
+        "lowStock": "low stock, lowstock — Low stock alerts",
+        "search": "<product name> — Search products by name"
+      },
+      "newRule": "New Auto-Reply Rule",
+      "triggerKeyword": "Trigger Keyword",
+      "keywordPlaceholder": "e.g. hello",
+      "category": "Category",
+      "botResponse": "Bot Response",
+      "responsePlaceholder": "Hi! Welcome to our store.",
+      "matchMode": "Match Mode",
+      "matchModes": {
+        "contains": "Contains — matches if keyword appears anywhere",
+        "exact": "Exact Match — must be exactly the keyword",
+        "startsWith": "Starts With — message starts with keyword"
+      },
+      "addRule": "Add Rule",
+      "customRules": "Custom Rules ({count})",
+      "noRules": "No custom rules yet",
+      "noRulesHint": "Add rules to automate responses in Messenger",
+      "timesTriggered": "{count}x triggered",
+      "testRules": "Test Rules",
+      "testPlaceholder": "Type a test message...",
+      "simulateMessage": "Simulate Message",
+      "testMatched": "✅ Matched: #{matched}",
+      "testNoMatch": "No rule matched. The AI fallback or built-in commands will handle this.",
+      "quickReplies": "Quick Replies",
+      "add": "+ Add",
+      "buttonLabelPlaceholder": "Button label (e.g. Hours)",
+      "replyTextPlaceholder": "Reply text...",
+      "saveQuickReply": "Save Quick Reply",
+      "noQuickReplies": "No quick replies saved"
+    },
+    "ai": {
+      "title": "AI Assistant",
+      "subtitle": "Configure AI-powered responses and manage your knowledge base. When no keyword rule matches, the AI generates smart replies from your store data and FAQs.",
+      "howItWorks": "How AI Responses Work",
+      "steps": [
+        "User sends a message to your Page",
+        "Check custom auto-reply rules for a match",
+        "If no rule matches, search FAQ knowledge base",
+        "If no FAQ found, use AI to generate a response",
+        "Send the reply back to the user"
+      ],
+      "knowledgeBase": "Knowledge Base ({count})",
+      "categories": "{count} categories",
+      "kbDescription": "FAQs are used by the AI to answer common questions. Add questions your customers frequently ask.",
+      "noFaqs": "No FAQs yet",
+      "noFaqsHint": "Add FAQs to build your knowledge base",
+      "settings": {
+        "enable": "AI-Powered Responses",
+        "provider": "Provider",
+        "providerHint": "Set OPENAI_API_KEY in env",
+        "model": "Model",
+        "models": {
+          "gpt4o": "GPT-4o",
+          "gpt4oMini": "GPT-4o Mini",
+          "gpt35": "GPT-3.5 Turbo"
+        },
+        "temperature": "Temperature ({value})",
+        "precise": "Precise",
+        "creative": "Creative",
+        "maxLength": "Max Length",
+        "lengths": {
+          "short": "Short (200)",
+          "medium": "Medium (500)",
+          "long": "Long (1000)",
+          "veryLong": "Very Long (2000)"
+        },
+        "persona": "Persona Tone",
+        "personas": {
+          "friendly": "Friendly & Warm",
+          "professional": "Professional & Formal",
+          "casual": "Casual & Relaxed",
+          "playful": "Playful & Fun"
+        },
+        "context": "Conversation Context",
+        "contexts": {
+          "3": "Last 3 messages",
+          "5": "Last 5 messages",
+          "10": "Last 10 messages",
+          "20": "Last 20 messages"
+        },
+        "contextHint": "How many past messages to include for context",
+        "systemPrompt": "System Prompt",
+        "systemPromptHint": "Guides the AI's behavior when responding to customers.",
+        "disabled": "AI features are disabled",
+        "disabledHint": "Enable AI to let the chatbot generate intelligent responses",
+        "save": "Save AI Settings",
+        "saved": "AI settings saved!"
+      },
+      "test": {
+        "title": "Test AI Responses",
+        "kbResponse": "📚 From knowledge base:\n{answer}",
+        "aiResponse": "🤖 AI Response (simulated)\n\nThanks for your message! Based on my training, I'd help you with '{input}'.\n\nTo get actual AI responses, connect your OpenAI API key via the OPENAI_API_KEY environment variable.",
+        "empty": "Type a message to test the AI",
+        "placeholder": "Type a customer message..."
+      },
+      "manageFaqs": {
+        "title": "Manage FAQs",
+        "add": "+ Add FAQ",
+        "questionPlaceholder": "Question",
+        "categories": {
+          "general": "General",
+          "shipping": "Shipping",
+          "returns": "Returns",
+          "pricing": "Pricing"
+        },
+        "answerPlaceholder": "Answer...",
+        "addFaq": "Add FAQ",
+        "noFaqs": "No FAQs added yet"
+      }
+    },
+    "tabs": {
+      "live": "Live",
+      "automation": "Automation",
+      "ai": "AI",
+      "inbox": "Inbox",
+      "broadcasts": "Broadcasts",
+      "settings": "Settings"
+    }
+  },
+  "users": {
+    "title": "User Management",
+    "subtitle": "Manage cashiers and administrators.",
+    "addUser": "Add User",
+    "allUsers": "All Users",
+    "usersCount": "{count} users",
+    "noUsers": "No users yet",
+    "defaultHint": "Default admin: admin@system.local / admin123",
+    "roles": {
+      "admin": "admin",
+      "cashier": "cashier",
+      "inactive": "Inactive"
+    },
+    "fields": {
+      "name": "Name",
+      "email": "Email",
+      "password": "Password",
+      "role": "Role",
+      "pin": "PIN (for quick login)"
+    },
+    "placeholders": {
+      "name": "Full name",
+      "email": "email@example.com",
+      "password": "Min 6 characters",
+      "pin": "4-digit PIN"
+    },
+    "rolesDropdown": {
+      "cashier": "Cashier",
+      "admin": "Admin"
+    },
+    "add": "Add User",
+    "failed": "Failed to create user"
+  },
+  "theme": {
+    "toggle": "Toggle theme"
+  },
+  "locale": {
+    "en": "English",
+    "kh": "ភាសាខ្មែរ",
+    "switchTo": "Switch to {locale}"
+  }
+}
