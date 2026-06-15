@@ -831,37 +831,6 @@ export async function createCashFlowEntry(formData: FormData) {
   redirect("/cash-flow");
 }
 
-// === STOCK CHECKS ===
-export async function createStockCheck(formData: FormData) {
-  const name = formData.get("name") as string;
-  if (!name) throw new Error("Name required");
-  const result = db.prepare("INSERT INTO stock_checks (name) VALUES (?)").run(name);
-  const checkId = result.lastInsertRowid as number;
-  const products = db.prepare("SELECT id, name, quantity FROM products ORDER BY name ASC").all() as any[];
-  const insert = db.prepare("INSERT INTO stock_check_items (stock_check_id, product_id, expected_qty) VALUES (?, ?, ?)");
-  for (const p of products) insert.run(checkId, p.id, p.quantity);
-  revalidatePath("/stock-check");
-  redirect(`/stock-check/${checkId}`);
-}
-
-export async function updateStockCheckItem(formData: FormData) {
-  const itemId = parseInt(formData.get("item_id") as string);
-  const actualQty = parseFloat(formData.get("actual_qty") as string);
-  if (!itemId || isNaN(actualQty)) throw new Error("Invalid data");
-  const item = db.prepare("SELECT sci.*, p.quantity FROM stock_check_items sci JOIN products p ON p.id = sci.product_id WHERE sci.id = ?").get(itemId) as any;
-  const difference = actualQty - item.expected_qty;
-  db.prepare("UPDATE stock_check_items SET actual_qty = ?, difference = ? WHERE id = ?").run(actualQty, difference, itemId);
-  revalidatePath(`/stock-check/${item.stock_check_id}`);
-}
-
-export async function completeStockCheck(formData: FormData) {
-  const checkId = parseInt(formData.get("check_id") as string);
-  if (!checkId) throw new Error("Missing check ID");
-  db.prepare("UPDATE stock_checks SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(checkId);
-  revalidatePath("/stock-check");
-  redirect("/stock-check");
-}
-
 // === CUSTOMER ORDERS ===
 export async function createCustomerOrder(formData: FormData) {
   const customer_id = formData.get("customer_id") ? parseInt(formData.get("customer_id") as string) : null;

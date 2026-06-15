@@ -12,7 +12,6 @@
     "inventory": "Inventory",
     "fbLive": "FB Live",
     "stock": "Inventory",
-    "stockcheck": "Stock Check",
     "orders": "Orders",
     "delivery": "Delivery",
     "debts": "Debts",
@@ -785,24 +784,7 @@
     "amount": "Amount",
     "empty": "No entries yet"
   },
-  "stockCheck": {
-    "title": "Stock Check",
-    "subtitle": "Audit inventory and reconcile counts",
-    "new": "New Check",
-    "checkName": "Check Name",
-    "status": "Status",
-    "items": "Items",
-    "counted": "Counted",
-    "view": "View Details",
-    "statuses": { "draft": "Draft", "in_progress": "In Progress", "completed": "Completed" },
-    "expected": "Expected",
-    "actual": "Actual",
-    "difference": "Diff",
-    "hasDiscrepancies": "⚠ Discrepancies found",
-    "complete": "Complete Check",
-    "notFound": "Stock check not found",
-    "empty": "No stock checks yet"
-  },
+
   "orders": {
     "title": "Customer Orders",
     "subtitle": "Manage orders from customers",

@@ -281,28 +281,6 @@ function initSchema(db: Database.Database) {
     );
   `);
 
-  // Stock checks (inventory audit)
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS stock_checks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'in_progress', 'completed')),
-      created_at TEXT DEFAULT (datetime('now')),
-      completed_at TEXT
-    );
-  `);
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS stock_check_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      stock_check_id INTEGER NOT NULL REFERENCES stock_checks(id) ON DELETE CASCADE,
-      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-      expected_qty REAL NOT NULL,
-      actual_qty REAL,
-      difference REAL,
-      note TEXT
-    );
-  `);
-
   // Promotions
   db.exec(`
     CREATE TABLE IF NOT EXISTS promotions (
