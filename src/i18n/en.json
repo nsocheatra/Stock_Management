@@ -323,7 +323,13 @@
       "totalProducts": "Total Products",
       "suppliers": "Suppliers",
       "lowStock": "Low Stock Items",
-      "recentMovements": "Recent Movements"
+      "recentMovements": "Recent Movements",
+      "pendingDebts": "Pending Debts",
+      "todayNet": "Today Net",
+      "pendingOrders": "Pending Orders",
+      "activePromotions": "Active Promotions",
+      "totalMembers": "Members",
+      "pendingDeliveries": "Pending Deliveries"
     },
     "charts": {
       "stockLevels": "Stock Levels by Product",

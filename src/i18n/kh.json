@@ -323,7 +323,13 @@
       "totalProducts": "ផលិតផលសរុប",
       "suppliers": "អ្នកផ្គត់ផ្គង់",
       "lowStock": "ទំនិញស្តុកតិច",
-      "recentMovements": "ចលនាថ្មីៗ"
+      "recentMovements": "ចលនាថ្មីៗ",
+      "pendingDebts": "បំណុលដែលមិនទាន់សង",
+      "todayNet": "សុទ្ធថ្ងៃនេះ",
+      "pendingOrders": "ការបញ្ជាទិញដែលកំពុងរង់ចាំ",
+      "activePromotions": "ការផ្សព្វផ្សាយដែលសកម្ម",
+      "totalMembers": "សមាជិក",
+      "pendingDeliveries": "ការដឹកជញ្ជូនដែលកំពុងរង់ចាំ"
     },
     "charts": {
       "stockLevels": "កម្រិតស្តុកតាមផលិតផល",
