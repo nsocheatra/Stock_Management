@@ -92,7 +92,7 @@ export default function LoginForm() {
         <form onSubmit={handlePinLogin} className="space-y-4">
           <div>
             <label className="input-label">{t("login.cashierPin")}</label>
-            <input name="pin" type="password" inputMode="numeric" required className="input-field text-center text-2xl tracking-[0.5em] font-mono" placeholder={t("login.pinPlaceholder")} maxLength={4} autoFocus />
+            <input name="pin" type="password" inputMode="numeric" required className="input-field text-center text-2xl tracking-[0.5em] font-mono" placeholder={t("login.pinPlaceholder")} maxLength={6} autoFocus />
           </div>
           <button type="submit" disabled={loading} className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 transition-all shadow-lg shadow-emerald-500/15 cursor-pointer">
             {loading ? t("login.quickLoginLoading") : t("login.quickLogin")}

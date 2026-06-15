@@ -2,6 +2,7 @@ import { db } from "@/lib/db";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus, ReceiptText } from "lucide-react";
+import OrderActions from "./OrderActions";
 
 export default function OrdersPage() {
   const orders = db.prepare(`
@@ -38,6 +39,7 @@ export default function OrdersPage() {
                 <th className="text-right p-4 font-medium"><T k="orders.total" /></th>
                 <th className="text-center p-4 font-medium"><T k="orders.status" /></th>
                 <th className="text-right p-4 font-medium"><T k="common.date" /></th>
+                <th className="text-right p-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface">
@@ -59,10 +61,13 @@ export default function OrdersPage() {
                     </span>
                   </td>
                   <td className="p-4 text-right text-faint text-xs">{o.created_at?.slice(0, 10)}</td>
+                  <td className="p-4 text-right">
+                    <OrderActions orderId={o.id} saleId={o.sale_id} status={o.status} />
+                  </td>
                 </tr>
               ))}
               {orders.length === 0 && (
-                <tr><td colSpan={6} className="p-12 text-center text-faint text-sm">
+                <tr><td colSpan={7} className="p-12 text-center text-faint text-sm">
                   <ReceiptText className="size-10 mx-auto mb-3 opacity-40" />
                   <T k="orders.empty" />
                 </td></tr>

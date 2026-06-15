@@ -34,18 +34,13 @@ export const I18nContext = createContext<I18nContextValue>({
   setLocale: () => {},
 });
 
-export function I18nProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<Locale>(() => {
-    try {
-      const stored = localStorage.getItem("locale");
-      if (stored === "en" || stored === "kh") return stored;
-    } catch {}
-    return "en";
-  });
+export function I18nProvider({ children, initialLocale }: { children: ReactNode; initialLocale?: Locale }) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale ?? "en");
 
   const setLocale = useCallback((l: Locale) => {
     setLocaleState(l);
     try { localStorage.setItem("locale", l); } catch {}
+    try { document.cookie = `locale=${l};path=/;max-age=31536000;SameSite=Lax`; } catch {}
   }, []);
 
   const t = useCallback(

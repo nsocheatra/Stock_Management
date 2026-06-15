@@ -53,7 +53,7 @@ export default function UserForm() {
       </div>
       <div>
         <label className="input-label">{t("users.fields.pin")}</label>
-        <input name="pin" className="input-field" placeholder={t("users.placeholders.pin")} pattern="[0-9]{4}" maxLength={4} />
+        <input name="pin" className="input-field" placeholder={t("users.placeholders.pin")} pattern="[0-9]{6}" maxLength={6} />
       </div>
       <button type="submit" className="w-full py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/15 flex items-center justify-center gap-2 cursor-pointer">
         <Plus className="size-4" />

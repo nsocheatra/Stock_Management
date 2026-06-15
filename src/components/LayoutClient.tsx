@@ -16,13 +16,15 @@ export default function LayoutClient({
   children,
   user,
   navItems,
+  initialLocale,
 }: {
   children: ReactNode;
   user: User;
   navItems: NavItem[];
+  initialLocale?: "en" | "kh";
 }) {
   return (
-    <I18nProvider>
+    <I18nProvider initialLocale={initialLocale}>
       <div className="flex h-screen w-screen relative">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none" style={{ backgroundColor: "var(--glow-1)" }} />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none" style={{ backgroundColor: "var(--glow-2)" }} />
