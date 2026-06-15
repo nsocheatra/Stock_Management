@@ -216,6 +216,180 @@ function initSchema(db: Database.Database) {
     );
   `);
 
+  // Extend users table with permissions
+  try { db.exec("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '[]'"); } catch {}
+
+  // Customer groups (tiered pricing)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS customer_groups (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      discount_percent REAL DEFAULT 0,
+      markup_percent REAL DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+  try { db.exec("ALTER TABLE customers ADD COLUMN customer_group_id INTEGER REFERENCES customer_groups(id) ON DELETE SET NULL"); } catch {}
+
+  // Customer group product prices
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS customer_group_prices (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      group_id INTEGER NOT NULL REFERENCES customer_groups(id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      price REAL NOT NULL,
+      UNIQUE(group_id, product_id)
+    );
+  `);
+
+  // Debts (customer payable & supplier payable)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS debts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('customer', 'supplier')),
+      reference_id INTEGER NOT NULL,
+      amount REAL NOT NULL,
+      paid_amount REAL DEFAULT 0,
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'partial', 'paid', 'cancelled')),
+      due_date TEXT,
+      note TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS debt_payments (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      debt_id INTEGER NOT NULL REFERENCES debts(id) ON DELETE CASCADE,
+      amount REAL NOT NULL,
+      payment_method TEXT DEFAULT 'cash',
+      note TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Cash flow
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS cash_flow (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      type TEXT NOT NULL CHECK(type IN ('income', 'expense')),
+      category TEXT NOT NULL,
+      amount REAL NOT NULL,
+      description TEXT,
+      reference_type TEXT,
+      reference_id INTEGER,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Stock checks (inventory audit)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS stock_checks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      status TEXT DEFAULT 'draft' CHECK(status IN ('draft', 'in_progress', 'completed')),
+      created_at TEXT DEFAULT (datetime('now')),
+      completed_at TEXT
+    );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS stock_check_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      stock_check_id INTEGER NOT NULL REFERENCES stock_checks(id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      expected_qty REAL NOT NULL,
+      actual_qty REAL,
+      difference REAL,
+      note TEXT
+    );
+  `);
+
+  // Promotions
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS promotions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      type TEXT NOT NULL CHECK(type IN ('percentage', 'fixed', 'buy_x_get_y')),
+      value REAL NOT NULL,
+      min_purchase REAL DEFAULT 0,
+      buy_qty INTEGER DEFAULT 0,
+      get_qty INTEGER DEFAULT 0,
+      product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+      start_date TEXT,
+      end_date TEXT,
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Membership / loyalty program
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS membership_tiers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      min_spend REAL DEFAULT 0,
+      discount_percent REAL DEFAULT 0,
+      benefits TEXT
+    );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER NOT NULL UNIQUE REFERENCES customers(id) ON DELETE CASCADE,
+      tier_id INTEGER REFERENCES membership_tiers(id) ON DELETE SET NULL,
+      points REAL DEFAULT 0,
+      total_spent REAL DEFAULT 0,
+      joined_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
+  // Customer orders (order management)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS customer_orders (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled')),
+      total REAL NOT NULL,
+      delivery_address TEXT,
+      delivery_fee REAL DEFAULT 0,
+      note TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS customer_order_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER NOT NULL REFERENCES customer_orders(id) ON DELETE CASCADE,
+      product_id INTEGER REFERENCES products(id) ON DELETE SET NULL,
+      product_name TEXT NOT NULL,
+      price REAL NOT NULL,
+      quantity INTEGER NOT NULL
+    );
+  `);
+
+  // Delivery partners
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS delivery_partners (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      phone TEXT,
+      commission_type TEXT DEFAULT 'fixed' CHECK(commission_type IN ('fixed', 'percentage')),
+      commission_value REAL DEFAULT 0,
+      active INTEGER DEFAULT 1,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS deliveries (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id INTEGER REFERENCES customer_orders(id) ON DELETE SET NULL,
+      partner_id INTEGER REFERENCES delivery_partners(id) ON DELETE SET NULL,
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending', 'picked_up', 'in_transit', 'delivered', 'failed')),
+      fee REAL DEFAULT 0,
+      note TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    );
+  `);
+
   // Messenger chatbot tables
   db.exec(`
     CREATE TABLE IF NOT EXISTS messenger_rules (

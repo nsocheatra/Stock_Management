@@ -14,6 +14,14 @@ import {
   Settings,
   Users,
   UserRound,
+  ClipboardCheck,
+  ReceiptText,
+  Gem,
+  HandCoins,
+  Wallet,
+  Percent,
+  BadgePercent,
+  ChevronDown,
 } from "lucide-react";
 
 const iconMap: Record<string, typeof LayoutDashboard> = {
@@ -27,6 +35,13 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
   settings: Settings,
   users: Users,
   customers: UserRound,
+  stockcheck: ClipboardCheck,
+  orders: ReceiptText,
+  delivery: Truck,
+  debts: HandCoins,
+  cashflow: Wallet,
+  promotions: Percent,
+  membership: Gem,
 };
 
 interface NavItem {

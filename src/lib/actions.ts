@@ -788,3 +788,165 @@ export async function getSaleItems(saleId: number) {
     sku: string | null; price: number; quantity: number;
   }>;
 }
+
+// === DEBTS ===
+export async function createDebt(formData: FormData) {
+  const type = formData.get("type") as string;
+  const reference_id = parseInt(formData.get("reference_id") as string);
+  const amount = parseFloat(formData.get("amount") as string);
+  const due_date = formData.get("due_date") as string || null;
+  const note = formData.get("note") as string || null;
+  if (!type || !reference_id || !amount) return { error: "Missing required fields" };
+  db.prepare("INSERT INTO debts (type, reference_id, amount, due_date, note) VALUES (?, ?, ?, ?, ?)").run(type, reference_id, amount, due_date, note);
+  revalidatePath("/debts");
+  redirect("/debts");
+}
+
+export async function addDebtPayment(formData: FormData) {
+  const debt_id = parseInt(formData.get("debt_id") as string);
+  const amount = parseFloat(formData.get("amount") as string);
+  if (!debt_id || !amount) return { error: "Missing fields" };
+  const paymentMethod = formData.get("payment_method") as string || "cash";
+  const note = formData.get("note") as string || null;
+  db.transaction(() => {
+    db.prepare("INSERT INTO debt_payments (debt_id, amount, payment_method, note) VALUES (?, ?, ?, ?)").run(debt_id, amount, paymentMethod, note);
+    const debt = db.prepare("SELECT amount, paid_amount FROM debts WHERE id = ?").get(debt_id) as any;
+    const newPaid = debt.paid_amount + amount;
+    const status = newPaid >= debt.amount ? "paid" : "partial";
+    db.prepare("UPDATE debts SET paid_amount = ?, status = ? WHERE id = ?").run(newPaid, status, debt_id);
+  })();
+  revalidatePath("/debts");
+  redirect("/debts");
+}
+
+// === CASH FLOW ===
+export async function createCashFlowEntry(formData: FormData) {
+  const type = formData.get("type") as string;
+  const category = formData.get("category") as string;
+  const amount = parseFloat(formData.get("amount") as string);
+  const description = formData.get("description") as string || null;
+  if (!type || !category || !amount) return { error: "Missing fields" };
+  db.prepare("INSERT INTO cash_flow (type, category, amount, description) VALUES (?, ?, ?, ?)").run(type, category, amount, description);
+  revalidatePath("/cash-flow");
+  redirect("/cash-flow");
+}
+
+// === STOCK CHECKS ===
+export async function createStockCheck(formData: FormData) {
+  const name = formData.get("name") as string;
+  if (!name) return { error: "Name required" };
+  const result = db.prepare("INSERT INTO stock_checks (name) VALUES (?)").run(name);
+  const checkId = result.lastInsertRowid as number;
+  const products = db.prepare("SELECT id, name, quantity FROM products ORDER BY name ASC").all() as any[];
+  const insert = db.prepare("INSERT INTO stock_check_items (stock_check_id, product_id, expected_qty) VALUES (?, ?, ?)");
+  for (const p of products) insert.run(checkId, p.id, p.quantity);
+  revalidatePath("/stock-check");
+  redirect(`/stock-check/${checkId}`);
+}
+
+export async function updateStockCheckItem(formData: FormData) {
+  const itemId = parseInt(formData.get("item_id") as string);
+  const actualQty = parseFloat(formData.get("actual_qty") as string);
+  if (!itemId || isNaN(actualQty)) return { error: "Invalid data" };
+  const item = db.prepare("SELECT sci.*, p.quantity FROM stock_check_items sci JOIN products p ON p.id = sci.product_id WHERE sci.id = ?").get(itemId) as any;
+  const difference = actualQty - item.expected_qty;
+  db.prepare("UPDATE stock_check_items SET actual_qty = ?, difference = ? WHERE id = ?").run(actualQty, difference, itemId);
+  revalidatePath(`/stock-check/${item.stock_check_id}`);
+}
+
+export async function completeStockCheck(formData: FormData) {
+  const checkId = parseInt(formData.get("check_id") as string);
+  if (!checkId) return { error: "Missing check ID" };
+  db.prepare("UPDATE stock_checks SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(checkId);
+  revalidatePath("/stock-check");
+  redirect("/stock-check");
+}
+
+// === CUSTOMER ORDERS ===
+export async function createCustomerOrder(formData: FormData) {
+  const customer_id = formData.get("customer_id") ? parseInt(formData.get("customer_id") as string) : null;
+  const delivery_address = formData.get("delivery_address") as string || null;
+  const delivery_fee = parseFloat(formData.get("delivery_fee") as string) || 0;
+  const note = formData.get("note") as string || null;
+  const itemsJson = formData.get("items") as string;
+  if (!itemsJson) return { error: "No items" };
+  const items = JSON.parse(itemsJson) as Array<{ product_id: number; product_name: string; price: number; quantity: number }>;
+  if (items.length === 0) return { error: "Cart empty" };
+  const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
+  db.transaction(() => {
+    const result = db.prepare("INSERT INTO customer_orders (customer_id, total, delivery_address, delivery_fee, note) VALUES (?, ?, ?, ?, ?)").run(customer_id, total + delivery_fee, delivery_address, delivery_fee, note);
+    const orderId = result.lastInsertRowid as number;
+    const insert = db.prepare("INSERT INTO customer_order_items (order_id, product_id, product_name, price, quantity) VALUES (?, ?, ?, ?, ?)");
+    for (const item of items) insert.run(orderId, item.product_id, item.product_name, item.price, item.quantity);
+  })();
+  revalidatePath("/orders");
+  redirect("/orders");
+}
+
+export async function updateOrderStatus(formData: FormData) {
+  const orderId = parseInt(formData.get("order_id") as string);
+  const status = formData.get("status") as string;
+  if (!orderId || !status) return { error: "Missing fields" };
+  db.prepare("UPDATE customer_orders SET status = ? WHERE id = ?").run(status, orderId);
+  revalidatePath("/orders");
+}
+
+// === DELIVERY PARTNERS ===
+export async function createDeliveryPartner(formData: FormData) {
+  const name = formData.get("name") as string;
+  const phone = formData.get("phone") as string || null;
+  const commission_type = formData.get("commission_type") as string || "fixed";
+  const commission_value = parseFloat(formData.get("commission_value") as string) || 0;
+  if (!name) return { error: "Name required" };
+  db.prepare("INSERT INTO delivery_partners (name, phone, commission_type, commission_value) VALUES (?, ?, ?, ?)").run(name, phone, commission_type, commission_value);
+  revalidatePath("/delivery");
+  redirect("/delivery");
+}
+
+export async function createDelivery(formData: FormData) {
+  const order_id = formData.get("order_id") ? parseInt(formData.get("order_id") as string) : null;
+  const partner_id = formData.get("partner_id") ? parseInt(formData.get("partner_id") as string) : null;
+  const fee = parseFloat(formData.get("fee") as string) || 0;
+  const note = formData.get("note") as string || null;
+  db.prepare("INSERT INTO deliveries (order_id, partner_id, fee, note) VALUES (?, ?, ?, ?)").run(order_id, partner_id, fee, note);
+  revalidatePath("/delivery");
+  redirect("/delivery");
+}
+
+// === PROMOTIONS ===
+export async function createPromotion(formData: FormData) {
+  const name = formData.get("name") as string;
+  const type = formData.get("type") as string;
+  const value = parseFloat(formData.get("value") as string) || 0;
+  const min_purchase = parseFloat(formData.get("min_purchase") as string) || 0;
+  const start_date = formData.get("start_date") as string || null;
+  const end_date = formData.get("end_date") as string || null;
+  const product_id = formData.get("product_id") ? parseInt(formData.get("product_id") as string) : null;
+  const buy_qty = parseInt(formData.get("buy_qty") as string) || 0;
+  const get_qty = parseInt(formData.get("get_qty") as string) || 0;
+  if (!name || !type) return { error: "Missing fields" };
+  db.prepare("INSERT INTO promotions (name, type, value, min_purchase, start_date, end_date, product_id, buy_qty, get_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+    .run(name, type, value, min_purchase, start_date, end_date, product_id, buy_qty, get_qty);
+  revalidatePath("/promotions");
+  redirect("/promotions");
+}
+
+// === MEMBERSHIP ===
+export async function createMembershipTier(formData: FormData) {
+  const name = formData.get("name") as string;
+  const min_spend = parseFloat(formData.get("min_spend") as string) || 0;
+  const discount_percent = parseFloat(formData.get("discount_percent") as string) || 0;
+  const benefits = formData.get("benefits") as string || null;
+  if (!name) return { error: "Name required" };
+  db.prepare("INSERT INTO membership_tiers (name, min_spend, discount_percent, benefits) VALUES (?, ?, ?, ?)").run(name, min_spend, discount_percent, benefits);
+  revalidatePath("/membership");
+  redirect("/membership");
+}
+
+export async function enrollMember(formData: FormData) {
+  const customer_id = parseInt(formData.get("customer_id") as string);
+  const tier_id = formData.get("tier_id") ? parseInt(formData.get("tier_id") as string) : null;
+  if (!customer_id) return { error: "Customer required" };
+  db.prepare("INSERT OR IGNORE INTO members (customer_id, tier_id) VALUES (?, ?)").run(customer_id, tier_id);
+  revalidatePath("/membership");
+}
