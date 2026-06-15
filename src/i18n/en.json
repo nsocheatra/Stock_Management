@@ -676,12 +676,20 @@
       "settings": {
         "enable": "AI-Powered Responses",
         "provider": "Provider",
-        "providerHint": "Set OPENAI_API_KEY in env",
+        "providerHint": "Enter the API key for the selected provider below.",
         "model": "Model",
         "models": {
           "gpt4o": "GPT-4o",
           "gpt4oMini": "GPT-4o Mini",
           "gpt35": "GPT-3.5 Turbo"
+        },
+        "apiKey": {
+          "openai": "OpenAI API Key",
+          "openaiPlaceholder": "sk-...",
+          "gemini": "Google Gemini API Key",
+          "geminiPlaceholder": "AIza...",
+          "claude": "Anthropic Claude API Key",
+          "claudePlaceholder": "sk-ant-..."
         },
         "temperature": "Temperature ({value})",
         "precise": "Precise",
@@ -718,7 +726,7 @@
       "test": {
         "title": "Test AI Responses",
         "kbResponse": "📚 From knowledge base:\n{answer}",
-        "aiResponse": "🤖 AI Response (simulated)\n\nThanks for your message! Based on my training, I'd help you with '{input}'.\n\nTo get actual AI responses, connect your OpenAI API key via the OPENAI_API_KEY environment variable.",
+        "aiResponse": "🤖 AI Response (simulated)\n\nThanks for your message! Based on my training, I'd help you with '{input}'.\n\nTo get actual AI responses, configure your API key in the AI settings above.",
         "empty": "Type a message to test the AI",
         "placeholder": "Type a customer message..."
       },

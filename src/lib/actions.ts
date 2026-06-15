@@ -758,7 +758,7 @@ export async function deleteTemplate(id: number) {
 
 // ─── AI Settings ─────────────────────────────────────────────
 export async function saveAISettings(formData: FormData) {
-  const keys = ["ai_provider", "ai_model", "ai_system_prompt", "ai_temperature", "ai_max_tokens", "ai_enabled", "ai_persona_tone", "ai_context_messages"];
+  const keys = ["ai_provider", "ai_model", "ai_system_prompt", "ai_temperature", "ai_max_tokens", "ai_enabled", "ai_persona_tone", "ai_context_messages", "ai_openai_key", "ai_gemini_key", "ai_claude_key"];
   const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
   for (const key of keys) {
     const val = formData.get(key);

@@ -676,12 +676,20 @@
       "settings": {
         "enable": "ការឆ្លើយតបដោយ AI",
         "provider": "អ្នកផ្តល់សេវា",
-        "providerHint": "កំណត់ OPENAI_API_KEY ក្នុង env",
+        "providerHint": "បញ្ចូល API key សម្រាប់អ្នកផ្តល់សេវាដែលបានជ្រើសរើសខាងក្រោម។",
         "model": "ម៉ូដែល",
         "models": {
           "gpt4o": "GPT-4o",
           "gpt4oMini": "GPT-4o Mini",
           "gpt35": "GPT-3.5 Turbo"
+        },
+        "apiKey": {
+          "openai": "OpenAI API Key",
+          "openaiPlaceholder": "sk-...",
+          "gemini": "Google Gemini API Key",
+          "geminiPlaceholder": "AIza...",
+          "claude": "Anthropic Claude API Key",
+          "claudePlaceholder": "sk-ant-..."
         },
         "temperature": "សីតុណ្ហភាព ({value})",
         "precise": "ច្បាស់លាស់",
@@ -718,7 +726,7 @@
       "test": {
         "title": "សាកល្បងការឆ្លើយតប AI",
         "kbResponse": "📚 ពីមូលដ្ឋានចំណេះដឹង:\n{answer}",
-        "aiResponse": "🤖 ការឆ្លើយតប AI (ក្លែងធ្វើ)\n\nសូមអរគុណសម្រាប់សាររបស់អ្នក! ដោយផ្អែកលើការបណ្តុះបណ្តាលរបស់ខ្ញុំ ខ្ញុំអាចជួយអ្នកជាមួយ '{input}'។\n\nដើម្បីទទួលបានការឆ្លើយតប AI ពិតប្រាកដ សូមភ្ជាប់ OpenAI API key របស់អ្នកតាមរយៈអថេរបរិស្ថាន OPENAI_API_KEY។",
+        "aiResponse": "🤖 ការឆ្លើយតប AI (ក្លែងធ្វើ)\n\nសូមអរគុណសម្រាប់សាររបស់អ្នក! ដោយផ្អែកលើការបណ្តុះបណ្តាលរបស់ខ្ញុំ ខ្ញុំអាចជួយអ្នកជាមួយ '{input}'។\n\nដើម្បីទទួលបានការឆ្លើយតប AI ពិតប្រាកដ សូមកំណត់រចនាសម្ព័ន្ធ API key នៅក្នុងការកំណត់ AI ខាងលើ។",
         "empty": "វាយសារដើម្បីសាកល្បង AI",
         "placeholder": "វាយសារអតិថិជន..."
       },

@@ -17,6 +17,9 @@ export default function AIPage() {
     ai_enabled: getSetting("ai_enabled"),
     ai_persona_tone: getSetting("ai_persona_tone"),
     ai_context_messages: getSetting("ai_context_messages"),
+    ai_openai_key: getSetting("ai_openai_key"),
+    ai_gemini_key: getSetting("ai_gemini_key"),
+    ai_claude_key: getSetting("ai_claude_key"),
   };
 
   const faqs = db.prepare("SELECT * FROM messenger_faq ORDER BY created_at DESC").all() as Array<{

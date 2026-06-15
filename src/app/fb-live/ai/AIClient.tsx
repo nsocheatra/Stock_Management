@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Save, Brain, Bot, Thermometer, Text, MessageSquare,
-  Plus, Trash2, Sparkles,
+  Plus, Trash2, Sparkles, Eye, EyeOff,
 } from "lucide-react";
 import { saveAISettings, addFAQ, deleteFAQ } from "@/lib/actions";
 import { useTranslation } from "@/i18n/useTranslation";
@@ -21,9 +21,13 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
   const [faqCategory, setFaqCategory] = useState("general");
   const [chatInput, setChatInput] = useState("");
   const [chatLog, setChatLog] = useState<Array<{ role: string; text: string }>>([]);
+  const [showOpenAIKey, setShowOpenAIKey] = useState(false);
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [showClaudeKey, setShowClaudeKey] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
   const enabled = settings.ai_enabled === "1";
+  const provider = settings.ai_provider || "openai";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -64,7 +68,7 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
       setTimeout(() => {
         setChatLog((prev) => [...prev, {
           role: "ai",
-          text: `🤖 AI Response (simulated)\n\nThanks for your message! Based on my training, I'd help you with "${chatInput.trim()}".\n\nTo get actual AI responses, connect your OpenAI API key via the OPENAI_API_KEY environment variable.`,
+          text: `🤖 AI Response (simulated)\n\nThanks for your message! Based on my training, I'd help you with "${chatInput.trim()}".\n\nTo get actual AI responses, configure your ${provider === "openai" ? "OpenAI" : provider === "gemini" ? "Gemini" : "Claude"} API key in the AI settings above.`,
         }]);
       }, 700);
     }
@@ -94,20 +98,77 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="input-label">{t("fbLive.ai.settings.provider")}</label>
-                <select name="ai_provider" defaultValue={settings.ai_provider || "openai"} className="input-field">
+                <select name="ai_provider" defaultValue={provider} className="input-field">
                   <option value="openai">OpenAI</option>
+                  <option value="gemini">Google Gemini</option>
+                  <option value="claude">Anthropic Claude</option>
                 </select>
-                <p className="text-xs text-faint mt-1">{t("fbLive.ai.settings.providerHint")}</p>
               </div>
               <div>
                 <label className="input-label flex items-center gap-2"><Bot className="size-3" /> {t("fbLive.ai.settings.model")}</label>
                 <select name="ai_model" defaultValue={settings.ai_model || "gpt-4o-mini"} className="input-field">
-                  <option value="gpt-4o">{t("fbLive.ai.settings.models.gpt4o")}</option>
-                  <option value="gpt-4o-mini">{t("fbLive.ai.settings.models.gpt4oMini")}</option>
-                  <option value="gpt-3.5-turbo">{t("fbLive.ai.settings.models.gpt35")}</option>
+                  {provider === "openai" && (
+                    <>
+                      <option value="gpt-4o">{t("fbLive.ai.settings.models.gpt4o")}</option>
+                      <option value="gpt-4o-mini">{t("fbLive.ai.settings.models.gpt4oMini")}</option>
+                      <option value="gpt-3.5-turbo">{t("fbLive.ai.settings.models.gpt35")}</option>
+                    </>
+                  )}
+                  {provider === "gemini" && (
+                    <>
+                      <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+                      <option value="gemini-2.0-pro">Gemini 2.0 Pro</option>
+                      <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                      <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                    </>
+                  )}
+                  {provider === "claude" && (
+                    <>
+                      <option value="claude-sonnet-4">Claude Sonnet 4</option>
+                      <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                      <option value="claude-3.5-haiku">Claude 3.5 Haiku</option>
+                      <option value="claude-opus-4">Claude Opus 4</option>
+                    </>
+                  )}
                 </select>
               </div>
             </div>
+
+            {/* API Keys */}
+            {provider === "openai" && (
+              <div>
+                <label className="input-label">{t("fbLive.ai.settings.apiKey.openai")}</label>
+                <div className="relative">
+                  <input name="ai_openai_key" type={showOpenAIKey ? "text" : "password"} defaultValue={settings.ai_openai_key} placeholder={t("fbLive.ai.settings.apiKey.openaiPlaceholder")} className="input-field pr-10 font-mono text-xs" />
+                  <button type="button" onClick={() => setShowOpenAIKey(!showOpenAIKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-default cursor-pointer">
+                    {showOpenAIKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            {provider === "gemini" && (
+              <div>
+                <label className="input-label">{t("fbLive.ai.settings.apiKey.gemini")}</label>
+                <div className="relative">
+                  <input name="ai_gemini_key" type={showGeminiKey ? "text" : "password"} defaultValue={settings.ai_gemini_key} placeholder={t("fbLive.ai.settings.apiKey.geminiPlaceholder")} className="input-field pr-10 font-mono text-xs" />
+                  <button type="button" onClick={() => setShowGeminiKey(!showGeminiKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-default cursor-pointer">
+                    {showGeminiKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            {provider === "claude" && (
+              <div>
+                <label className="input-label">{t("fbLive.ai.settings.apiKey.claude")}</label>
+                <div className="relative">
+                  <input name="ai_claude_key" type={showClaudeKey ? "text" : "password"} defaultValue={settings.ai_claude_key} placeholder={t("fbLive.ai.settings.apiKey.claudePlaceholder")} className="input-field pr-10 font-mono text-xs" />
+                  <button type="button" onClick={() => setShowClaudeKey(!showClaudeKey)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-default cursor-pointer">
+                    {showClaudeKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+              </div>
+            )}
+            <p className="text-xs text-faint mt-1">{t("fbLive.ai.settings.providerHint")}</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>

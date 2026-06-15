@@ -500,6 +500,9 @@ function initSchema(db: Database.Database) {
   db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").run("ai_max_tokens", "500");
   db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").run("ai_persona_tone", "friendly");
   db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").run("ai_context_messages", "5");
+  db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").run("ai_openai_key", "");
+  db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").run("ai_gemini_key", "");
+  db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)").run("ai_claude_key", "");
 
   // Receipts table for storing completed sale receipts
   db.exec(`
