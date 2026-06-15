@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import {
   replyToConversation, markConversationRead, assignConversation, tagConversation,
-  searchConversations,
+  searchConversations, importFBPageConversations,
 } from "@/lib/actions";
 import { useTranslation } from "@/i18n/useTranslation";
 
@@ -45,9 +45,9 @@ const tagColors: Record<string, string> = {
 };
 
 export default function InboxClient({
-  conversations: initialConvs, messagesMap, quickReplies,
+  conversations: initialConvs, messagesMap, quickReplies, pageConnected,
 }: {
-  conversations: Conv[]; messagesMap: Record<number, Msg[]>; quickReplies: QR[];
+  conversations: Conv[]; messagesMap: Record<number, Msg[]>; quickReplies: QR[]; pageConnected: boolean;
 }) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [text, setText] = useState("");
@@ -58,6 +58,7 @@ export default function InboxClient({
   const [tagInput, setTagInput] = useState("");
   const [showAssign, setShowAssign] = useState(false);
   const [assignInput, setAssignInput] = useState("");
+  const importingRef = useRef(false);
   const router = useRouter();
   const { t } = useTranslation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -65,6 +66,15 @@ export default function InboxClient({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selectedId, messagesMap]);
+
+  useEffect(() => {
+    if (pageConnected && initialConvs.length === 0 && !importingRef.current) {
+      importingRef.current = true;
+      importFBPageConversations().then((result) => {
+        if (result.success) router.refresh();
+      });
+    }
+  }, [pageConnected, initialConvs.length, router]);
 
   const selected = conversations.find((c) => c.id === selectedId);
   const messages = selectedId ? messagesMap[selectedId] || [] : [];
@@ -190,8 +200,22 @@ export default function InboxClient({
           ) : (
             <div className="text-center py-12 text-faint px-4">
               <MessageSquare className="size-6 mx-auto mb-2 opacity-40" />
-              <p className="text-xs">{t("fbLive.inbox.noConversations")}</p>
-              <p className="text-[10px] mt-1">{t("fbLive.inbox.noConversationsHint")}</p>
+              <p className="text-xs">
+                {pageConnected ? t("fbLive.inbox.noConversations") : "Connect a Facebook page to use the inbox."}
+              </p>
+              <p className="text-[10px] mt-1">
+                {pageConnected
+                  ? t("fbLive.inbox.noConversationsHint")
+                  : "Go to Settings and sign in with Facebook to import conversations."}
+              </p>
+              {!pageConnected && (
+                <a
+                  href="/fb-live/settings"
+                  className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg text-xs font-semibold bg-violet-600/20 text-violet-300 border border-violet-500/20 hover:bg-violet-600/30 transition-all"
+                >
+                  Connect Facebook
+                </a>
+              )}
             </div>
           )}
         </div>

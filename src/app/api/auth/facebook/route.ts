@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
     fbUrl.searchParams.set("client_id", appId);
     fbUrl.searchParams.set("redirect_uri", redirectUri);
     fbUrl.searchParams.set("state", stateToken);
-    fbUrl.searchParams.set("scope", "pages_show_list,pages_read_engagement,pages_manage_engagement,business_management");
+    fbUrl.searchParams.set("scope", "pages_show_list,pages_read_engagement,pages_messaging,business_management");
     fbUrl.searchParams.set("response_type", "code");
 
     return NextResponse.redirect(fbUrl);
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
   // Has code → handle OAuth callback
   try {
     const tokenRes = await fetch(
-      `https://graph.facebook.com/v19.0/oauth/access_token?client_id=${appId}&redirect_uri=${redirectUri}&client_secret=${appSecret}&code=${code}`
+      `https://graph.facebook.com/v22.0/oauth/access_token?client_id=${appId}&redirect_uri=${redirectUri}&client_secret=${appSecret}&code=${code}`
     );
     const tokenData = await tokenRes.json();
 
@@ -57,26 +57,26 @@ export async function GET(request: NextRequest) {
 
     // Exchange short-lived token for long-lived token
     const llRes = await fetch(
-      `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${tokenData.access_token}`
+      `https://graph.facebook.com/v22.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${tokenData.access_token}`
     );
     const llData = await llRes.json();
     const userAccessToken = llData.access_token || tokenData.access_token;
 
     // Get user info
     const meRes = await fetch(
-      `https://graph.facebook.com/v19.0/me?fields=id,name&access_token=${userAccessToken}`
+      `https://graph.facebook.com/v22.0/me?fields=id,name&access_token=${userAccessToken}`
     );
     const meData = await meRes.json();
 
     // Get pages the user manages
     const pagesRes = await fetch(
-      `https://graph.facebook.com/v19.0/me/accounts?access_token=${userAccessToken}`
+      `https://graph.facebook.com/v22.0/me/accounts?access_token=${userAccessToken}`
     );
     const pagesData = await pagesRes.json();
 
     // Get businesses the user has access to
     const bizRes = await fetch(
-      `https://graph.facebook.com/v19.0/me/businesses?access_token=${userAccessToken}`
+      `https://graph.facebook.com/v22.0/me/businesses?access_token=${userAccessToken}`
     );
     const bizData = await bizRes.json();
 

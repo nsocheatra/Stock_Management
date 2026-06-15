@@ -5,6 +5,7 @@ import { Hash, MessageCircle, Package, Settings } from "lucide-react";
 import FBLiveClient from "./FBLiveClient";
 import FBCommentSimulator from "./FBCommentSimulator";
 import OrderActions from "./OrderActions";
+import ClearFBOrdersButton from "./ClearFBOrdersButton";
 
 interface KeywordRow {
   id: number;
@@ -84,8 +85,8 @@ export default function FBLivePage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Simulate Comment + Keyword Setup */}
-        <div className="lg:col-span-1 space-y-6">
+        {/* Left Card: Simulate */}
+        <div className="lg:col-span-1">
           <div className="bg-surface-blur border-surface rounded-2xl p-5 shadow-xl">
             <h2 className="text-sm font-semibold text-default flex items-center gap-2 mb-3">
               <MessageCircle className="size-4 text-muted" />
@@ -94,7 +95,10 @@ export default function FBLivePage() {
             <p className="text-xs text-faint mb-3"><T k="fbLive.main.simulateHint" /></p>
             <FBCommentSimulator keywords={keywords.map(k => k.keyword)} />
           </div>
+        </div>
 
+        {/* Right Card: Link Keyword to Product */}
+        <div className="lg:col-span-2">
           <div className="bg-surface-blur border-surface rounded-2xl p-5 shadow-xl">
             <h2 className="text-sm font-semibold text-default flex items-center gap-2 mb-4">
               <Hash className="size-4 text-muted" />
@@ -103,8 +107,6 @@ export default function FBLivePage() {
             <FBLiveClient products={products} keywords={keywords} />
           </div>
         </div>
-
-        <div className="lg:col-span-2" />
       </div>
 
       {/* Orders Feed */}
@@ -114,7 +116,10 @@ export default function FBLivePage() {
             <MessageCircle className="size-4 text-muted" />
             <T k="fbLive.main.orderFeed" />
           </h2>
-          <span className="text-xs text-faint"><T k="fbLive.main.orders" vars={{ count: orders.length }} /></span>
+          <div className="flex items-center gap-2">
+            <ClearFBOrdersButton />
+            <span className="text-xs text-faint"><T k="fbLive.main.orders" vars={{ count: orders.length }} /></span>
+          </div>
         </div>
 
             {orders.length > 0 ? (
@@ -147,7 +152,7 @@ export default function FBLivePage() {
                           )}
                         </td>
                         <td className="p-3 text-xs text-faint whitespace-nowrap">
-                          {new Date(o.created_at).toLocaleString()}
+                          {new Date(o.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                         </td>
                         <td className="p-3 text-right">
                           <OrderActions orderId={o.id} />

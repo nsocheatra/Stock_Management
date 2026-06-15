@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { ClipboardCheck, Plus, ArrowRight, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { T } from "@/components/T";
+import ClearAuditsButton from "./ClearAuditsButton";
 
 interface AuditRow {
   id: number;
@@ -47,13 +48,16 @@ export default function AuditListPage() {
           </h1>
           <p className="text-sm text-faint mt-1"><T k="audit.subtitle" /></p>
         </div>
-        <Link
-          href="/audit/new"
-          className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4.5 py-2.5 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-500/10 border border-violet-500/20"
-        >
-          <Plus className="size-4" />
-          <span className="text-sm font-semibold"><T k="audit.new" /></span>
-        </Link>
+        <div className="flex items-center gap-3">
+          <ClearAuditsButton />
+          <Link
+            href="/audit/new"
+            className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4.5 py-2.5 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-500/10 border border-violet-500/20"
+          >
+            <Plus className="size-4" />
+            <span className="text-sm font-semibold"><T k="audit.new" /></span>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4">

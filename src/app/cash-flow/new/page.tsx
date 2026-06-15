@@ -1,4 +1,3 @@
-import { db } from "@/lib/db";
 import { T } from "@/components/T";
 import { createCashFlowEntry } from "@/lib/actions";
 import Link from "next/link";

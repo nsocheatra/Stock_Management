@@ -29,17 +29,9 @@ export default function FBSettingsForm({
   const [showToken, setShowToken] = useState(false);
   const [showMsgToken, setShowMsgToken] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [origin] = useState(() => typeof window !== "undefined" ? window.location.origin : "");
-  const [fbConnected] = useState<string | null>(() => {
-    try {
-      return typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("fb_connected") : null;
-    } catch { return null; }
-  });
-  const [fbError] = useState<string | null>(() => {
-    try {
-      return typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("fb_error") : null;
-    } catch { return null; }
-  });
+  const [origin, setOrigin] = useState("");
+  const [fbConnected, setFbConnected] = useState<string | null>(null);
+  const [fbError, setFbError] = useState<string | null>(null);
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -47,6 +39,9 @@ export default function FBSettingsForm({
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("fb_connected");
     const error = params.get("fb_error");
+    setOrigin(window.location.origin);
+    setFbConnected(connected);
+    setFbError(error);
     if (connected || error) {
       const newParams = new URLSearchParams(window.location.search);
       newParams.delete("fb_connected");

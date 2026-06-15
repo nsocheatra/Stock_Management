@@ -211,6 +211,11 @@ export async function getOrderReceipt(orderId: number) {
   return order;
 }
 
+export async function clearFBOrders() {
+  db.prepare("DELETE FROM fb_orders").run();
+  revalidatePath("/fb-live");
+}
+
 export async function resetFBOrder(orderId: number) {
   db.prepare("UPDATE fb_orders SET status = 'pending' WHERE id = ?").run(orderId);
   revalidatePath("/fb-live");
@@ -589,6 +594,86 @@ export async function tagConversation(formData: FormData) {
   revalidatePath("/fb-live/inbox");
 }
 
+export async function importFBPageConversations() {
+  const pageToken = (db.prepare("SELECT value FROM fb_settings WHERE key = 'access_token'").get() as { value: string } | undefined)?.value
+    || (db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
+
+  if (!pageToken) return { error: "No Facebook page connected. Connect a page in Settings first." };
+
+  const pageId = (db.prepare("SELECT value FROM fb_settings WHERE key = 'page_id'").get() as { value: string } | undefined)?.value;
+  if (!pageId) return { error: "No page ID found. Connect a page in Settings first." };
+
+  try {
+    const res = await fetch(
+      `https://graph.facebook.com/v22.0/${pageId}/conversations?fields=participants,messages.limit(100){message,from,created_time},updated_time&limit=50&access_token=${pageToken}`
+    );
+    if (!res.ok) {
+      const errBody = await res.text();
+      return { error: `Facebook API error: ${errBody}` };
+    }
+
+    const data = await res.json();
+    const conversations = data.data as Array<{
+      id: string;
+      participants: Array<{ id: string; name: string }>;
+      messages: { data: Array<{ message: string; from: { id: string; name: string }; created_time: string }> };
+      updated_time: string;
+    }>;
+
+    let imported = 0;
+    const upsertConv = db.prepare(`
+      INSERT INTO messenger_conversations (sender_id, sender_name, last_message, updated_at)
+      VALUES (?, ?, ?, ?)
+    `);
+    const insertMsg = db.prepare(`
+      INSERT INTO messenger_messages (conversation_id, sender, text, created_at)
+      VALUES (?, ?, ?, ?)
+    `);
+
+    for (const conv of conversations) {
+      const senderId = conv.participants?.[0]?.id || "unknown";
+      const senderName = conv.participants?.[0]?.name || "Unknown";
+      const lastMsg = conv.messages?.data?.[conv.messages.data.length - 1]?.message || "";
+      const updatedTime = conv.updated_time
+        ? new Date(conv.updated_time).toISOString().replace("T", " ").replace("Z", "")
+        : new Date().toISOString().replace("T", " ").replace("Z", "");
+
+      const existing = db.prepare("SELECT id FROM messenger_conversations WHERE sender_id = ?").get(senderId) as { id: number } | undefined;
+
+      let convId: number;
+      if (existing) {
+        convId = existing.id;
+        db.prepare("UPDATE messenger_conversations SET sender_name=?, last_message=?, updated_at=? WHERE id=?").run(senderName, lastMsg, updatedTime, convId);
+      } else {
+        const result = upsertConv.run(senderId, senderName, lastMsg, updatedTime);
+        convId = result.lastInsertRowid as number;
+        imported++;
+      }
+
+      if (conv.messages?.data) {
+        for (const msg of conv.messages.data.reverse()) {
+          const existingMsg = db.prepare(
+            "SELECT id FROM messenger_messages WHERE conversation_id = ? AND text = ? AND created_at = ?"
+          ).get(convId, msg.message, msg.created_time) as { id: number } | undefined;
+
+          if (!existingMsg) {
+            const sender = msg.from?.id === pageId ? "bot" : "user";
+            const created = msg.created_time
+              ? new Date(msg.created_time).toISOString().replace("T", " ").replace("Z", "")
+              : new Date().toISOString().replace("T", " ").replace("Z", "");
+            insertMsg.run(convId, sender, msg.message, created);
+          }
+        }
+      }
+    }
+
+    revalidatePath("/fb-live/inbox");
+    return { success: true, imported, total: conversations.length };
+  } catch (err) {
+    return { error: `Failed to import: ${err instanceof Error ? err.message : "Unknown error"}` };
+  }
+}
+
 // ─── Messenger Broadcasts ────────────────────────────────────
 export async function getBroadcasts() {
   return db.prepare("SELECT * FROM messenger_broadcasts ORDER BY created_at DESC LIMIT 50").all() as Array<{
@@ -832,6 +917,17 @@ export async function createCashFlowEntry(formData: FormData) {
 }
 
 // === PHYSICAL AUDITS ===
+export async function clearAllAudits() {
+  const audits = db.prepare("SELECT id FROM physical_audits").all() as any[];
+  const deleteItems = db.prepare("DELETE FROM physical_audit_items WHERE audit_id = ?");
+  const deleteAudit = db.prepare("DELETE FROM physical_audits WHERE id = ?");
+  for (const a of audits) {
+    deleteItems.run(a.id);
+    deleteAudit.run(a.id);
+  }
+  revalidatePath("/audit");
+}
+
 export async function createAudit(formData: FormData) {
   const name = formData.get("name") as string;
   if (!name) throw new Error("Name required");
@@ -907,6 +1003,61 @@ export async function updateOrderStatus(formData: FormData) {
   if (!orderId || !status) throw new Error("Missing fields");
   db.prepare("UPDATE customer_orders SET status = ? WHERE id = ?").run(status, orderId);
   revalidatePath("/orders");
+}
+
+export async function convertOrderToSale(orderId: number) {
+  const order = db.prepare("SELECT * FROM customer_orders WHERE id = ?").get(orderId) as any;
+  if (!order) return { error: "Order not found" };
+  if (order.sale_id) return { error: "Already converted to sale" };
+
+  const items = db.prepare("SELECT * FROM customer_order_items WHERE order_id = ?").all(orderId) as any[];
+  if (items.length === 0) return { error: "No items in order" };
+
+  const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)");
+  const updateStock = db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?");
+  const getProduct = db.prepare("SELECT id, quantity, price FROM products WHERE id = ?");
+
+  try {
+    db.transaction(() => {
+      for (const item of items) {
+        const product = getProduct.get(item.product_id) as any;
+        if (product && product.quantity < item.quantity) {
+          throw new Error(`Insufficient stock for ${item.product_name}`);
+        }
+        if (product) {
+          insertMovement.run(item.product_id, item.quantity, `Customer order #${orderId}: ${item.product_name}`);
+          updateStock.run(item.quantity, item.product_id);
+        }
+      }
+      const saleResult = db.prepare("INSERT INTO sales (customer_id, total, item_count) VALUES (?, ?, ?)")
+        .run(order.customer_id, order.total, items.length);
+      const saleId = saleResult.lastInsertRowid as number;
+      const insert = db.prepare("INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity) VALUES (?, ?, ?, ?, ?, ?)");
+      for (const item of items) {
+        const product = getProduct.get(item.product_id) as any;
+        insert.run(saleId, item.product_id, item.product_name, product?.sku || null, item.price, item.quantity);
+      }
+      db.prepare("UPDATE customer_orders SET sale_id = ?, status = 'delivered' WHERE id = ?").run(saleId, orderId);
+    })();
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+
+  revalidatePath("/orders");
+  revalidatePath("/pos");
+  return { success: true };
+}
+
+export async function getCustomerOrderReceipt(orderId: number) {
+  const order = db.prepare(`
+    SELECT co.*, c.name as customer_name
+    FROM customer_orders co
+    LEFT JOIN customers c ON c.id = co.customer_id
+    WHERE co.id = ?
+  `).get(orderId) as any;
+  if (!order) return null;
+  const items = db.prepare("SELECT * FROM customer_order_items WHERE order_id = ?").all(orderId) as any[];
+  return { ...order, items };
 }
 
 // === DELIVERY PARTNERS ===

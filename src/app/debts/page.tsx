@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { T } from "@/components/T";
 import Link from "next/link";
-import { Plus, Filter } from "lucide-react";
+import { Plus } from "lucide-react";
 import DebtsClient from "./DebtsClient";
 
 interface DebtRow {

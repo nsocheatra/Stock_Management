@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Khmer } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import LayoutClient from "@/components/LayoutClient";
 import { LangUpdater } from "@/components/LangUpdater";
 import { getCurrentUser } from "@/lib/auth";
+import { cookies } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,18 +31,18 @@ export const metadata: Metadata = {
 const navItems = [
   { href: "/pos", label: "POS", icon: "pos" },
   { href: "/", label: "Dashboard", icon: "dashboard" },
+  { href: "/fb-live", label: "FB Live", icon: "fblive" },
   { href: "/customers", label: "Customers", icon: "customers" },
   { href: "/products", label: "Products", icon: "products" },
   { href: "/stock", label: "Inventory", icon: "stock" },
   { href: "/audit", label: "Audit", icon: "audit" },
   { href: "/orders", label: "Orders", icon: "orders" },
-  { href: "/delivery", label: "Delivery", icon: "delivery" },
   { href: "/debts", label: "Debts", icon: "debts" },
   { href: "/cash-flow", label: "Cash Flow", icon: "cashflow" },
   { href: "/promotions", label: "Promotions", icon: "promotions" },
   { href: "/membership", label: "Membership", icon: "membership" },
-  { href: "/fb-live", label: "FB Live", icon: "fblive" },
   { href: "/suppliers", label: "Suppliers", icon: "suppliers" },
+  { href: "/delivery", label: "Delivery", icon: "delivery" },
   { href: "/reports", label: "Reports", icon: "reports" },
   { href: "/settings", label: "Settings", icon: "settings" },
   { href: "/users", label: "Users", icon: "users" },
@@ -50,15 +52,18 @@ export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const user = await getCurrentUser();
+  const cookieStore = await cookies();
+  const localeCookie = cookieStore.get("locale")?.value;
+  const initialLocale = localeCookie === "kh" ? "kh" : "en";
 
   return (
     <html
-      lang="en"
+      lang={initialLocale}
       className={`${geistSans.variable} ${geistMono.variable} ${notoSansKhmer.variable} antialiased dark`}
       suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{
+      <body className="overflow-hidden" style={{ backgroundColor: "var(--bg-main)", color: "var(--text-primary)" }}>
+        <Script id="theme-init" strategy="beforeInteractive" dangerouslySetInnerHTML={{
           __html: `
             try {
               var t = localStorage.getItem("theme");
@@ -70,10 +75,8 @@ export default async function RootLayout({
             } catch(e) {}
           `
         }} />
-      </head>
-      <body className="overflow-hidden" style={{ backgroundColor: "var(--bg-main)", color: "var(--text-primary)" }}>
         <LangUpdater />
-        <LayoutClient user={user} navItems={navItems}>
+        <LayoutClient user={user} navItems={navItems} initialLocale={initialLocale}>
           {children}
         </LayoutClient>
       </body>

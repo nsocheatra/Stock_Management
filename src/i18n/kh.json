@@ -335,7 +335,7 @@
     "signIn": "ចូលប្រើ",
     "signingIn": "កំពុងចូលប្រើ...",
     "cashierPin": "PIN អ្នកគិតលុយ",
-    "pinPlaceholder": "****",
+    "pinPlaceholder": "******",
     "quickLogin": "ចូលប្រើរហ័ស",
     "quickLoginLoading": "កំពុងចូលប្រើ...",
     "invalidPin": "PIN មិនត្រឹមត្រូវ",
@@ -477,8 +477,8 @@
       }
     },
     "settings": {
-      "title": "ការកំណត់",
-      "subtitle": "កំណត់រចនាសម្ព័ន្ធការបញ្ជាទិញដោយស្វ័យប្រវត្តិ Facebook Live និង Messenger chatbot ។",
+      "title": "កំណត់រចនាសម្ព័ន្ធ Facebook Live Auto-Ordering",
+      "subtitle": "ការកំណត់ Facebook Live auto-ordering និង Messenger chatbot ។",
       "liveTab": "ការបញ្ជាទិញតាមផ្សាយផ្ទាល់",
       "chatbotTab": "Messenger Chatbot",
       "live": {
@@ -770,7 +770,7 @@
       "name": "ឈ្មោះពេញ",
       "email": "email@example.com",
       "password": "យ៉ាងតិច ៦ តួអក្សរ",
-      "pin": "PIN ៤ ខ្ទង់"
+      "pin": "PIN ៦ ខ្ទង់"
     },
     "rolesDropdown": {
       "cashier": "អ្នកគិតលុយ",

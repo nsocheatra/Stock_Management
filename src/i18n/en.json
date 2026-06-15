@@ -335,7 +335,7 @@
     "signIn": "Sign In",
     "signingIn": "Signing in...",
     "cashierPin": "Cashier PIN",
-    "pinPlaceholder": "****",
+    "pinPlaceholder": "******",
     "quickLogin": "Quick Login",
     "quickLoginLoading": "Signing in...",
     "invalidPin": "Invalid PIN",
@@ -477,8 +477,8 @@
       }
     },
     "settings": {
-      "title": "Settings",
-      "subtitle": "Configure Facebook Live auto-ordering and Messenger chatbot.",
+      "title": "Configure Facebook Live Auto-Ordering",
+      "subtitle": "Facebook Live auto-ordering and Messenger chatbot settings.",
       "liveTab": "Live Auto-Ordering",
       "chatbotTab": "Messenger Chatbot",
       "live": {
@@ -770,7 +770,7 @@
       "name": "Full name",
       "email": "email@example.com",
       "password": "Min 6 characters",
-      "pin": "4-digit PIN"
+      "pin": "6-digit PIN"
     },
     "rolesDropdown": {
       "cashier": "Cashier",
