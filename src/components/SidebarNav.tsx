@@ -54,7 +54,7 @@ export default function SidebarNav({ items }: { items: NavItem[] }) {
   const { t } = useTranslation();
 
   return (
-    <nav className="flex-1 p-4 space-y-1.5">
+    <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
       {items.map((item) => {
         const Icon = iconMap[item.icon];
         const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
