@@ -796,7 +796,7 @@ export async function createDebt(formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   const due_date = formData.get("due_date") as string || null;
   const note = formData.get("note") as string || null;
-  if (!type || !reference_id || !amount) return { error: "Missing required fields" };
+  if (!type || !reference_id || !amount) throw new Error("Missing required fields");
   db.prepare("INSERT INTO debts (type, reference_id, amount, due_date, note) VALUES (?, ?, ?, ?, ?)").run(type, reference_id, amount, due_date, note);
   revalidatePath("/debts");
   redirect("/debts");
@@ -805,7 +805,7 @@ export async function createDebt(formData: FormData) {
 export async function addDebtPayment(formData: FormData) {
   const debt_id = parseInt(formData.get("debt_id") as string);
   const amount = parseFloat(formData.get("amount") as string);
-  if (!debt_id || !amount) return { error: "Missing fields" };
+  if (!debt_id || !amount) throw new Error("Missing fields");
   const paymentMethod = formData.get("payment_method") as string || "cash";
   const note = formData.get("note") as string || null;
   db.transaction(() => {
@@ -825,7 +825,7 @@ export async function createCashFlowEntry(formData: FormData) {
   const category = formData.get("category") as string;
   const amount = parseFloat(formData.get("amount") as string);
   const description = formData.get("description") as string || null;
-  if (!type || !category || !amount) return { error: "Missing fields" };
+  if (!type || !category || !amount) throw new Error("Missing fields");
   db.prepare("INSERT INTO cash_flow (type, category, amount, description) VALUES (?, ?, ?, ?)").run(type, category, amount, description);
   revalidatePath("/cash-flow");
   redirect("/cash-flow");
@@ -834,7 +834,7 @@ export async function createCashFlowEntry(formData: FormData) {
 // === STOCK CHECKS ===
 export async function createStockCheck(formData: FormData) {
   const name = formData.get("name") as string;
-  if (!name) return { error: "Name required" };
+  if (!name) throw new Error("Name required");
   const result = db.prepare("INSERT INTO stock_checks (name) VALUES (?)").run(name);
   const checkId = result.lastInsertRowid as number;
   const products = db.prepare("SELECT id, name, quantity FROM products ORDER BY name ASC").all() as any[];
@@ -847,7 +847,7 @@ export async function createStockCheck(formData: FormData) {
 export async function updateStockCheckItem(formData: FormData) {
   const itemId = parseInt(formData.get("item_id") as string);
   const actualQty = parseFloat(formData.get("actual_qty") as string);
-  if (!itemId || isNaN(actualQty)) return { error: "Invalid data" };
+  if (!itemId || isNaN(actualQty)) throw new Error("Invalid data");
   const item = db.prepare("SELECT sci.*, p.quantity FROM stock_check_items sci JOIN products p ON p.id = sci.product_id WHERE sci.id = ?").get(itemId) as any;
   const difference = actualQty - item.expected_qty;
   db.prepare("UPDATE stock_check_items SET actual_qty = ?, difference = ? WHERE id = ?").run(actualQty, difference, itemId);
@@ -856,7 +856,7 @@ export async function updateStockCheckItem(formData: FormData) {
 
 export async function completeStockCheck(formData: FormData) {
   const checkId = parseInt(formData.get("check_id") as string);
-  if (!checkId) return { error: "Missing check ID" };
+  if (!checkId) throw new Error("Missing check ID");
   db.prepare("UPDATE stock_checks SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(checkId);
   revalidatePath("/stock-check");
   redirect("/stock-check");
@@ -869,9 +869,9 @@ export async function createCustomerOrder(formData: FormData) {
   const delivery_fee = parseFloat(formData.get("delivery_fee") as string) || 0;
   const note = formData.get("note") as string || null;
   const itemsJson = formData.get("items") as string;
-  if (!itemsJson) return { error: "No items" };
+  if (!itemsJson) throw new Error("No items");
   const items = JSON.parse(itemsJson) as Array<{ product_id: number; product_name: string; price: number; quantity: number }>;
-  if (items.length === 0) return { error: "Cart empty" };
+  if (items.length === 0) throw new Error("Cart empty");
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
   db.transaction(() => {
     const result = db.prepare("INSERT INTO customer_orders (customer_id, total, delivery_address, delivery_fee, note) VALUES (?, ?, ?, ?, ?)").run(customer_id, total + delivery_fee, delivery_address, delivery_fee, note);
@@ -886,7 +886,7 @@ export async function createCustomerOrder(formData: FormData) {
 export async function updateOrderStatus(formData: FormData) {
   const orderId = parseInt(formData.get("order_id") as string);
   const status = formData.get("status") as string;
-  if (!orderId || !status) return { error: "Missing fields" };
+  if (!orderId || !status) throw new Error("Missing fields");
   db.prepare("UPDATE customer_orders SET status = ? WHERE id = ?").run(status, orderId);
   revalidatePath("/orders");
 }
@@ -897,7 +897,7 @@ export async function createDeliveryPartner(formData: FormData) {
   const phone = formData.get("phone") as string || null;
   const commission_type = formData.get("commission_type") as string || "fixed";
   const commission_value = parseFloat(formData.get("commission_value") as string) || 0;
-  if (!name) return { error: "Name required" };
+  if (!name) throw new Error("Name required");
   db.prepare("INSERT INTO delivery_partners (name, phone, commission_type, commission_value) VALUES (?, ?, ?, ?)").run(name, phone, commission_type, commission_value);
   revalidatePath("/delivery");
   redirect("/delivery");
@@ -924,7 +924,7 @@ export async function createPromotion(formData: FormData) {
   const product_id = formData.get("product_id") ? parseInt(formData.get("product_id") as string) : null;
   const buy_qty = parseInt(formData.get("buy_qty") as string) || 0;
   const get_qty = parseInt(formData.get("get_qty") as string) || 0;
-  if (!name || !type) return { error: "Missing fields" };
+  if (!name || !type) throw new Error("Missing fields");
   db.prepare("INSERT INTO promotions (name, type, value, min_purchase, start_date, end_date, product_id, buy_qty, get_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
     .run(name, type, value, min_purchase, start_date, end_date, product_id, buy_qty, get_qty);
   revalidatePath("/promotions");
@@ -937,7 +937,7 @@ export async function createMembershipTier(formData: FormData) {
   const min_spend = parseFloat(formData.get("min_spend") as string) || 0;
   const discount_percent = parseFloat(formData.get("discount_percent") as string) || 0;
   const benefits = formData.get("benefits") as string || null;
-  if (!name) return { error: "Name required" };
+  if (!name) throw new Error("Name required");
   db.prepare("INSERT INTO membership_tiers (name, min_spend, discount_percent, benefits) VALUES (?, ?, ?, ?)").run(name, min_spend, discount_percent, benefits);
   revalidatePath("/membership");
   redirect("/membership");

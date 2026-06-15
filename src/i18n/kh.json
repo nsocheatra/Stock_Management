@@ -767,6 +767,12 @@
     "status": "ស្ថានភាព",
     "types": { "customer": "បំណុលអតិថិជន", "supplier": "បំណុលអ្នកផ្គត់ផ្គង់" },
     "statuses": { "pending": "រង់ចាំ", "partial": "មួយផ្នែក", "paid": "បង់ហើយ", "cancelled": "បោះបង់" },
+    "addPayment": "បន្ថែមការទូទាត់",
+    "paymentAmount": "ចំនួនទូទាត់",
+    "recordPayment": "កត់ត្រាការទូទាត់",
+    "addPayment": "បន្ថែមការទូទាត់",
+    "paymentAmount": "ចំនួនទូទាត់",
+    "recordPayment": "កត់ត្រាការទូទាត់",
     "empty": "មិនទាន់មានបំណុល"
   },
   "cashFlow": {
@@ -791,6 +797,12 @@
     "items": "មុខទំនិញ",
     "counted": "រាប់ហើយ",
     "view": "មើល",
+    "expected": "រំពឹងទុក",
+    "actual": "ពិត",
+    "difference": "ភាពខុសគ្នា",
+    "hasDiscrepancies": "⚠ រកឃើញភាពខុសគ្នា",
+    "complete": "បញ្ចប់",
+    "notFound": "រកមិនឃើញ",
     "statuses": { "draft": "ព្រាង", "in_progress": "កំពុងធ្វើ", "completed": "រួចរាល់" },
     "empty": "មិនទាន់មាន"
   },
@@ -802,6 +814,8 @@
     "items": "មុខទំនិញ",
     "total": "សរុប",
     "status": "ស្ថានភាព",
+    "deliveryAddress": "អាសយដ្ឋានដឹកជញ្ជូន",
+    "deliveryFee": "ថ្លៃដឹកជញ្ជូន",
     "statuses": { "pending": "រង់ចាំ", "confirmed": "បញ្ជាក់", "processing": "កំពុងរៀបចំ", "shipped": "បានដឹក", "delivered": "បានដល់", "cancelled": "បោះបង់" },
     "empty": "មិនទាន់មាន"
   },
@@ -813,6 +827,11 @@
     "managePartners": "គ្រប់គ្រងដៃគូ",
     "recentDeliveries": "ការដឹកជញ្ជូនថ្មីៗ",
     "noPartners": "មិនទាន់មានដៃគូ",
+    "addPartner": "បន្ថែមដៃគូ",
+    "commissionType": "ប្រភេទកម្រៃជើងសា",
+    "commissionValue": "តម្លៃកម្រៃជើងសា",
+    "partner": "ដៃគូដឹកជញ្ជូន",
+    "deliveryFee": "ថ្លៃដឹកជញ្ជូន",
     "statuses": { "pending": "រង់ចាំ", "picked_up": "ប្រមូលហើយ", "in_transit": "កំពុងដឹក", "delivered": "បានដល់", "failed": "បរាជ័យ" },
     "empty": "មិនទាន់មាន"
   },
@@ -825,6 +844,11 @@
     "type": "ប្រភេទ",
     "value": "តម្លៃ",
     "minPurchase": "ការទិញអប្បបរមា",
+    "startDate": "ថ្ងៃចាប់ផ្តើម",
+    "endDate": "ថ្ងៃបញ្ចប់",
+    "product": "ផលិតផល",
+    "buyQty": "បរិមាណទិញ",
+    "getQty": "បរិមាណទទួល",
     "empty": "មិនទាន់មាន"
   },
   "membership": {
@@ -837,6 +861,11 @@
     "tiers": "កម្រិតសមាជិក",
     "topMembers": "សមាជិកកំពូល",
     "noTiers": "មិនទាន់មានកម្រិត",
+    "addTier": "បន្ថែមកម្រិត",
+    "discountPercent": "បញ្ចុះតម្លៃ %",
+    "minSpend": "ការចំណាយអប្បបរមា",
+    "benefits": "អត្ថប្រយោជន៍",
+    "existingTiers": "កម្រិតដែលមានស្រាប់",
     "empty": "មិនទាន់មានសមាជិក"
   },
   "locale": {

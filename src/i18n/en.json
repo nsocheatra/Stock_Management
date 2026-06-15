@@ -767,6 +767,9 @@
     "status": "Status",
     "types": { "customer": "Customer Debt", "supplier": "Supplier Payable" },
     "statuses": { "pending": "Pending", "partial": "Partial", "paid": "Paid", "cancelled": "Cancelled" },
+    "addPayment": "Add Payment",
+    "paymentAmount": "Payment Amount",
+    "recordPayment": "Record Payment",
     "empty": "No debts recorded"
   },
   "cashFlow": {
@@ -792,6 +795,12 @@
     "counted": "Counted",
     "view": "View Details",
     "statuses": { "draft": "Draft", "in_progress": "In Progress", "completed": "Completed" },
+    "expected": "Expected",
+    "actual": "Actual",
+    "difference": "Diff",
+    "hasDiscrepancies": "⚠ Discrepancies found",
+    "complete": "Complete Check",
+    "notFound": "Stock check not found",
     "empty": "No stock checks yet"
   },
   "orders": {
@@ -803,6 +812,8 @@
     "total": "Total",
     "status": "Status",
     "statuses": { "pending": "Pending", "confirmed": "Confirmed", "processing": "Processing", "shipped": "Shipped", "delivered": "Delivered", "cancelled": "Cancelled" },
+    "deliveryAddress": "Delivery Address",
+    "deliveryFee": "Delivery Fee",
     "empty": "No orders yet"
   },
   "delivery": {
@@ -814,6 +825,11 @@
     "recentDeliveries": "Recent Deliveries",
     "noPartners": "No delivery partners yet",
     "statuses": { "pending": "Pending", "picked_up": "Picked Up", "in_transit": "In Transit", "delivered": "Delivered", "failed": "Failed" },
+    "addPartner": "Add Partner",
+    "commissionType": "Commission Type",
+    "commissionValue": "Commission Value",
+    "partner": "Delivery Partner",
+    "deliveryFee": "Delivery Fee",
     "empty": "No deliveries yet"
   },
   "promotions": {
@@ -825,6 +841,11 @@
     "type": "Type",
     "value": "Value",
     "minPurchase": "Min Purchase",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "product": "Product",
+    "buyQty": "Buy Quantity",
+    "getQty": "Get Quantity",
     "empty": "No promotions yet"
   },
   "membership": {
@@ -837,6 +858,11 @@
     "tiers": "Membership Tiers",
     "topMembers": "Top Members",
     "noTiers": "No tiers configured",
+    "addTier": "Add Tier",
+    "discountPercent": "Discount %",
+    "minSpend": "Min Spend",
+    "benefits": "Benefits",
+    "existingTiers": "Existing Tiers",
     "empty": "No members yet"
   },
   "locale": {
