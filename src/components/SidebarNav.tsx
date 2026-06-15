@@ -20,8 +20,7 @@ import {
   HandCoins,
   Wallet,
   Percent,
-  BadgePercent,
-  ChevronDown,
+
 } from "lucide-react";
 
 const iconMap: Record<string, typeof LayoutDashboard> = {

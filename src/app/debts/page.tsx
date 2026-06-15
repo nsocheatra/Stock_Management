@@ -20,8 +20,12 @@ interface DebtRow {
 
 export default function DebtsPage() {
   const debts = db.prepare(`
-    SELECT d.*, c.name, c.phone FROM debts d
+    SELECT d.*,
+      CASE WHEN d.type = 'customer' THEN c.name WHEN d.type = 'supplier' THEN s.name END as name,
+      CASE WHEN d.type = 'customer' THEN c.phone WHEN d.type = 'supplier' THEN s.phone END as phone
+    FROM debts d
     LEFT JOIN customers c ON d.type = 'customer' AND d.reference_id = c.id
+    LEFT JOIN suppliers s ON d.type = 'supplier' AND d.reference_id = s.id
     ORDER BY d.created_at DESC
   `).all() as DebtRow[];
 

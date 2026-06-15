@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
-import { HandCoins, UserRound, Truck, Filter } from "lucide-react";
+import { UserRound, Truck, Filter } from "lucide-react";
 
 type Debt = { id: number; type: string; reference_id: number; amount: number; paid_amount: number; status: string; due_date: string | null; note: string | null; created_at: string; name: string; phone: string | null };
 

@@ -351,6 +351,7 @@ function initSchema(db: Database.Database) {
       total REAL NOT NULL,
       delivery_address TEXT,
       delivery_fee REAL DEFAULT 0,
+      sale_id INTEGER REFERENCES sales(id) ON DELETE SET NULL,
       note TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
@@ -389,6 +390,8 @@ function initSchema(db: Database.Database) {
       created_at TEXT DEFAULT (datetime('now'))
     );
   `);
+
+  try { db.exec("ALTER TABLE customer_orders ADD COLUMN sale_id INTEGER REFERENCES sales(id) ON DELETE SET NULL"); } catch {}
 
   // Messenger chatbot tables
   db.exec(`
