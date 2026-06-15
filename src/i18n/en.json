@@ -12,7 +12,7 @@
     "inventory": "Inventory",
     "fbLive": "FB Live",
     "stock": "Inventory",
-    "audit": "Physical Audit",
+    "audit": "Stock Audit",
     "orders": "Orders",
     "delivery": "Delivery",
     "debts": "Debts",
@@ -233,7 +233,7 @@
     }
   },
   "audit": {
-    "title": "Physical Audit",
+    "title": "Stock Audit",
     "subtitle": "Reconcile physical stock counts against system records",
     "new": "New Audit",
     "newSubtitle": "All products will be pre-loaded with their current quantities",

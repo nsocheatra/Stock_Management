@@ -38,6 +38,7 @@ export default async function AuditDetailPage({ params }: Props) {
     SELECT ai.id, p.name as product_name, p.sku, ai.expected_qty, ai.actual_qty, ai.difference, ai.note
     FROM physical_audit_items ai
     JOIN products p ON p.id = ai.product_id
+    WHERE ai.audit_id = ?
     ORDER BY p.name ASC
   `).all(auditId) as AuditItem[];
 
