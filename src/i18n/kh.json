@@ -184,11 +184,11 @@
   "stock": {
     "title": "ការគ្រប់គ្រងស្តុក",
     "subtitle": "តាមដានកម្រិតស្តុក តាមដានចលនា និងគ្រប់គ្រងសារពើភ័ណ្ឌ។",
-    "stockIn": "បញ្ចូលស្តុក",
-    "stockInEntry": "បញ្ចូលស្តុក",
+    "stockIn": "ទទួលពីអ្នកផ្គត់ផ្គង់",
+    "stockInEntry": "ទទួលស្តុកពីអ្នកផ្គត់ផ្គង់",
     "currentInventory": "សារពើភ័ណ្ឌបច្ចុប្បន្ន",
     "productCount": "{count} ផលិតផល",
-    "stockInTooltip": "បញ្ចូលស្តុក",
+    "stockInTooltip": "ទទួលពីអ្នកផ្គត់ផ្គង់",
     "kpi": {
       "totalProducts": "ផលិតផលសរុប",
       "totalStock": "ស្តុកសរុប",
@@ -222,7 +222,7 @@
       "qtyPlaceholder": "បញ្ចូលបរិមាណ",
       "notePlaceholder": "ឧ. លេខបញ្ជាទិញ #៩២១៣",
       "productOption": "{name} ({sku}) - ស្តុកបច្ចុប្បន្ន: {qty}",
-      "add": "បន្ថែមចូលស្តុក",
+      "add": "ទទួលស្តុក",
       "remove": "ដកចេញពីស្តុក",
       "quantityForCase": "បរិមាណក្នុងមួយកេស",
       "costPerUnit": "តម្លៃក្នុងមួយឯកតា ($)",

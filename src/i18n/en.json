@@ -184,11 +184,11 @@
   "stock": {
     "title": "Inventory Management",
     "subtitle": "Monitor stock levels, track movements, and manage inventory.",
-    "stockIn": "Stock In",
-    "stockInEntry": "Stock In Entry",
+    "stockIn": "Receive from Supplier",
+    "stockInEntry": "Receive Stock from Supplier",
     "currentInventory": "Current Inventory",
     "productCount": "{count} product{plural}",
-    "stockInTooltip": "Stock In",
+    "stockInTooltip": "Receive from Supplier",
     "kpi": {
       "totalProducts": "Total Products",
       "totalStock": "Total Stock",
@@ -222,7 +222,7 @@
       "qtyPlaceholder": "Enter quantity",
       "notePlaceholder": "e.g. Purchase order #9213",
       "productOption": "{name} ({sku}) - Current Stock: {qty}",
-      "add": "Add Stock Entry",
+      "add": "Receive Stock",
       "remove": "Remove Stock Entry",
       "quantityForCase": "Quantity for Case",
       "costPerUnit": "Cost per Unit ($)",
