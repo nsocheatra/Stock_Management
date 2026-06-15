@@ -267,6 +267,28 @@ function initSchema(db: Database.Database) {
     );
   `);
 
+  // Physical audits (periodic inventory reconciliation)
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS physical_audits (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      status TEXT DEFAULT 'in_progress' CHECK(status IN ('in_progress', 'completed', 'cancelled')),
+      created_at TEXT DEFAULT (datetime('now')),
+      completed_at TEXT
+    );
+  `);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS physical_audit_items (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      audit_id INTEGER NOT NULL REFERENCES physical_audits(id) ON DELETE CASCADE,
+      product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+      expected_qty REAL NOT NULL,
+      actual_qty REAL,
+      difference REAL,
+      note TEXT
+    );
+  `);
+
   // Cash flow
   db.exec(`
     CREATE TABLE IF NOT EXISTS cash_flow (

@@ -32,6 +32,7 @@ const navItems = [
   { href: "/customers", label: "Customers", icon: "customers" },
   { href: "/products", label: "Products", icon: "products" },
   { href: "/stock", label: "Inventory", icon: "stock" },
+  { href: "/audit", label: "Audit", icon: "audit" },
   { href: "/orders", label: "Orders", icon: "orders" },
   { href: "/delivery", label: "Delivery", icon: "delivery" },
   { href: "/debts", label: "Debts", icon: "debts" },

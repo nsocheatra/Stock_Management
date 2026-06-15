@@ -831,6 +831,55 @@ export async function createCashFlowEntry(formData: FormData) {
   redirect("/cash-flow");
 }
 
+// === PHYSICAL AUDITS ===
+export async function createAudit(formData: FormData) {
+  const name = formData.get("name") as string;
+  if (!name) throw new Error("Name required");
+  const result = db.prepare("INSERT INTO physical_audits (name) VALUES (?)").run(name);
+  const auditId = result.lastInsertRowid as number;
+  const products = db.prepare("SELECT id, name, quantity FROM products ORDER BY name ASC").all() as any[];
+  const insert = db.prepare("INSERT INTO physical_audit_items (audit_id, product_id, expected_qty) VALUES (?, ?, ?)");
+  for (const p of products) insert.run(auditId, p.id, p.quantity);
+  revalidatePath("/audit");
+  redirect(`/audit/${auditId}`);
+}
+
+export async function updateAuditItem(formData: FormData) {
+  const itemId = parseInt(formData.get("item_id") as string);
+  const actualQty = parseFloat(formData.get("actual_qty") as string);
+  const note = formData.get("note") as string || null;
+  if (!itemId || isNaN(actualQty)) throw new Error("Invalid data");
+  const item = db.prepare("SELECT aai.*, p.quantity FROM physical_audit_items aai JOIN products p ON p.id = aai.product_id WHERE aai.id = ?").get(itemId) as any;
+  const difference = actualQty - item.expected_qty;
+  db.prepare("UPDATE physical_audit_items SET actual_qty = ?, difference = ?, note = ? WHERE id = ?").run(actualQty, difference, note, itemId);
+  revalidatePath(`/audit/${item.audit_id}`);
+}
+
+export async function completeAudit(formData: FormData) {
+  const auditId = parseInt(formData.get("audit_id") as string);
+  if (!auditId) throw new Error("Missing audit ID");
+  db.prepare("UPDATE physical_audits SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(auditId);
+  revalidatePath("/audit");
+  redirect("/audit");
+}
+
+export async function applyAuditCorrections(formData: FormData) {
+  const auditId = parseInt(formData.get("audit_id") as string);
+  if (!auditId) throw new Error("Missing audit ID");
+  const items = db.prepare(`
+    SELECT aai.product_id, aai.actual_qty, p.quantity as current_qty
+    FROM physical_audit_items aai
+    JOIN products p ON p.id = aai.product_id
+    WHERE aai.audit_id = ? AND aai.actual_qty IS NOT NULL AND aai.difference != 0
+  `).all(auditId) as any[];
+  const update = db.prepare("UPDATE products SET quantity = ? WHERE id = ?");
+  for (const item of items) {
+    update.run(item.actual_qty, item.product_id);
+  }
+  revalidatePath("/audit");
+  redirect(`/audit/${auditId}`);
+}
+
 // === CUSTOMER ORDERS ===
 export async function createCustomerOrder(formData: FormData) {
   const customer_id = formData.get("customer_id") ? parseInt(formData.get("customer_id") as string) : null;

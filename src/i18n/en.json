@@ -12,6 +12,7 @@
     "inventory": "Inventory",
     "fbLive": "FB Live",
     "stock": "Inventory",
+    "audit": "Physical Audit",
     "orders": "Orders",
     "delivery": "Delivery",
     "debts": "Debts",
@@ -229,6 +230,34 @@
       "quantityForCase": "Quantity for Case",
       "costPerUnit": "Cost per Unit ($)",
       "costPerCase": "Cost per Case ($)"
+    }
+  },
+  "audit": {
+    "title": "Physical Audit",
+    "subtitle": "Reconcile physical stock counts against system records",
+    "new": "New Audit",
+    "newSubtitle": "All products will be pre-loaded with their current quantities",
+    "name": "Audit Name",
+    "start": "Start Audit",
+    "statuses": { "in_progress": "In Progress", "completed": "Completed", "cancelled": "Cancelled" },
+    "counted": "Counted",
+    "discrepancies": "Discrepancies",
+    "items": "Items",
+    "empty": "No physical audits yet",
+    "emptyCta": "Start your first audit",
+    "created": "Created",
+    "count": "Count",
+    "complete": "Complete Audit",
+    "applyCorrections": "Apply Corrections",
+    "noDiscrepancies": "✓ All items match — no discrepancies found",
+    "notePlaceholder": "Note...",
+    "table": {
+      "product": "Product",
+      "sku": "SKU",
+      "expected": "Expected",
+      "actual": "Actual Count",
+      "difference": "Diff",
+      "note": "Note"
     }
   },
   "suppliers": {
