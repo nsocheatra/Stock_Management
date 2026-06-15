@@ -185,13 +185,10 @@
     "title": "ការគ្រប់គ្រងស្តុក",
     "subtitle": "តាមដានកម្រិតស្តុក តាមដានចលនា និងគ្រប់គ្រងសារពើភ័ណ្ឌ។",
     "stockIn": "បញ្ចូលស្តុក",
-    "stockOut": "ដកស្តុក",
     "stockInEntry": "បញ្ចូលស្តុក",
-    "stockOutEntry": "ដកស្តុក",
     "currentInventory": "សារពើភ័ណ្ឌបច្ចុប្បន្ន",
     "productCount": "{count} ផលិតផល",
     "stockInTooltip": "បញ្ចូលស្តុក",
-    "stockOutTooltip": "ដកស្តុក",
     "kpi": {
       "totalProducts": "ផលិតផលសរុប",
       "totalStock": "ស្តុកសរុប",

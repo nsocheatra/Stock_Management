@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { Plus, Minus, Package, AlertTriangle, Warehouse, DollarSign, ArrowDownUp } from "lucide-react";
+import { Plus, Package, AlertTriangle, Warehouse, DollarSign, ArrowDownUp } from "lucide-react";
 import { T } from "@/components/T";
 
 interface ProductRow {
@@ -59,13 +59,7 @@ export default function StockPage() {
             <Plus className="size-4" />
             <span className="text-sm font-semibold"><T k="stock.stockIn" /></span>
           </Link>
-          <Link
-            href="/stock/out"
-            className="flex items-center gap-2 bg-gradient-to-r from-rose-600 to-red-600 text-white px-4.5 py-2.5 rounded-xl hover:from-rose-500 hover:to-red-500 active:scale-95 transition-all duration-200 shadow-lg shadow-rose-500/10 border border-rose-500/20"
-          >
-            <Minus className="size-4" />
-            <span className="text-sm font-semibold"><T k="stock.stockOut" /></span>
-          </Link>
+
         </div>
       </div>
 
@@ -175,13 +169,7 @@ export default function StockPage() {
                         >
                           <Plus className="size-3.5" />
                         </Link>
-                        <Link
-                          href="/stock/out"
-                          className="p-1.5 rounded-lg hover:bg-rose-500/10 text-muted hover:text-rose-400 transition-colors"
-                          title="Stock Out"
-                        >
-                          <Minus className="size-3.5" />
-                        </Link>
+
                       </div>
                     </td>
                   </tr>

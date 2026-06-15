@@ -185,13 +185,10 @@
     "title": "Inventory Management",
     "subtitle": "Monitor stock levels, track movements, and manage inventory.",
     "stockIn": "Stock In",
-    "stockOut": "Stock Out",
     "stockInEntry": "Stock In Entry",
-    "stockOutEntry": "Stock Out Entry",
     "currentInventory": "Current Inventory",
     "productCount": "{count} product{plural}",
     "stockInTooltip": "Stock In",
-    "stockOutTooltip": "Stock Out",
     "kpi": {
       "totalProducts": "Total Products",
       "totalStock": "Total Stock",
