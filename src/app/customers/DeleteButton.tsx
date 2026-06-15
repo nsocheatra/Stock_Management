@@ -2,12 +2,14 @@
 
 import { Trash2 } from "lucide-react";
 import { deleteCustomer } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 export default function DeleteCustomerButton({ id }: { id: number }) {
+  const { t } = useTranslation();
   return (
     <form
       action={async () => {
-        if (confirm("Delete this customer?")) {
+        if (confirm(t("customers.deleteConfirm"))) {
           await deleteCustomer(id);
         }
       }}

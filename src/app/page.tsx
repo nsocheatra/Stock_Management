@@ -1,6 +1,7 @@
 import { db } from "@/lib/db";
 import { Package, Truck, AlertTriangle, TrendingUp } from "lucide-react";
 import BarChartWidget from "@/components/BarChartWidget";
+import { T } from "@/components/T";
 
 interface DashboardData {
   totalProducts: number;
@@ -37,7 +38,7 @@ export default function DashboardPage() {
 
   const cards = [
     {
-      label: "Total Products",
+      label: <T k="dashboard.kpi.totalProducts" />,
       value: data.totalProducts,
       icon: Package,
       gradient: "from-violet-500 to-indigo-500",
@@ -45,7 +46,7 @@ export default function DashboardPage() {
       iconColor: "text-violet-400 bg-violet-500/10 border border-violet-500/20",
     },
     {
-      label: "Suppliers",
+      label: <T k="dashboard.kpi.suppliers" />,
       value: data.totalSuppliers,
       icon: Truck,
       gradient: "from-emerald-500 to-teal-500",
@@ -53,7 +54,7 @@ export default function DashboardPage() {
       iconColor: "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20",
     },
     {
-      label: "Low Stock Items",
+      label: <T k="dashboard.kpi.lowStock" />,
       value: data.lowStock,
       icon: AlertTriangle,
       gradient: "from-rose-500 to-amber-500",
@@ -63,7 +64,7 @@ export default function DashboardPage() {
         : "text-zinc-400 bg-zinc-500/10 border border-zinc-500/20",
     },
     {
-      label: "Recent Movements",
+      label: <T k="dashboard.kpi.recentMovements" />,
       value: data.movements.length,
       icon: TrendingUp,
       gradient: "from-cyan-500 to-blue-500",
@@ -76,18 +77,18 @@ export default function DashboardPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-          Dashboard Overview
+          <T k="dashboard.title" />
         </h1>
-        <p className="text-sm text-faint mt-1">Real-time indicators and recent warehousing movements.</p>
+        <p className="text-sm text-faint mt-1"><T k="dashboard.subtitle" /></p>
       </div>
 
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {cards.map((card) => {
+        {cards.map((card, i) => {
           const Icon = card.icon;
           return (
             <div
-              key={card.label}
+              key={i}
               className={`group relative bg-surface-blur border-surface rounded-2xl p-6 flex items-center gap-5 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5 shadow-lg ${card.glowColor}`}
             >
               <div className={`p-3.5 rounded-xl ${card.iconColor} transition-colors duration-300`}>
@@ -110,14 +111,14 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-violet-500/20 to-transparent" />
           <h2 className="text-lg font-semibold text-default mb-6 flex items-center gap-2">
             <span className="size-2 rounded-full bg-violet-400 shadow-md shadow-violet-400/50" />
-            Stock Levels by Product
+            <T k="dashboard.charts.stockLevels" />
           </h2>
           {data.products.length > 0 ? (
             <div className="pt-2">
               <BarChartWidget data={data.products} />
             </div>
           ) : (
-            <p className="text-faint text-center py-12">No products registered yet</p>
+            <p className="text-faint text-center py-12"><T k="dashboard.charts.noProducts" /></p>
           )}
         </div>
 
@@ -126,7 +127,7 @@ export default function DashboardPage() {
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
           <h2 className="text-lg font-semibold text-default mb-6 flex items-center gap-2">
             <span className="size-2 rounded-full bg-cyan-400 shadow-md shadow-cyan-400/50" />
-            Recent Stock Activities
+            <T k="dashboard.charts.recentActivities" />
           </h2>
           {data.movements.length > 0 ? (
             <div className="space-y-4">
@@ -137,7 +138,7 @@ export default function DashboardPage() {
                 >
                   <div className="min-w-0">
                     <p className="font-semibold text-default truncate">{m.product_name}</p>
-                    <p className="text-xs text-faint mt-0.5 truncate">{m.note || "No reference note"}</p>
+                    <p className="text-xs text-faint mt-0.5 truncate">{m.note || <T k="dashboard.noReference" />}</p>
                   </div>
                   <span
                     className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 border ${
@@ -146,14 +147,14 @@ export default function DashboardPage() {
                         : "bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-sm shadow-rose-500/5"
                     }`}
                   >
-                    {m.type === "IN" ? "Stock In +" : "Stock Out -"}
+                    {m.type === "IN" ? <T k="dashboard.movementIn" /> : <T k="dashboard.movementOut" />}
                     {m.quantity}
                   </span>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-faint text-center py-12">No movements logged yet</p>
+            <p className="text-faint text-center py-12"><T k="dashboard.charts.noMovements" /></p>
           )}
         </div>
       </div>

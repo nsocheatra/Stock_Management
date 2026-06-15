@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { Plus, Minus, Package, AlertTriangle, Warehouse, DollarSign, ArrowDownUp } from "lucide-react";
+import { T } from "@/components/T";
 
 interface ProductRow {
   id: number;
@@ -46,9 +47,9 @@ export default function StockPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-            Inventory Management
+            <T k="stock.title" />
           </h1>
-          <p className="text-sm text-faint mt-1">Monitor stock levels, track movements, and manage inventory.</p>
+          <p className="text-sm text-faint mt-1"><T k="stock.subtitle" /></p>
         </div>
         <div className="flex gap-3">
           <Link
@@ -56,14 +57,14 @@ export default function StockPage() {
             className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4.5 py-2.5 rounded-xl hover:from-emerald-500 hover:to-teal-500 active:scale-95 transition-all duration-200 shadow-lg shadow-emerald-500/10 border border-emerald-500/20"
           >
             <Plus className="size-4" />
-            <span className="text-sm font-semibold">Stock In</span>
+            <span className="text-sm font-semibold"><T k="stock.stockIn" /></span>
           </Link>
           <Link
             href="/stock/out"
             className="flex items-center gap-2 bg-gradient-to-r from-rose-600 to-red-600 text-white px-4.5 py-2.5 rounded-xl hover:from-rose-500 hover:to-red-500 active:scale-95 transition-all duration-200 shadow-lg shadow-rose-500/10 border border-rose-500/20"
           >
             <Minus className="size-4" />
-            <span className="text-sm font-semibold">Stock Out</span>
+            <span className="text-sm font-semibold"><T k="stock.stockOut" /></span>
           </Link>
         </div>
       </div>
@@ -76,7 +77,7 @@ export default function StockPage() {
               <Package className="size-5 text-violet-400" />
             </div>
             <div>
-              <p className="text-xs text-faint uppercase tracking-wider font-medium">Total Products</p>
+              <p className="text-xs text-faint uppercase tracking-wider font-medium"><T k="stock.kpi.totalProducts" /></p>
               <p className="text-2xl font-extrabold text-default mt-0.5">{totalProducts}</p>
             </div>
           </div>
@@ -87,7 +88,7 @@ export default function StockPage() {
               <Warehouse className="size-5 text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-faint uppercase tracking-wider font-medium">Total Stock</p>
+              <p className="text-xs text-faint uppercase tracking-wider font-medium"><T k="stock.kpi.totalStock" /></p>
               <p className="text-2xl font-extrabold text-default mt-0.5">{totalStock}</p>
             </div>
           </div>
@@ -98,7 +99,7 @@ export default function StockPage() {
               <AlertTriangle className={`size-5 ${lowStockCount > 0 ? "text-rose-400" : "text-zinc-400"}`} />
             </div>
             <div>
-              <p className="text-xs text-faint uppercase tracking-wider font-medium">Low Stock</p>
+              <p className="text-xs text-faint uppercase tracking-wider font-medium"><T k="stock.kpi.lowStock" /></p>
               <p className={`text-2xl font-extrabold mt-0.5 ${lowStockCount > 0 ? "text-rose-400" : "text-default"}`}>{lowStockCount}</p>
             </div>
           </div>
@@ -109,7 +110,7 @@ export default function StockPage() {
               <DollarSign className="size-5 text-cyan-400" />
             </div>
             <div>
-              <p className="text-xs text-faint uppercase tracking-wider font-medium">Inventory Value</p>
+              <p className="text-xs text-faint uppercase tracking-wider font-medium"><T k="stock.kpi.inventoryValue" /></p>
               <p className="text-2xl font-extrabold text-default mt-0.5">${inventoryValue.toFixed(2)}</p>
             </div>
           </div>
@@ -121,8 +122,8 @@ export default function StockPage() {
         <div className="bg-rose-500/5 border border-rose-500/20 rounded-xl p-4 flex items-center gap-3">
           <AlertTriangle className="size-5 text-rose-400 shrink-0" />
           <p className="text-sm text-rose-300">
-            <span className="font-bold">{lowStockCount}</span> product{lowStockCount > 1 ? "s" : ""} {lowStockCount > 1 ? "are" : "is"} below minimum stock level.
-            <Link href="/products" className="ml-2 underline hover:text-rose-200">View products</Link>
+            <T k="stock.lowStockAlert" vars={{ count: lowStockCount, be: lowStockCount > 1 ? "are" : "is" }} />
+            <Link href="/products" className="ml-2 underline hover:text-rose-200"><T k="stock.viewProducts" /></Link>
           </p>
         </div>
       )}
@@ -130,22 +131,22 @@ export default function StockPage() {
       {/* Inventory Table */}
       <div className="bg-surface-blur border-surface rounded-2xl shadow-xl overflow-hidden">
         <div className="p-4 border-b border-surface flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-default">Current Inventory</h2>
-          <span className="text-xs text-faint">{products.length} product{products.length !== 1 ? "s" : ""}</span>
+          <h2 className="text-sm font-semibold text-default"><T k="stock.currentInventory" /></h2>
+          <span className="text-xs text-faint"><T k="stock.productCount" vars={{ count: products.length, plural: products.length !== 1 ? "s" : "" }} /></span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-surface bg-header">
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider">Product</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider">SKU</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider">Barcode</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider">Category</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right">Price</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right">On Hand</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right">Min Stock</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right">Value</th>
-                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right">Actions</th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider"><T k="stock.table.product" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider"><T k="stock.table.sku" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider"><T k="stock.table.barcode" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider"><T k="stock.table.category" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="stock.table.price" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="stock.table.onHand" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="stock.table.minStock" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="stock.table.value" /></th>
+                <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="common.actions" /></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-surface">
@@ -190,8 +191,8 @@ export default function StockPage() {
                 <tr>
                   <td colSpan={9} className="text-center py-16 text-faint">
                     <Warehouse className="size-10 mx-auto mb-3 opacity-40" />
-                    <p className="text-sm">No products in inventory</p>
-                    <Link href="/products/new" className="text-xs text-violet-400 hover:underline mt-1 inline-block">Add your first product</Link>
+                    <p className="text-sm"><T k="stock.empty" /></p>
+                    <Link href="/products/new" className="text-xs text-violet-400 hover:underline mt-1 inline-block"><T k="stock.emptyCta" /></Link>
                   </td>
                 </tr>
               )}
@@ -205,9 +206,9 @@ export default function StockPage() {
         <div className="p-4 border-b border-surface flex items-center justify-between">
           <h2 className="text-sm font-semibold text-default flex items-center gap-2">
             <ArrowDownUp className="size-4 text-muted" />
-            Recent Movements
+<T k="stock.recentMovements" />
           </h2>
-          <Link href="/stock" className="text-xs text-violet-400 hover:underline">View all</Link>
+          <Link href="/stock" className="text-xs text-violet-400 hover:underline"><T k="stock.viewAll" /></Link>
         </div>
         {movements.length > 0 ? (
           <div className="divide-y divide-surface">
@@ -232,7 +233,7 @@ export default function StockPage() {
           </div>
         ) : (
           <div className="text-center py-10 text-faint">
-            <p className="text-sm">No movements recorded yet</p>
+            <p className="text-sm"><T k="stock.noMovements" /></p>
           </div>
         )}
       </div>

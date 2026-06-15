@@ -4,8 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { deleteUser } from "@/lib/auth";
+import { useTranslation } from "@/i18n/useTranslation";
 
 export default function DeleteButton({ userId }: { userId: number }) {
+  const { t } = useTranslation();
   const [confirm, setConfirm] = useState(false);
   const router = useRouter();
 
@@ -18,8 +20,8 @@ export default function DeleteButton({ userId }: { userId: number }) {
   if (confirm) {
     return (
       <div className="flex items-center gap-1">
-        <button onClick={handleDelete} className="px-2 py-1 rounded-lg text-[10px] font-medium bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors cursor-pointer">Confirm</button>
-        <button onClick={() => setConfirm(false)} className="px-2 py-1 rounded-lg text-[10px] font-medium bg-surface text-muted hover:text-default transition-colors cursor-pointer">Cancel</button>
+        <button onClick={handleDelete} className="px-2 py-1 rounded-lg text-[10px] font-medium bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 transition-colors cursor-pointer">{t("common.confirm")}</button>
+        <button onClick={() => setConfirm(false)} className="px-2 py-1 rounded-lg text-[10px] font-medium bg-surface text-muted hover:text-default transition-colors cursor-pointer">{t("common.cancel")}</button>
       </div>
     );
   }

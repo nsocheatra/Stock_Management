@@ -9,15 +9,21 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslation } from "@/i18n/useTranslation";
 
-// Custom premium glass tooltip component
-const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ payload: { name: string }; value: number }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  const { t } = useTranslation();
   if (active && payload && payload.length) {
     return (
       <div className="bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-3.5 rounded-xl shadow-xl">
         <p className="text-xs text-zinc-400 font-medium mb-1">{payload[0].payload.name}</p>
         <p className="text-sm font-bold text-violet-400">
-          Stock: <span className="text-white">{payload[0].value} units</span>
+          {t("chart.stock")} <span className="text-white">{payload[0].value} {t("chart.units")}</span>
         </p>
       </div>
     );

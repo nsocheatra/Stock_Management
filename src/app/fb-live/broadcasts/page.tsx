@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import BroadcastsClient from "./BroadcastsClient";
 
@@ -17,19 +18,17 @@ export default function BroadcastsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-default">Broadcasts</h2>
-          <p className="text-sm text-faint mt-1">
-            Create and send broadcast messages to your Messenger conversations.
-          </p>
+          <h2 className="text-xl font-bold text-default"><T k="fbLive.broadcasts.title" /></h2>
+          <p className="text-sm text-faint mt-1"><T k="fbLive.broadcasts.subtitle" /></p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-center px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
             <p className="text-xs font-bold text-emerald-300">{totalSent}</p>
-            <p className="text-[10px] text-faint">Messages Sent</p>
+            <p className="text-[10px] text-faint"><T k="fbLive.broadcasts.sent" /></p>
           </div>
           <div className="text-center px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
             <p className="text-xs font-bold text-violet-300">{totalRecipients}</p>
-            <p className="text-[10px] text-faint">Reached</p>
+            <p className="text-[10px] text-faint"><T k="fbLive.broadcasts.reached" /></p>
           </div>
         </div>
       </div>

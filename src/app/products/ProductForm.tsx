@@ -3,6 +3,7 @@
 import { useActionState, useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
 import { createProduct, updateProduct } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 type Supplier = { id: number; name: string };
 type Product = {
@@ -37,6 +38,7 @@ export default function ProductForm({
   product?: Product;
 }) {
   const isUpdate = !!product;
+  const { t } = useTranslation();
   const [sku, setSku] = useState(product?.sku ?? "");
   const [skuEdited, setSkuEdited] = useState(!!product?.sku);
   const [barcode, setBarcode] = useState(product?.barcode ?? "");
@@ -80,41 +82,41 @@ export default function ProductForm({
     }
   };
 
-  const [state, formAction] = useActionState(wrappedAction, null);
+  const [, formAction] = useActionState(wrappedAction, null);
 
 
   return (
     <form action={formAction} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div>
-          <label className="input-label">Name</label>
+            <label className="input-label">{t("products.fields.name")}</label>
           <input
             name="name"
             defaultValue={product?.name}
             required
             onChange={handleNameChange}
-            placeholder="e.g. Wireless Mouse"
+            placeholder={t("products.placeholders.name")}
             className="input-field"
           />
         </div>
         <div>
-          <label className="input-label">SKU</label>
+            <label className="input-label">{t("products.fields.sku")}</label>
           <input
             name="sku"
             value={sku}
             required
             onChange={(e) => { setSku(e.target.value); setSkuEdited(true); }}
-            placeholder="Auto-generated"
+            placeholder={t("products.placeholders.sku")}
             className="input-field font-mono"
           />
         </div>
         <div>
-          <label className="input-label">Barcode</label>
+            <label className="input-label">{t("products.fields.barcode")}</label>
           <input
             name="barcode"
             value={barcode}
             onChange={(e) => setBarcode(e.target.value)}
-            placeholder="Scan or enter barcode"
+            placeholder={t("products.placeholders.barcode")}
             className="input-field"
           />
         </div>
@@ -122,43 +124,43 @@ export default function ProductForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="input-label">Unit Price ($)</label>
+            <label className="input-label">{t("products.fields.unitPrice")}</label>
           <input
             name="unit_price"
             type="number"
             step="0.01"
             defaultValue={product?.unit_price ?? ""}
-            placeholder="0.00"
+            placeholder={t("products.placeholders.price")}
             className="input-field"
           />
         </div>
         <div>
-          <label className="input-label">Price per Case ($)</label>
+            <label className="input-label">{t("products.fields.pricePerCase")}</label>
           <input
             name="price_per_case"
             type="number"
             step="0.01"
             defaultValue={product?.price_per_case ?? ""}
-            placeholder="0.00"
+            placeholder={t("products.placeholders.price")}
             className="input-field"
           />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="input-label">Price (legacy, used for calculations)</label>
+            <label className="input-label">{t("products.fields.price")}</label>
           <input
             name="price"
             type="number"
             step="0.01"
             defaultValue={product?.price}
             required
-            placeholder="0.00"
+            placeholder={t("products.placeholders.price")}
             className="input-field"
           />
         </div>
         <div>
-          <label className="input-label">Quantity</label>
+            <label className="input-label">{t("products.fields.quantity")}</label>
           <input
             name="quantity"
             type="number"
@@ -171,21 +173,21 @@ export default function ProductForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="input-label">Category</label>
+            <label className="input-label">{t("products.fields.category")}</label>
           <input
             name="category"
             defaultValue={product?.category ?? ""}
-            placeholder="e.g. Electronics"
+            placeholder={t("products.placeholders.category")}
             className="input-field"
           />
         </div>
         <div>
-          <label className="input-label">Min Stock Level</label>
+            <label className="input-label">{t("products.fields.minStock")}</label>
           <input
             name="minStock"
             type="number"
             defaultValue={product?.minStock ?? 5}
-            placeholder="5"
+            placeholder={t("products.placeholders.minStock")}
             className="input-field"
           />
         </div>
@@ -193,27 +195,28 @@ export default function ProductForm({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="input-label">Description</label>
+            <label className="input-label">{t("products.fields.description")}</label>
           <textarea
             name="description"
             rows={3}
             defaultValue={product?.description ?? ""}
-            placeholder="Brief product notes or details..."
+            placeholder={t("products.placeholders.description")}
             className="input-field resize-none"
           />
         </div>
         <div>
-          <label className="input-label">Image URL</label>
+            <label className="input-label">{t("products.fields.imageUrl")}</label>
           <input
             name="image_url"
             type="url"
             value={imageUrl}
             onChange={(e) => { setImageUrl(e.target.value); setImageError(false); }}
-            placeholder="https://example.com/product.jpg"
+            placeholder={t("products.placeholders.imageUrl")}
             className="input-field"
           />
           {imageUrl && !imageError && (
             <div className="mt-2 rounded-lg overflow-hidden border border-surface w-24 h-24">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageUrl}
                 alt="Preview"
@@ -223,19 +226,19 @@ export default function ProductForm({
             </div>
           )}
           {imageError && imageUrl && (
-            <div className="mt-2 text-[10px] text-rose-400">Could not load image</div>
+            <div className="mt-2 text-[10px] text-rose-400">{t("products.imageError")}</div>
           )}
         </div>
       </div>
 
       <div>
-        <label className="input-label">Supplier</label>
+        <label className="input-label">{t("products.fields.supplier")}</label>
         <select
           name="supplierId"
           defaultValue={product?.supplierId ?? ""}
           className="input-field"
         >
-          <option value="" className="select-option">No supplier</option>
+          <option value="" className="select-option">{t("products.noSupplier")}</option>
           {suppliers.map((s) => (
             <option key={s.id} value={s.id} className="select-option">
               {s.name}
@@ -249,13 +252,13 @@ export default function ProductForm({
           type="submit"
           className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer text-sm"
         >
-          {isUpdate ? "Update Product" : "Create Product"}
+          {isUpdate ? t("products.edit") : t("products.new")}
         </button>
         <Link
           href="/products"
           className="cancel-btn"
         >
-          Cancel
+          {t("common.cancel")}
         </Link>
       </div>
     </form>

@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import CustomerForm from "../CustomerForm";
@@ -24,7 +25,7 @@ export default async function EditCustomerPage({
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
       <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-        Edit Customer
+        <T k="customers.edit" />
       </h1>
       <div className="bg-surface-blur border-surface rounded-2xl p-8 shadow-xl">
         <CustomerForm customer={customer} />

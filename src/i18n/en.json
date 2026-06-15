@@ -11,6 +11,8 @@
     "products": "Products",
     "inventory": "Inventory",
     "fbLive": "FB Live",
+    "stock": "Inventory",
+    "fblive": "FB Live",
     "suppliers": "Suppliers",
     "reports": "Reports",
     "settings": "Settings",
@@ -35,7 +37,16 @@
     "credit": "Credit",
     "date": "Date",
     "note": "Note",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "justNow": "just now",
+    "minutesAgo": "{n}m ago",
+    "hoursAgo": "{n}h ago",
+    "daysAgo": "{n}d ago"
+  },
+  "chart": {
+    "stock": "Stock:",
+    "quantity": "Quantity:",
+    "units": "units"
   },
   "pos": {
     "title": "Point of Sale",
@@ -169,6 +180,10 @@
     "stockOut": "Stock Out",
     "stockInEntry": "Stock In Entry",
     "stockOutEntry": "Stock Out Entry",
+    "currentInventory": "Current Inventory",
+    "productCount": "{count} product{plural}",
+    "stockInTooltip": "Stock In",
+    "stockOutTooltip": "Stock Out",
     "kpi": {
       "totalProducts": "Total Products",
       "totalStock": "Total Stock",
@@ -203,7 +218,10 @@
       "notePlaceholder": "e.g. Purchase order #9213",
       "productOption": "{name} ({sku}) - Current Stock: {qty}",
       "add": "Add Stock Entry",
-      "remove": "Remove Stock Entry"
+      "remove": "Remove Stock Entry",
+      "quantityForCase": "Quantity for Case",
+      "costPerUnit": "Cost per Unit ($)",
+      "costPerCase": "Cost per Case ($)"
     }
   },
   "suppliers": {
@@ -254,6 +272,7 @@
       "total": "Total",
       "date": "Date"
     },
+    "uncategorized": "Uncategorized",
     "walkIn": "Walk-in",
     "allocation": {
       "byProduct": "Stock Allocation by Product",
@@ -278,7 +297,7 @@
     "pin": "PIN",
     "email": "Email",
     "password": "Password",
-    "emailPlaceholder": "admin@system.local",
+    "emailPlaceholder": "you@example.com",
     "passwordPlaceholder": "Enter password",
     "signIn": "Sign In",
     "signingIn": "Signing in...",
@@ -288,7 +307,7 @@
     "quickLoginLoading": "Signing in...",
     "invalidPin": "Invalid PIN",
     "loginFailed": "Login failed",
-    "defaultHint": "Default: admin@system.local / admin123"
+    "defaultHint": ""
   },
   "dashboard": {
     "title": "Dashboard Overview",
@@ -305,7 +324,9 @@
       "recentActivities": "Recent Stock Activities",
       "noMovements": "No movements logged yet"
     },
-    "noReference": "No reference note"
+    "noReference": "No reference note",
+    "movementIn": "Stock In +",
+    "movementOut": "Stock Out -"
   },
   "settings": {
     "title": "Settings",
@@ -386,6 +407,24 @@
       "productOption": "{name} ({sku}) — {qty} in stock",
       "addKeyword": "Add Keyword",
       "activeKeywords": "Active Keywords",
+      "inStock": "in stock",
+      "untitled": "Untitled",
+      "processing": "Processing",
+      "draft": "Draft",
+      "clear": "Clear",
+      "table": {
+        "no": "No",
+        "name": "Name",
+        "comment": "Comment",
+        "time": "Time",
+        "action": "Action",
+        "status": "Status"
+      },
+      "statuses": {
+        "deleted": "Deleted",
+        "new": "New",
+        "old": "Old"
+      },
       "simulate": {
         "customerName": "Customer Name",
         "commentText": "Comment Text",
@@ -675,7 +714,7 @@
     "allUsers": "All Users",
     "usersCount": "{count} users",
     "noUsers": "No users yet",
-    "defaultHint": "Default admin: admin@system.local / admin123",
+    "defaultHint": "",
     "roles": {
       "admin": "admin",
       "cashier": "cashier",
@@ -698,6 +737,7 @@
       "cashier": "Cashier",
       "admin": "Admin"
     },
+    "pinLabel": "PIN: {pin}",
     "add": "Add User",
     "failed": "Failed to create user"
   },

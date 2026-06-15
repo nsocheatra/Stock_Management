@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { saveCustomer } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 type Customer = {
   id: number;
@@ -15,6 +16,7 @@ type Customer = {
 
 export default function CustomerForm({ customer }: { customer?: Customer }) {
   const isUpdate = !!customer;
+  const { t } = useTranslation();
 
   const wrappedAction = async (_prev: unknown, formData: FormData) => {
     if (isUpdate && customer) {
@@ -35,52 +37,52 @@ export default function CustomerForm({ customer }: { customer?: Customer }) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="input-label">Name</label>
+            <label className="input-label">{t("customers.fields.name")}</label>
           <input
             name="name"
             defaultValue={customer?.name}
             required
-            placeholder="e.g. John Doe"
+            placeholder={t("customers.placeholders.name")}
             className="input-field"
           />
         </div>
         <div>
-          <label className="input-label">Type</label>
+            <label className="input-label">{t("customers.fields.type")}</label>
           <select
             name="customer_type"
             defaultValue={customer?.customer_type || "retail"}
             className="input-field"
           >
-            <option value="retail">Retailer</option>
-            <option value="wholesale">Wholesaler</option>
+            <option value="retail">{t("customers.types.retailer")}</option>
+            <option value="wholesale">{t("customers.types.wholesaler")}</option>
           </select>
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="input-label">Phone</label>
+            <label className="input-label">{t("customers.fields.phone")}</label>
           <input
             name="phone"
             type="tel"
             defaultValue={customer?.phone ?? ""}
-            placeholder="e.g. +1 234 567 890"
+            placeholder={t("customers.placeholders.phone")}
             className="input-field"
           />
         </div>
         <div>
-          <label className="input-label">Address</label>
+            <label className="input-label">{t("customers.fields.address")}</label>
           <input
             name="address"
             defaultValue={customer?.address ?? ""}
-            placeholder="e.g. 123 Main Street"
+            placeholder={t("customers.placeholders.address")}
             className="input-field"
           />
         </div>
       </div>
 
       <div>
-        <label className="input-label">Credit ($)</label>
+        <label className="input-label">{t("customers.fields.credit")}</label>
         <input
           name="credit"
           type="number"
@@ -95,10 +97,10 @@ export default function CustomerForm({ customer }: { customer?: Customer }) {
           type="submit"
           className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer text-sm"
         >
-          {isUpdate ? "Update Customer" : "Create Customer"}
+          {isUpdate ? t("customers.edit") : t("customers.add")}
         </button>
         <Link href="/customers" className="cancel-btn">
-          Cancel
+          {t("common.cancel")}
         </Link>
       </div>
     </form>

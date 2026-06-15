@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import AIClient from "./AIClient";
 
@@ -25,11 +26,8 @@ export default function AIPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-default">AI Assistant</h2>
-        <p className="text-sm text-faint mt-1">
-          Configure AI-powered responses and manage your knowledge base.
-          When no keyword rule matches, the AI generates smart replies from your store data and FAQs.
-        </p>
+        <h2 className="text-xl font-bold text-default"><T k="fbLive.ai.title" /></h2>
+        <p className="text-sm text-faint mt-1"><T k="fbLive.ai.subtitle" /></p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
@@ -43,27 +41,27 @@ export default function AIPage() {
           </div>
           {/* AI Status Card */}
           <div className="bg-surface-blur border border-surface rounded-2xl p-5 shadow-xl space-y-3">
-            <h3 className="text-sm font-semibold text-default">How AI Responses Work</h3>
+            <h3 className="text-sm font-semibold text-default"><T k="fbLive.ai.howItWorks" /></h3>
             <ol className="space-y-2 text-xs text-muted">
               <li className="flex items-start gap-2">
                 <span className="size-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">1</span>
-                <span>User sends a message to your Page</span>
+                <span><T k="fbLive.ai.steps.0" /></span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="size-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">2</span>
-                <span>Check custom auto-reply rules for a match</span>
+                <span><T k="fbLive.ai.steps.1" /></span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="size-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">3</span>
-                <span>If no rule matches, search FAQ knowledge base</span>
+                <span><T k="fbLive.ai.steps.2" /></span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="size-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">4</span>
-                <span>If no FAQ found, use AI to generate a response</span>
+                <span><T k="fbLive.ai.steps.3" /></span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="size-5 rounded-full bg-violet-500/20 text-violet-300 flex items-center justify-center text-[10px] font-bold shrink-0 mt-0.5">5</span>
-                <span>Send the reply back to the user</span>
+                <span><T k="fbLive.ai.steps.4" /></span>
               </li>
             </ol>
           </div>
@@ -78,13 +76,13 @@ function FAQSnippet({ faqs }: { faqs: Array<{ id: number; question: string; answ
   return (
     <div>
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-sm font-semibold text-default">Knowledge Base ({faqs.length})</h3>
+        <h3 className="text-sm font-semibold text-default"><T k="fbLive.ai.knowledgeBase" vars={{ count: faqs.length }} /></h3>
         {faqCategories.length > 0 && (
-          <span className="text-[10px] text-faint">{faqCategories.length} categories</span>
+          <span className="text-[10px] text-faint"><T k="fbLive.ai.categories" vars={{ count: faqCategories.length }} /></span>
         )}
       </div>
       <p className="text-xs text-faint mb-3">
-        FAQs are used by the AI to answer common questions. Add questions your customers frequently ask.
+        <T k="fbLive.ai.kbDescription" />
       </p>
       {faqs.length > 0 ? (
         <div className="space-y-1.5 max-h-64 overflow-y-auto">
@@ -100,8 +98,8 @@ function FAQSnippet({ faqs }: { faqs: Array<{ id: number; question: string; answ
         </div>
       ) : (
         <div className="text-center py-6 text-faint">
-          <p className="text-xs">No FAQs yet</p>
-          <p className="text-[10px] mt-1">Add FAQs to build your knowledge base</p>
+          <p className="text-xs"><T k="fbLive.ai.noFaqs" /></p>
+          <p className="text-[10px] mt-1"><T k="fbLive.ai.noFaqsHint" /></p>
         </div>
       )}
     </div>

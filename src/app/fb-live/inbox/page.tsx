@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import InboxClient from "./InboxClient";
 
@@ -23,14 +24,14 @@ export default function InboxPage() {
     <div className="h-[calc(100vh-220px)] flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
-          <h2 className="text-xl font-bold text-default">Inbox</h2>
+          <h2 className="text-xl font-bold text-default"><T k="fbLive.inbox.title" /></h2>
           {totalUnread > 0 && (
             <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-semibold">
-              {totalUnread} unread
+              <T k="fbLive.inbox.unread" vars={{ count: totalUnread }} />
             </span>
           )}
         </div>
-        <span className="text-xs text-faint">{conversations.length} conversations</span>
+        <span className="text-xs text-faint"><T k="fbLive.inbox.conversations" vars={{ count: conversations.length }} /></span>
       </div>
 
       <div className="flex-1 bg-surface-blur border-surface rounded-2xl shadow-xl overflow-hidden">

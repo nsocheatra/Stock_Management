@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, Package } from "lucide-react";
-import { addFBKeyword, deleteFBKeyword, simulateFBComment } from "@/lib/actions";
+import { addFBKeyword, deleteFBKeyword } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 type Product = { id: number; name: string; sku: string; quantity: number };
 type Keyword = { id: number; keyword: string; product_id: number; quantity: number; product_name: string; sku: string };
@@ -13,6 +14,7 @@ export default function FBLiveClient({ products, keywords }: { products: Product
   const [productId, setProductId] = useState("");
   const [qty, setQty] = useState(1);
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleAddKeyword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,28 +41,28 @@ export default function FBLiveClient({ products, keywords }: { products: Product
     <div>
       <form onSubmit={handleAddKeyword} className="space-y-3">
         <div>
-          <label className="input-label">Keyword</label>
+          <label className="input-label">{t("fbLive.main.fields.keyword")}</label>
           <input
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
-            placeholder="e.g. #product1"
+            placeholder={t("fbLive.main.keywordPlaceholder")}
             className="input-field"
             required
           />
         </div>
         <div>
-          <label className="input-label">Product</label>
+          <label className="input-label">{t("fbLive.main.fields.product")}</label>
           <select value={productId} onChange={(e) => setProductId(e.target.value)} className="input-field" required>
-            <option value="" className="select-option">Select product...</option>
+            <option value="" className="select-option">{t("fbLive.main.productPlaceholder")}</option>
             {products.map((p) => (
               <option key={p.id} value={p.id} className="select-option" disabled={p.quantity === 0}>
-                {p.name} ({p.sku}) — {p.quantity} in stock
+                {t("fbLive.main.productOption", { name: p.name, sku: p.sku, qty: p.quantity })}
               </option>
             ))}
           </select>
         </div>
         <div>
-          <label className="input-label">Qty per order</label>
+          <label className="input-label">{t("fbLive.main.fields.qtyPerOrder")}</label>
           <input
             type="number"
             min="1"
@@ -73,13 +75,13 @@ export default function FBLiveClient({ products, keywords }: { products: Product
           type="submit"
           className="w-full py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer"
         >
-          Add Keyword
+          {t("fbLive.main.addKeyword")}
         </button>
       </form>
 
       {keywords.length > 0 && (
         <div className="mt-4 space-y-2">
-          <p className="text-xs text-faint font-medium uppercase tracking-wider">Active Keywords</p>
+          <p className="text-xs text-faint font-medium uppercase tracking-wider">{t("fbLive.main.activeKeywords")}</p>
           {keywords.map((k) => (
             <div key={k.id} className="flex items-center justify-between p-2.5 rounded-xl border border-surface hover-surface transition-colors">
               <div className="min-w-0 flex-1">

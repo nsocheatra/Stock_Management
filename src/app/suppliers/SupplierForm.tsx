@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/useTranslation";
 
 type Supplier = {
   id: number;
@@ -19,6 +20,7 @@ export default function SupplierForm({
   action: ((formData: FormData) => Promise<void>) | ((id: number, formData: FormData) => Promise<void>);
 }) {
   const isUpdate = !!supplier;
+  const { t } = useTranslation();
 
   const wrappedAction = async (_prev: unknown, formData: FormData) => {
     if (isUpdate) {
@@ -28,49 +30,49 @@ export default function SupplierForm({
     }
   };
 
-  const [state, formAction] = useActionState(wrappedAction, null);
+  const [, formAction] = useActionState(wrappedAction, null);
 
   return (
     <form action={formAction} className="space-y-6">
       <div>
-        <label className="input-label">Name</label>
+        <label className="input-label">{t("suppliers.fields.name")}</label>
         <input
           name="name"
           defaultValue={supplier?.name}
           required
-          placeholder="e.g. Acme Corp"
+          placeholder={t("suppliers.placeholders.name")}
           className="input-field"
         />
       </div>
 
       <div>
-        <label className="input-label">Email</label>
+        <label className="input-label">{t("suppliers.fields.email")}</label>
         <input
           name="email"
           type="email"
           defaultValue={supplier?.email ?? ""}
-          placeholder="e.g. contact@acme.com"
+          placeholder={t("suppliers.placeholders.email")}
           className="input-field"
         />
       </div>
 
       <div>
-        <label className="input-label">Phone</label>
+        <label className="input-label">{t("suppliers.fields.phone")}</label>
         <input
           name="phone"
           defaultValue={supplier?.phone ?? ""}
-          placeholder="e.g. +1 (555) 019-2834"
+          placeholder={t("suppliers.placeholders.phone")}
           className="input-field"
         />
       </div>
 
       <div>
-        <label className="input-label">Address</label>
+        <label className="input-label">{t("suppliers.fields.address")}</label>
         <textarea
           name="address"
           rows={3}
           defaultValue={supplier?.address ?? ""}
-          placeholder="Corporate headquarters location..."
+          placeholder={t("suppliers.placeholders.address")}
           className="input-field resize-none"
         />
       </div>
@@ -80,13 +82,13 @@ export default function SupplierForm({
           type="submit"
           className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold px-6 py-3 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-[0.98] transition-all duration-200 shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer text-sm"
         >
-          {isUpdate ? "Update Supplier" : "Create Supplier"}
+          {isUpdate ? t("suppliers.edit") : t("suppliers.add")}
         </button>
         <Link
           href="/suppliers"
           className="cancel-btn"
         >
-          Cancel
+          {t("common.cancel")}
         </Link>
       </div>
     </form>

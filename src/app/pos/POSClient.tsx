@@ -1,16 +1,18 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useTranslation } from "@/i18n/useTranslation";
 import { Search, ShoppingCart, Scan, Minus, Plus, Trash2, Printer, Users, Building2, Store, Image as ImageIcon, Minimize2, Maximize2 } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
 import ReceiptView from "./ReceiptView";
 
-type Product = { id: number; name: string; sku: string; barcode: string | null; price: number; wholesale_price: number | null; selling_price: number | null; original_price: number | null; unit_price: number | null; price_per_case: number | null; quantity: number; image_url: string | null };
+type Product = { id: number; name: string; sku: string; barcode: string | null; price: number; wholesale_price: number | null; selling_price: number | null; original_price: number | null; unit_price: number | null; price_per_case: number | null; quantity: number; image_url: string | null; category: string | null };
 type Customer = { id: number; name: string; customer_type: string };
 type CartItem = { product: Product; qty: number; price: number };
 type ReceiptItem = { name: string; sku: string; price: number; qty: number };
 
 export default function POSClient({ products, customers }: { products: Product[]; customers: Customer[] }) {
+  const { t } = useTranslation();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [search, setSearch] = useState("");
   const [scanBuf, setScanBuf] = useState("");
@@ -111,7 +113,7 @@ export default function POSClient({ products, customers }: { products: Product[]
     }
     const result = await processPOS(formData);
     if ("error" in result) {
-      setMessage({ text: result.error || "Sale failed", ok: false });
+      setMessage({ text: result.error || t("pos.saleFailed"), ok: false });
       setTimeout(() => setMessage(null), 4000);
       return;
     }
@@ -119,7 +121,7 @@ export default function POSClient({ products, customers }: { products: Product[]
       const items = cart.map((item) => ({ name: item.product.name, sku: item.product.sku, price: item.price, qty: item.qty }));
       setCart([]);
       setSelectedCustomer(null);
-      setMessage({ text: "Sale completed successfully!", ok: true });
+      setMessage({ text: t("pos.saleSuccess"), ok: true });
       setReceiptItems(items);
       setTimeout(() => setMessage(null), 4000);
     }
@@ -155,23 +157,23 @@ export default function POSClient({ products, customers }: { products: Product[]
               }}
               className="input-field pl-10 appearance-none"
             >
-              <option value="">Walk-in Customer (Retail)</option>
+              <option value="">{t("pos.walkIn")}</option>
               {customers.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name} — {c.customer_type === "wholesale" ? "Wholesaler" : "Retailer"}
+                  {c.name} — {c.customer_type === "wholesale" ? t("customers.types.wholesaler") : t("customers.types.retailer")}
                 </option>
               ))}
             </select>
             {isWholesale && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs font-semibold text-emerald-400">
                 <Building2 className="size-3" />
-                Wholesale
+                {t("pos.wholesale")}
               </div>
             )}
             {selectedCustomer && !isWholesale && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs font-semibold text-sky-400">
                 <Store className="size-3" />
-                Retail
+                {t("pos.retail")}
               </div>
             )}
           </div>
@@ -183,14 +185,14 @@ export default function POSClient({ products, customers }: { products: Product[]
             ref={searchRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by name, SKU, or scan barcode..."
+            placeholder={t("pos.searchPlaceholder")}
             className="input-field pl-10"
             autoFocus
           />
           {scanBuf && (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-emerald-400">
               <Scan className="size-3" />
-              Scanning...
+              {t("pos.scanning")}
             </div>
           )}
         </div>
@@ -209,6 +211,7 @@ export default function POSClient({ products, customers }: { products: Product[]
             >
               {p.image_url ? (
                 <div className="w-full h-24 rounded-lg overflow-hidden mb-2 border border-surface">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.image_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 </div>
               ) : (
@@ -226,13 +229,13 @@ export default function POSClient({ products, customers }: { products: Product[]
               </div>
               <div className="flex items-center justify-between mt-1">
                 <span className={`text-[10px] px-1.5 py-0.5 rounded ${p.quantity <= 5 ? "bg-rose-500/15 text-rose-400" : "bg-emerald-500/10 text-emerald-400"}`}>
-                  {p.quantity} left
+                  {t("pos.itemsLeft", { qty: p.quantity })}
                 </span>
               </div>
             </button>
           ))}
           {search && filtered.length === 0 && (
-            <div className="col-span-full text-center py-12 text-muted">No products match your search</div>
+            <div className="col-span-full text-center py-12 text-muted">{t("pos.noMatch")}</div>
           )}
         </div>
       </div>
@@ -241,7 +244,7 @@ export default function POSClient({ products, customers }: { products: Product[]
       <button
         onClick={() => setMinimized((v) => !v)}
         className="absolute top-4 right-4 z-10 p-2 rounded-xl border border-surface text-muted hover:text-default hover:bg-surface transition-all cursor-pointer"
-        title={minimized ? "Show Cart" : "Minimize Cart"}
+        title={minimized ? t("pos.showCart") : t("pos.minimizeCart")}
       >
         {minimized ? <Maximize2 className="size-4" /> : <Minimize2 className="size-4" />}
       </button>
@@ -250,8 +253,8 @@ export default function POSClient({ products, customers }: { products: Product[]
       <div className={`w-96 flex flex-col border-l border-surface transition-all duration-300 ${minimized ? "w-0 border-l-0 overflow-hidden" : ""}`}>
         <div className="p-4 border-b border-surface flex items-center gap-2 shrink-0">
           <ShoppingCart className="size-4 text-muted" />
-          <span className="text-sm font-semibold text-default">Cart</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-surface text-muted">{itemCount} items</span>
+          <span className="text-sm font-semibold text-default">{t("pos.cart")}</span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-surface text-muted">{t("pos.items", { count: itemCount })}</span>
         </div>
 
         <div className="flex-1 overflow-auto p-4 space-y-3">
@@ -283,8 +286,8 @@ export default function POSClient({ products, customers }: { products: Product[]
           {cart.length === 0 && (
             <div className="text-center py-16 text-faint">
               <ShoppingCart className="size-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Cart is empty</p>
-              <p className="text-xs mt-1">Search products above to add items</p>
+              <p className="text-sm">{t("pos.cartEmpty")}</p>
+              <p className="text-xs mt-1">{t("pos.cartEmptyHint")}</p>
             </div>
           )}
         </div>
@@ -296,11 +299,11 @@ export default function POSClient({ products, customers }: { products: Product[]
               className="w-full py-2 rounded-xl text-xs font-medium border border-surface text-muted hover:text-default hover:bg-surface transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Printer className="size-3" />
-              Preview Receipt
+              {t("pos.previewReceipt")}
             </button>
           )}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted">Subtotal ({itemCount} items)</span>
+            <span className="text-sm text-muted">{t("pos.subtotal", { count: itemCount })}</span>
             <span className="text-lg font-bold text-default">${total.toFixed(2)}</span>
           </div>
           {message && (
@@ -313,7 +316,7 @@ export default function POSClient({ products, customers }: { products: Product[]
             disabled={cart.length === 0}
             className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer"
           >
-            Complete Sale — ${total.toFixed(2)}
+            {t("pos.completeSale", { total: total.toFixed(2) })}
           </button>
         </div>
       </div>

@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { getFBSettings } from "@/lib/actions";
 import { db } from "@/lib/db";
 import FBSettingsForm from "./FBSettingsForm";
@@ -31,9 +32,9 @@ export default async function FBLiveSettingsPage() {
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-          Settings
+          <T k="fbLive.settings.title" />
         </h1>
-        <p className="text-sm text-faint mt-1">Configure Facebook Live auto-ordering and Messenger chatbot.</p>
+        <p className="text-sm text-faint mt-1"><T k="fbLive.settings.subtitle" /></p>
       </div>
 
       <FBSettingsForm

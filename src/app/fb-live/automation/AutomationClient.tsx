@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Plus, Trash2, ToggleLeft, ToggleRight, TestTube,
-  MessageSquare, Edit3, X, Check, ChevronDown, ChevronUp,
+  MessageSquare, Edit3, X, Check,
 } from "lucide-react";
 import {
   addMessengerRule, updateMessengerRule, deleteMessengerRule,
   toggleMessengerRule, testMessengerRule,
   addQuickReply, deleteQuickReply,
 } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 interface Rule {
   id: number; keyword: string; response: string; match_mode: string; category: string;
@@ -45,6 +46,7 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
   const [qrTitle, setQrTitle] = useState("");
   const [qrText, setQrText] = useState("");
   const router = useRouter();
+  const { t } = useTranslation();
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,36 +110,36 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
         <div className="lg:col-span-2 bg-surface-blur border-surface rounded-2xl p-5 shadow-xl space-y-4">
           <h3 className="text-sm font-semibold text-default flex items-center gap-2">
             <Plus className="size-4 text-muted" />
-            New Auto-Reply Rule
+            {t("fbLive.automation.newRule")}
           </h3>
           <form onSubmit={handleAdd} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="input-label">Trigger Keyword</label>
-                <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="e.g. hello" className="input-field" required />
+                <label className="input-label">{t("fbLive.automation.triggerKeyword")}</label>
+                <input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder={t("fbLive.automation.keywordPlaceholder")} className="input-field" required />
               </div>
               <div>
-                <label className="input-label">Category</label>
+                <label className="input-label">{t("fbLive.automation.category")}</label>
                 <select value={category} onChange={(e) => setCategory(e.target.value)} className="input-field">
-                  {categories.map((c) => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1)}</option>)}
+                  {categories.map((c) => <option key={c} value={c}>{t("fbLive.automation.categories." + c)}</option>)}
                 </select>
               </div>
             </div>
             <div>
-              <label className="input-label">Bot Response</label>
-              <textarea value={response} onChange={(e) => setResponse(e.target.value)} placeholder="Hi! Welcome to our store." rows={3} className="input-field resize-none" required />
+              <label className="input-label">{t("fbLive.automation.botResponse")}</label>
+              <textarea value={response} onChange={(e) => setResponse(e.target.value)} placeholder={t("fbLive.automation.responsePlaceholder")} rows={3} className="input-field resize-none" required />
             </div>
             <div>
-              <label className="input-label">Match Mode</label>
+              <label className="input-label">{t("fbLive.automation.matchMode")}</label>
               <select value={matchMode} onChange={(e) => setMatchMode(e.target.value)} className="input-field">
-                <option value="contains">Contains — matches if keyword appears anywhere</option>
-                <option value="exact">Exact Match — must be exactly the keyword</option>
-                <option value="starts">Starts With — message starts with keyword</option>
+                <option value="contains">{t("fbLive.automation.matchModes.contains")}</option>
+                <option value="exact">{t("fbLive.automation.matchModes.exact")}</option>
+                <option value="starts">{t("fbLive.automation.matchModes.startsWith")}</option>
               </select>
             </div>
             <button type="submit" className="w-full py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer">
               <Plus className="size-4 inline mr-1" />
-              Add Rule
+              {t("fbLive.automation.addRule")}
             </button>
           </form>
         </div>
@@ -145,7 +147,7 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
         {/* Rules List */}
         <div className="lg:col-span-3 bg-surface-blur border-surface rounded-2xl p-5 shadow-xl space-y-3">
           <h3 className="text-sm font-semibold text-default flex items-center justify-between">
-            <span>Custom Rules ({rules.length})</span>
+            <span>{t("fbLive.automation.customRules", { count: rules.length })}</span>
             <div className="flex gap-1">
               {categories.map((c) => (
                 <button
@@ -156,7 +158,7 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
                   }}
                   className={`text-[10px] px-2 py-0.5 rounded-full border border-surface ${categoryColors[c]} cursor-pointer`}
                 >
-                  {c}
+                  {t("fbLive.automation.categories." + c)}
                 </button>
               ))}
             </div>
@@ -170,19 +172,19 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
                       <div className="grid grid-cols-2 gap-2">
                         <input value={editKeyword} onChange={(e) => setEditKeyword(e.target.value)} className="input-field text-xs" />
                         <select value={editCategory} onChange={(e) => setEditCategory(e.target.value)} className="input-field text-xs">
-                          {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                          {categories.map((c) => <option key={c} value={c}>{t("fbLive.automation.categories." + c)}</option>)}
                         </select>
                       </div>
                       <textarea value={editResponse} onChange={(e) => setEditResponse(e.target.value)} rows={2} className="input-field resize-none text-xs" />
                       <select value={editMatchMode} onChange={(e) => setEditMatchMode(e.target.value)} className="input-field text-xs">
-                        <option value="contains">Contains</option><option value="exact">Exact</option><option value="starts">Starts With</option>
+                        <option value="contains">{t("fbLive.automation.matchModes.contains")}</option><option value="exact">{t("fbLive.automation.matchModes.exact")}</option><option value="starts">{t("fbLive.automation.matchModes.startsWith")}</option>
                       </select>
                       <div className="flex gap-2">
                         <button onClick={saveEdit} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 transition-colors flex items-center gap-1 cursor-pointer">
-                          <Check className="size-3" /> Save
+                          <Check className="size-3" /> {t("common.save")}
                         </button>
                         <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface text-muted hover:text-default transition-colors flex items-center gap-1 cursor-pointer">
-                          <X className="size-3" /> Cancel
+                          <X className="size-3" /> {t("common.cancel")}
                         </button>
                       </div>
                     </div>
@@ -192,11 +194,11 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
                         <div className="flex items-center gap-2 flex-wrap">
                           <code className="text-xs font-mono text-violet-300 bg-violet-500/10 px-1.5 py-0.5 rounded">{rule.keyword}</code>
                           <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${categoryColors[rule.category] || "bg-zinc-500/20 text-zinc-300"}`}>
-                            {rule.category}
+                            {t("fbLive.automation.categories." + rule.category)}
                           </span>
                           <span className="text-[10px] text-faint uppercase">{rule.match_mode}</span>
                           {rule.times_triggered > 0 && (
-                            <span className="text-[10px] text-emerald-400/70">{rule.times_triggered}x triggered</span>
+                            <span className="text-[10px] text-emerald-400/70">{t("fbLive.automation.timesTriggered", { count: rule.times_triggered })}</span>
                           )}
                         </div>
                         <p className="text-xs text-muted mt-1.5 line-clamp-2">{rule.response}</p>
@@ -219,8 +221,8 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
             ) : (
               <div className="text-center py-8 text-faint">
                 <MessageSquare className="size-6 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">No custom rules yet</p>
-                <p className="text-xs mt-1">Add rules to automate responses in Messenger</p>
+                <p className="text-sm">{t("fbLive.automation.noRules")}</p>
+                <p className="text-xs mt-1">{t("fbLive.automation.noRulesHint")}</p>
               </div>
             )}
           </div>
@@ -233,23 +235,23 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
         <div className="bg-surface-blur border-surface rounded-2xl p-5 shadow-xl space-y-3">
           <h3 className="text-sm font-semibold text-default flex items-center gap-2">
             <TestTube className="size-4 text-muted" />
-            Test Rules
+            {t("fbLive.automation.testRules")}
           </h3>
           <form onSubmit={handleTest} className="space-y-3">
-            <input value={testText} onChange={(e) => setTestText(e.target.value)} placeholder="Type a test message..." className="input-field" />
+            <input value={testText} onChange={(e) => setTestText(e.target.value)} placeholder={t("fbLive.automation.testPlaceholder")} className="input-field" />
             <button type="submit" className="w-full py-2 rounded-xl text-sm font-medium border border-surface text-muted hover:text-default hover:bg-surface transition-all cursor-pointer">
-              Simulate Message
+              {t("fbLive.automation.simulateMessage")}
             </button>
           </form>
           {testResult && (
             <div className={`rounded-xl p-3 text-xs border ${testResult.matched ? "bg-emerald-500/5 border-emerald-500/20" : "bg-amber-500/5 border-amber-500/20"}`}>
               {testResult.matched ? (
                 <>
-                  <p className="text-emerald-400 font-semibold mb-1">✅ Matched: #{testResult.matched}</p>
+                  <p className="text-emerald-400 font-semibold mb-1">{t("fbLive.automation.testMatched", { matched: testResult.matched })}</p>
                   <p className="text-muted">{testResult.response}</p>
                 </>
               ) : (
-                <p className="text-amber-300">No rule matched. The AI fallback or built-in commands will handle this.</p>
+                <p className="text-amber-300">{t("fbLive.automation.testNoMatch")}</p>
               )}
             </div>
           )}
@@ -260,17 +262,17 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold text-default flex items-center gap-2">
               <MessageSquare className="size-4 text-muted" />
-              Quick Replies
+              {t("fbLive.automation.quickReplies")}
             </h3>
             <button onClick={() => setShowQR(!showQR)} className="text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">
-              {showQR ? "Cancel" : "+ Add"}
+              {showQR ? t("common.cancel") : t("fbLive.automation.add")}
             </button>
           </div>
           {showQR && (
             <form onSubmit={addQR} className="space-y-2 p-3 rounded-xl bg-black/20 border border-surface">
-              <input value={qrTitle} onChange={(e) => setQrTitle(e.target.value)} placeholder="Button label (e.g. Hours)" className="input-field text-xs" required />
-              <textarea value={qrText} onChange={(e) => setQrText(e.target.value)} placeholder="Reply text..." rows={2} className="input-field resize-none text-xs" required />
-              <button type="submit" className="w-full py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white cursor-pointer">Save Quick Reply</button>
+              <input value={qrTitle} onChange={(e) => setQrTitle(e.target.value)} placeholder={t("fbLive.automation.buttonLabelPlaceholder")} className="input-field text-xs" required />
+              <textarea value={qrText} onChange={(e) => setQrText(e.target.value)} placeholder={t("fbLive.automation.replyTextPlaceholder")} rows={2} className="input-field resize-none text-xs" required />
+              <button type="submit" className="w-full py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white cursor-pointer">{t("fbLive.automation.saveQuickReply")}</button>
             </form>
           )}
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -287,7 +289,7 @@ export default function AutomationClient({ rules, quickReplies }: { rules: Rule[
                 </div>
               ))
             ) : (
-              <p className="text-xs text-faint text-center py-4">No quick replies saved</p>
+              <p className="text-xs text-faint text-center py-4">{t("fbLive.automation.noQuickReplies")}</p>
             )}
           </div>
         </div>

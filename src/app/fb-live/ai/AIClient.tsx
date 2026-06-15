@@ -7,6 +7,7 @@ import {
   Plus, Trash2, Sparkles,
 } from "lucide-react";
 import { saveAISettings, addFAQ, deleteFAQ } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 interface FAQ {
   id: number; question: string; answer: string; category: string;
@@ -21,6 +22,7 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
   const [chatInput, setChatInput] = useState("");
   const [chatLog, setChatLog] = useState<Array<{ role: string; text: string }>>([]);
   const router = useRouter();
+  const { t } = useTranslation();
   const enabled = settings.ai_enabled === "1";
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -76,7 +78,7 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
         <div className="flex items-center justify-between p-3 rounded-xl border border-surface">
           <div className="flex items-center gap-2">
             <Brain className={`size-4 ${enabled ? "text-emerald-400" : "text-muted"}`} />
-            <span className="text-sm font-semibold text-default">AI-Powered Responses</span>
+            <span className="text-sm font-semibold text-default">{t("fbLive.ai.settings.enable")}</span>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input type="hidden" name="ai_enabled" value={enabled ? "0" : "1"} />
@@ -91,18 +93,18 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="input-label">Provider</label>
+                <label className="input-label">{t("fbLive.ai.settings.provider")}</label>
                 <select name="ai_provider" defaultValue={settings.ai_provider || "openai"} className="input-field">
                   <option value="openai">OpenAI</option>
                 </select>
-                <p className="text-xs text-faint mt-1">Set <code className="text-violet-300">OPENAI_API_KEY</code> in env</p>
+                <p className="text-xs text-faint mt-1">{t("fbLive.ai.settings.providerHint")}</p>
               </div>
               <div>
-                <label className="input-label flex items-center gap-2"><Bot className="size-3" /> Model</label>
+                <label className="input-label flex items-center gap-2"><Bot className="size-3" /> {t("fbLive.ai.settings.model")}</label>
                 <select name="ai_model" defaultValue={settings.ai_model || "gpt-4o-mini"} className="input-field">
-                  <option value="gpt-4o">GPT-4o</option>
-                  <option value="gpt-4o-mini">GPT-4o Mini</option>
-                  <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                  <option value="gpt-4o">{t("fbLive.ai.settings.models.gpt4o")}</option>
+                  <option value="gpt-4o-mini">{t("fbLive.ai.settings.models.gpt4oMini")}</option>
+                  <option value="gpt-3.5-turbo">{t("fbLive.ai.settings.models.gpt35")}</option>
                 </select>
               </div>
             </div>
@@ -111,19 +113,19 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
               <div>
                 <label className="input-label flex items-center gap-2">
                   <Thermometer className="size-3" />
-                  Temperature ({settings.ai_temperature || "0.7"})
+                  {t("fbLive.ai.settings.temperature", { value: settings.ai_temperature || "0.7" })}
                 </label>
                 <input name="ai_temperature" type="range" min="0" max="2" step="0.1"
                   defaultValue={settings.ai_temperature || "0.7"}
                   onChange={(e) => { const s = e.currentTarget.parentElement?.querySelector("span"); if (s) s.textContent = e.currentTarget.value; }}
                   className="w-full accent-violet-500" />
-                <div className="flex justify-between text-[10px] text-faint"><span>Precise</span><span>Creative</span></div>
+                <div className="flex justify-between text-[10px] text-faint"><span>{t("fbLive.ai.settings.precise")}</span><span>{t("fbLive.ai.settings.creative")}</span></div>
               </div>
               <div>
-                <label className="input-label flex items-center gap-2"><Text className="size-3" /> Max Length</label>
+                <label className="input-label flex items-center gap-2"><Text className="size-3" /> {t("fbLive.ai.settings.maxLength")}</label>
                 <select name="ai_max_tokens" defaultValue={settings.ai_max_tokens || "500"} className="input-field">
-                  <option value="200">Short (200)</option><option value="500">Medium (500)</option>
-                  <option value="1000">Long (1000)</option><option value="2000">Very Long (2000)</option>
+                  <option value="200">{t("fbLive.ai.settings.lengths.short")}</option><option value="500">{t("fbLive.ai.settings.lengths.medium")}</option>
+                  <option value="1000">{t("fbLive.ai.settings.lengths.long")}</option><option value="2000">{t("fbLive.ai.settings.lengths.veryLong")}</option>
                 </select>
               </div>
             </div>
@@ -131,33 +133,33 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="input-label flex items-center gap-2">
-                  <Sparkles className="size-3" /> Persona Tone
+                  <Sparkles className="size-3" /> {t("fbLive.ai.settings.persona")}
                 </label>
                 <select name="ai_persona_tone" defaultValue={settings.ai_persona_tone || "friendly"} className="input-field">
-                  <option value="friendly">Friendly &amp; Warm</option>
-                  <option value="professional">Professional &amp; Formal</option>
-                  <option value="casual">Casual &amp; Relaxed</option>
-                  <option value="playful">Playful &amp; Fun</option>
+                  <option value="friendly">{t("fbLive.ai.settings.personas.friendly")}</option>
+                  <option value="professional">{t("fbLive.ai.settings.personas.professional")}</option>
+                  <option value="casual">{t("fbLive.ai.settings.personas.casual")}</option>
+                  <option value="playful">{t("fbLive.ai.settings.personas.playful")}</option>
                 </select>
               </div>
               <div>
                 <label className="input-label flex items-center gap-2">
-                  <MessageSquare className="size-3" /> Conversation Context
+                  <MessageSquare className="size-3" /> {t("fbLive.ai.settings.context")}
                 </label>
                 <select name="ai_context_messages" defaultValue={settings.ai_context_messages || "5"} className="input-field">
-                  <option value="3">Last 3 messages</option>
-                  <option value="5">Last 5 messages</option>
-                  <option value="10">Last 10 messages</option>
-                  <option value="20">Last 20 messages</option>
+                  <option value="3">{t("fbLive.ai.settings.contexts.3")}</option>
+                  <option value="5">{t("fbLive.ai.settings.contexts.5")}</option>
+                  <option value="10">{t("fbLive.ai.settings.contexts.10")}</option>
+                  <option value="20">{t("fbLive.ai.settings.contexts.20")}</option>
                 </select>
-                <p className="text-xs text-faint mt-1">How many past messages to include for context</p>
+                <p className="text-xs text-faint mt-1">{t("fbLive.ai.settings.contextHint")}</p>
               </div>
             </div>
 
             <div>
-              <label className="input-label">System Prompt</label>
+              <label className="input-label">{t("fbLive.ai.settings.systemPrompt")}</label>
               <textarea name="ai_system_prompt" defaultValue={settings.ai_system_prompt} rows={4} className="input-field resize-none font-mono text-xs" />
-              <p className="text-xs text-faint mt-1">Guides the AI&apos;s behavior when responding to customers.</p>
+              <p className="text-xs text-faint mt-1">{t("fbLive.ai.settings.systemPromptHint")}</p>
             </div>
           </>
         )}
@@ -165,15 +167,15 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
         {!enabled && (
           <div className="text-center py-6 text-faint">
             <Brain className="size-8 mx-auto mb-2 opacity-40" />
-            <p className="text-sm">AI features are disabled</p>
-            <p className="text-xs mt-1">Enable AI to let the chatbot generate intelligent responses</p>
+            <p className="text-sm">{t("fbLive.ai.settings.disabled")}</p>
+            <p className="text-xs mt-1">{t("fbLive.ai.settings.disabledHint")}</p>
           </div>
         )}
 
         <button type="submit" className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/15 border border-violet-500/20 flex items-center justify-center gap-2 cursor-pointer">
-          <Save className="size-4" /> Save AI Settings
+          <Save className="size-4" /> {t("fbLive.ai.settings.save")}
         </button>
-        {saved && <div className="text-xs text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-400">AI settings saved!</div>}
+        {saved && <div className="text-xs text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-400">{t("fbLive.ai.settings.saved")}</div>}
       </form>
 
       {/* Chat Simulator + FAQ Manager */}
@@ -182,7 +184,7 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
         <div className="bg-surface-blur border-surface rounded-2xl shadow-xl overflow-hidden flex flex-col">
           <div className="p-3 border-b border-surface flex items-center gap-2">
             <Bot className="size-4 text-violet-400" />
-            <span className="text-xs font-semibold text-default">Test AI Responses</span>
+            <span className="text-xs font-semibold text-default">{t("fbLive.ai.test.title")}</span>
           </div>
           <div className="flex-1 p-3 space-y-2 max-h-60 overflow-y-auto min-h-40">
             {chatLog.length > 0 ? (
@@ -200,12 +202,12 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
             ) : (
               <div className="text-center py-8 text-faint">
                 <MessageSquare className="size-6 mx-auto mb-1 opacity-40" />
-                <p className="text-xs">Type a message to test the AI</p>
+                <p className="text-xs">{t("fbLive.ai.test.empty")}</p>
               </div>
             )}
           </div>
           <form onSubmit={handleChat} className="p-3 border-t border-surface flex gap-2">
-            <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder="Type a customer message..." className="input-field flex-1 text-xs" />
+            <input value={chatInput} onChange={(e) => setChatInput(e.target.value)} placeholder={t("fbLive.ai.test.placeholder")} className="input-field flex-1 text-xs" />
             <button type="submit" disabled={!chatInput.trim()} className="px-3 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white disabled:opacity-40 transition-all cursor-pointer">
               <Send className="size-3.5" />
             </button>
@@ -215,26 +217,26 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
         {/* FAQ Manager */}
         <div className="bg-surface-blur border-surface rounded-2xl p-5 shadow-xl space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-default">Manage FAQs</h3>
+            <h3 className="text-sm font-semibold text-default">{t("fbLive.ai.manageFaqs.title")}</h3>
             <button onClick={() => setShowAddFAQ(!showAddFAQ)} className="text-xs text-violet-400 hover:text-violet-300 transition-colors cursor-pointer">
-              {showAddFAQ ? "Cancel" : "+ Add FAQ"}
+              {showAddFAQ ? t("common.cancel") : t("fbLive.ai.manageFaqs.add")}
             </button>
           </div>
 
           {showAddFAQ && (
             <form onSubmit={handleAddFAQ} className="space-y-2 p-3 rounded-xl bg-black/20 border border-surface">
               <div className="grid grid-cols-2 gap-2">
-                <input value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} placeholder="Question" className="input-field text-xs" required />
+                <input value={faqQuestion} onChange={(e) => setFaqQuestion(e.target.value)} placeholder={t("fbLive.ai.manageFaqs.questionPlaceholder")} className="input-field text-xs" required />
                 <select value={faqCategory} onChange={(e) => setFaqCategory(e.target.value)} className="input-field text-xs">
-                  <option value="general">General</option>
-                  <option value="shipping">Shipping</option>
-                  <option value="returns">Returns</option>
-                  <option value="pricing">Pricing</option>
+                  <option value="general">{t("fbLive.ai.manageFaqs.categories.general")}</option>
+                  <option value="shipping">{t("fbLive.ai.manageFaqs.categories.shipping")}</option>
+                  <option value="returns">{t("fbLive.ai.manageFaqs.categories.returns")}</option>
+                  <option value="pricing">{t("fbLive.ai.manageFaqs.categories.pricing")}</option>
                 </select>
               </div>
-              <textarea value={faqAnswer} onChange={(e) => setFaqAnswer(e.target.value)} placeholder="Answer..." rows={2} className="input-field resize-none text-xs" required />
+              <textarea value={faqAnswer} onChange={(e) => setFaqAnswer(e.target.value)} placeholder={t("fbLive.ai.manageFaqs.answerPlaceholder")} rows={2} className="input-field resize-none text-xs" required />
               <button type="submit" className="w-full py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white cursor-pointer">
-                <Plus className="size-3 inline mr-1" /> Add FAQ
+                <Plus className="size-3 inline mr-1" /> {t("fbLive.ai.manageFaqs.addFaq")}
               </button>
             </form>
           )}
@@ -256,7 +258,7 @@ export default function AIClient({ settings, faqs }: { settings: Record<string, 
                 </div>
               ))
             ) : (
-              <p className="text-xs text-faint text-center py-4">No FAQs added yet</p>
+              <p className="text-xs text-faint text-center py-4">{t("fbLive.ai.manageFaqs.noFaqs")}</p>
             )}
           </div>
         </div>

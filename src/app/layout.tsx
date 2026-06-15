@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Khmer } from "next/font/google";
 import "./globals.css";
 import LayoutClient from "@/components/LayoutClient";
+import { LangUpdater } from "@/components/LangUpdater";
 import { getCurrentUser } from "@/lib/auth";
 
 const geistSans = Geist({
@@ -12,6 +13,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const notoSansKhmer = Noto_Sans_Khmer({
+  variable: "--font-noto-sans-khmer",
+  subsets: ["khmer"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -40,7 +47,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} antialiased dark`}
+      className={`${geistSans.variable} ${geistMono.variable} ${notoSansKhmer.variable} antialiased dark`}
       suppressHydrationWarning
     >
       <head>
@@ -58,6 +65,7 @@ export default async function RootLayout({
         }} />
       </head>
       <body className="overflow-hidden" style={{ backgroundColor: "var(--bg-main)", color: "var(--text-primary)" }}>
+        <LangUpdater />
         <LayoutClient user={user} navItems={navItems}>
           {children}
         </LayoutClient>

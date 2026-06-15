@@ -1,6 +1,7 @@
 import { getSettings } from "@/lib/actions";
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { T } from "@/components/T";
 import SettingsTabs from "./SettingsTabs";
 
 export default async function SettingsPage() {
@@ -12,12 +13,12 @@ export default async function SettingsPage() {
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-          Settings
+          <T k="settings.title" />
         </h1>
-        <p className="text-sm text-faint mt-1">Configure printer and Telegram bot notifications.</p>
+        <p className="text-sm text-faint mt-1"><T k="settings.subtitle" /></p>
         <p className="text-xs text-faint mt-1">
-          Facebook Messenger chatbot settings have moved to{" "}
-          <a href="/fb-live/settings" className="text-violet-400 hover:text-violet-300 underline">FB Live → Settings</a>.
+          <T k="settings.messengerMoved" />{" "}
+          <a href="/fb-live/settings" className="text-violet-400 hover:text-violet-300 underline"><T k="settings.fbLiveSettings" /></a>.
         </p>
       </div>
       <SettingsTabs settings={settings} />

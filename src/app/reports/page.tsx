@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import BarChartWidget from "@/components/BarChartWidget";
 import PieChartWidget from "@/components/PieChartWidget";
@@ -12,10 +13,6 @@ interface ProductRow {
 interface MovementRow {
   type: string;
   quantity: number;
-}
-
-interface SupplierRow {
-  product_count: number;
 }
 
 interface SaleRow {
@@ -68,25 +65,25 @@ export default function ReportsPage() {
     <div className="space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-          Intelligence & Reports
+          <T k="reports.title" />
         </h1>
-        <p className="text-sm text-faint mt-1">Audit statistics, category allocation, and stock shortages.</p>
+        <p className="text-sm text-faint mt-1"><T k="reports.subtitle" /></p>
       </div>
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="group relative bg-surface-blur border-surface rounded-2xl p-6 transition-all duration-300 hover:scale-[1.01] shadow-lg">
-          <p className="text-xs font-semibold text-faint uppercase tracking-wider">Total Stock Ingested</p>
+          <p className="text-xs font-semibold text-faint uppercase tracking-wider"><T k="reports.kpi.stockIn" /></p>
           <p className="text-4xl font-extrabold text-emerald-400 mt-2 tracking-tight">+{totalIn}</p>
           <div className="absolute bottom-0 left-6 right-6 h-[2px] bg-gradient-to-r from-emerald-500 to-teal-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
         </div>
         <div className="group relative bg-surface-blur border-surface rounded-2xl p-6 transition-all duration-300 hover:scale-[1.01] shadow-lg">
-          <p className="text-xs font-semibold text-faint uppercase tracking-wider">Total Stock Dispatched</p>
+          <p className="text-xs font-semibold text-faint uppercase tracking-wider"><T k="reports.kpi.stockOut" /></p>
           <p className="text-4xl font-extrabold text-rose-400 mt-2 tracking-tight">-{totalOut}</p>
           <div className="absolute bottom-0 left-6 right-6 h-[2px] bg-gradient-to-r from-rose-500 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
         </div>
         <div className="group relative bg-surface-blur border-surface rounded-2xl p-6 transition-all duration-300 hover:scale-[1.01] shadow-lg">
-          <p className="text-xs font-semibold text-faint uppercase tracking-wider">Active Suppliers</p>
+          <p className="text-xs font-semibold text-faint uppercase tracking-wider"><T k="reports.kpi.activeSuppliers" /></p>
           <p className="text-4xl font-extrabold text-default mt-2 tracking-tight">{supplierCount}</p>
           <div className="absolute bottom-0 left-6 right-6 h-[2px] bg-gradient-to-r from-violet-500 to-indigo-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full" />
         </div>
@@ -97,24 +94,24 @@ export default function ReportsPage() {
         <div className="bg-surface-blur border-surface rounded-2xl p-6 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-500/25 to-transparent" />
           <h2 className="text-lg font-semibold text-default mb-6 flex items-center gap-2">
-            Wholesale & Retail Sales
+            <T k="reports.sales.title" />
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4">
-                  <p className="text-xs text-faint uppercase tracking-wider font-medium">Wholesale</p>
+                  <p className="text-xs text-faint uppercase tracking-wider font-medium"><T k="reports.sales.wholesale" /></p>
                   <p className="text-2xl font-extrabold text-emerald-400 mt-1">${wholesaleSales.toFixed(2)}</p>
-                  <p className="text-xs text-faint mt-1">{wholesaleCount} transaction{wholesaleCount !== 1 ? "s" : ""}</p>
+                  <p className="text-xs text-faint mt-1"><T k="reports.sales.wholesaleTransactions" vars={{ count: wholesaleCount }} /></p>
                 </div>
                 <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-4">
-                  <p className="text-xs text-faint uppercase tracking-wider font-medium">Retail</p>
+                  <p className="text-xs text-faint uppercase tracking-wider font-medium"><T k="reports.sales.retail" /></p>
                   <p className="text-2xl font-extrabold text-sky-400 mt-1">${retailSales.toFixed(2)}</p>
-                  <p className="text-xs text-faint mt-1">{retailCount} transaction{retailCount !== 1 ? "s" : ""}</p>
+                  <p className="text-xs text-faint mt-1"><T k="reports.sales.retailTransactions" vars={{ count: retailCount }} /></p>
                 </div>
               </div>
               <div className="bg-black/20 rounded-xl p-4">
-                <p className="text-xs text-faint uppercase tracking-wider font-medium">Total Revenue</p>
+                <p className="text-xs text-faint uppercase tracking-wider font-medium"><T k="reports.sales.totalRevenue" /></p>
                 <p className="text-3xl font-extrabold text-default mt-1">${totalSales.toFixed(2)}</p>
               </div>
             </div>
@@ -129,31 +126,31 @@ export default function ReportsPage() {
       {sales.length > 0 && (
         <div className="bg-surface-blur border-surface rounded-2xl shadow-xl relative overflow-hidden">
           <div className="p-6 border-b border-surface">
-            <h2 className="text-lg font-semibold text-default">Recent Transactions</h2>
+            <h2 className="text-lg font-semibold text-default"><T k="reports.recentTransactions" /></h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-surface bg-header">
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Customer</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Type</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Items</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Total</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Date</th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="reports.table.customer" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="reports.table.type" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="reports.table.items" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="reports.table.total" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="reports.table.date" /></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface">
                 {sales.slice(0, 20).map((s) => (
                   <tr key={s.id} className="hover-surface transition-colors duration-150">
-                    <td className="p-4 font-semibold text-default">{s.customer_name || "Walk-in"}</td>
+                    <td className="p-4 font-semibold text-default">{s.customer_name || <T k="reports.walkIn" />}</td>
                     <td className="p-4">
                       {s.customer_type === "wholesale" ? (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full border border-emerald-500/20">
-                          Wholesale
+                          <T k="reports.sales.wholesale" />
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-sky-400 bg-sky-500/10 px-2 py-1 rounded-full border border-sky-500/20">
-                          Retail
+                          <T k="reports.sales.retail" />
                         </span>
                       )}
                     </td>
@@ -174,25 +171,25 @@ export default function ReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-surface-blur border-surface rounded-2xl p-6 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-violet-500/25 to-transparent" />
-          <h2 className="text-lg font-semibold text-default mb-6">Stock Allocation by Product</h2>
+          <h2 className="text-lg font-semibold text-default mb-6"><T k="reports.allocation.byProduct" /></h2>
           {products.length > 0 ? (
             <div className="pt-2">
               <BarChartWidget data={products} height={320} />
             </div>
           ) : (
-            <p className="text-faint text-center py-12">No data recorded</p>
+            <p className="text-faint text-center py-12"><T k="reports.allocation.noData" /></p>
           )}
         </div>
 
         <div className="bg-surface-blur border-surface rounded-2xl p-6 shadow-xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-500/25 to-transparent" />
-          <h2 className="text-lg font-semibold text-default mb-6">Stock Allocation by Category</h2>
+          <h2 className="text-lg font-semibold text-default mb-6"><T k="reports.allocation.byCategory" /></h2>
           {categoryData.length > 0 ? (
             <div className="pt-2">
               <PieChartWidget data={categoryData} height={320} />
             </div>
           ) : (
-            <p className="text-faint text-center py-12">No data recorded</p>
+            <p className="text-faint text-center py-12"><T k="reports.allocation.noData" /></p>
           )}
         </div>
       </div>
@@ -202,7 +199,7 @@ export default function ReportsPage() {
         <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rose-500/25 to-transparent" />
         <h2 className="text-lg font-semibold text-default mb-6 flex items-center gap-2">
           <span className={`size-2.5 rounded-full ${lowStockCount > 0 ? "bg-rose-500 animate-pulse shadow-md shadow-rose-500" : "bg-emerald-500"}`} />
-          Critical Inventory Shortages
+          <T k="reports.shortages.title" />
         </h2>
         
         {lowStockCount > 0 ? (
@@ -210,9 +207,9 @@ export default function ReportsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-surface bg-header">
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Product Name</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Current Stock</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Min safety stock</th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="reports.shortages.product" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="reports.shortages.currentStock" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="reports.shortages.minStock" /></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface text-sm">
@@ -223,10 +220,10 @@ export default function ReportsPage() {
                       <td className="p-4 font-semibold text-default">{p.name}</td>
                       <td className="p-4 text-right">
                         <span className="bg-rose-500/15 text-rose-400 border border-rose-500/30 px-2.5 py-1 rounded-full font-bold text-xs">
-                          {p.quantity} units
+                          <T k="reports.shortages.units" vars={{ qty: p.quantity }} />
                         </span>
                       </td>
-                      <td className="p-4 text-right font-mono text-muted">{p.min_stock} safety limit</td>
+                      <td className="p-4 text-right font-mono text-muted"><T k="reports.shortages.safetyLimit" vars={{ min: p.min_stock }} /></td>
                     </tr>
                   ))}
               </tbody>
@@ -234,8 +231,8 @@ export default function ReportsPage() {
           </div>
         ) : (
           <div className="py-8 text-center bg-surface border border-dashed border-surface rounded-xl">
-            <p className="font-medium text-default">All inventory safety limits are secure</p>
-            <p className="text-xs text-faint mt-1">No products are currently under safety stock thresholds.</p>
+            <p className="font-medium text-default"><T k="reports.shortages.allSecure" /></p>
+            <p className="text-xs text-faint mt-1"><T k="reports.shortages.noShortages" /></p>
           </div>
         )}
       </div>

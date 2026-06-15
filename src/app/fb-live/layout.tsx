@@ -2,19 +2,22 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "@/i18n/useTranslation";
 import { Radio, Bot, Brain, MessageSquare, Megaphone, Settings } from "lucide-react";
 
-const tabs = [
-  { href: "/fb-live", label: "Live", icon: Radio, matchExact: true },
-  { href: "/fb-live/automation", label: "Automation", icon: Bot },
-  { href: "/fb-live/ai", label: "AI", icon: Brain },
-  { href: "/fb-live/inbox", label: "Inbox", icon: MessageSquare },
-  { href: "/fb-live/broadcasts", label: "Broadcasts", icon: Megaphone },
-  { href: "/fb-live/settings", label: "Settings", icon: Settings },
+const tabDefs = [
+  { href: "/fb-live", key: "fbLive.tabs.live", icon: Radio, matchExact: true },
+  { href: "/fb-live/automation", key: "fbLive.tabs.automation", icon: Bot },
+  { href: "/fb-live/ai", key: "fbLive.tabs.ai", icon: Brain },
+  { href: "/fb-live/inbox", key: "fbLive.tabs.inbox", icon: MessageSquare },
+  { href: "/fb-live/broadcasts", key: "fbLive.tabs.broadcasts", icon: Megaphone },
+  { href: "/fb-live/settings", key: "fbLive.tabs.settings", icon: Settings },
 ];
 
 export default function FBLiveLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useTranslation();
+  const tabs = tabDefs.map((tab) => ({ ...tab, label: t(tab.key) }));
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

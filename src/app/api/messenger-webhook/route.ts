@@ -117,7 +117,7 @@ async function handlePostback(senderId: string, payload: string) {
   }
 }
 
-async function sendMessage(token: string, recipientId: string, msg: { text: string; quick_replies?: Array<any> }) {
+async function sendMessage(token: string, recipientId: string, msg: { text: string; quick_replies?: Array<{ content_type: string; title: string; payload: string }> }) {
   try {
     await fetch(`https://graph.facebook.com/v18.0/me/messages?access_token=${token}`, {
       method: "POST",

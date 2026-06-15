@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { Plus, Edit, Truck, Mail, Phone, MapPin } from "lucide-react";
@@ -26,24 +27,24 @@ export default function SuppliersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-            Suppliers Directory
+            <T k="suppliers.title" />
           </h1>
-          <p className="text-sm text-faint mt-1">Manage vendor contact information and associated inventory catalog.</p>
+          <p className="text-sm text-faint mt-1"><T k="suppliers.subtitle" /></p>
         </div>
         <Link
           href="/suppliers/new"
           className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4.5 py-2.5 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-500/10 border border-violet-500/20"
         >
           <Plus className="size-4" />
-          <span className="text-sm font-semibold">Add Supplier</span>
+          <span className="text-sm font-semibold"><T k="suppliers.add" /></span>
         </Link>
       </div>
 
       {suppliers.length === 0 ? (
         <div className="text-center py-20 bg-surface border-surface rounded-2xl">
           <Truck className="size-14 mx-auto mb-4 text-muted opacity-70" />
-          <p className="text-lg text-default font-medium">No suppliers registered yet</p>
-          <p className="text-sm text-faint mt-1">Vendor entries will map catalog index fields.</p>
+          <p className="text-lg text-default font-medium"><T k="suppliers.empty" /></p>
+          <p className="text-sm text-faint mt-1"><T k="suppliers.emptyHint" /></p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -93,9 +94,9 @@ export default function SuppliersPage() {
               </div>
 
               <div className="pt-5 mt-4 border-t border-surface flex justify-between items-center">
-                <span className="text-xs text-faint font-medium uppercase tracking-wider">Indexed Catalog</span>
+                <span className="text-xs text-faint font-medium uppercase tracking-wider"><T k="suppliers.indexedCatalog" /></span>
                 <span className="text-xs text-violet-300 bg-violet-500/10 px-2.5 py-1 rounded-full border border-violet-500/20 font-bold">
-                  {s.product_count} product{s.product_count !== 1 ? "s" : ""}
+                  <T k="suppliers.products" vars={{ count: s.product_count }} />
                 </span>
               </div>
             </div>

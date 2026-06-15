@@ -4,12 +4,13 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   MessageSquare, Send, User, Bot, ArrowLeft, Search,
-  Tag, UserPlus, Clock, CheckCircle, X,
+  Tag, UserPlus, CheckCircle, X,
 } from "lucide-react";
 import {
   replyToConversation, markConversationRead, assignConversation, tagConversation,
   searchConversations,
 } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 interface Conv {
   id: number; sender_id: string; sender_name: string; last_message: string;
@@ -24,15 +25,15 @@ interface QR {
   id: number; title: string; text: string; payload: string;
 }
 
-function timeAgo(dateStr: string) {
+function timeAgo(dateStr: string, t: (key: string, vars?: Record<string, string | number>) => string) {
   const diff = Date.now() - new Date(dateStr + "Z").getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return t("common.justNow");
+  if (mins < 60) return t("common.minutesAgo", { n: mins });
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
+  if (hrs < 24) return t("common.hoursAgo", { n: hrs });
   const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+  return t("common.daysAgo", { n: days });
 }
 
 const tagColors: Record<string, string> = {
@@ -58,6 +59,7 @@ export default function InboxClient({
   const [showAssign, setShowAssign] = useState(false);
   const [assignInput, setAssignInput] = useState("");
   const router = useRouter();
+  const { t } = useTranslation();
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -134,7 +136,7 @@ export default function InboxClient({
                 setSearchQuery(e.target.value);
                 if (!e.target.value.trim()) setConversations(initialConvs);
               }}
-              placeholder="Search..."
+              placeholder={t("fbLive.inbox.searchPlaceholder")}
               className="input-field pl-8 text-xs"
             />
           </form>
@@ -162,7 +164,7 @@ export default function InboxClient({
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-1">
                         <p className="text-xs font-semibold text-default truncate">{conv.sender_name}</p>
-                        <span className="text-[10px] text-faint shrink-0">{timeAgo(conv.updated_at)}</span>
+                        <span className="text-[10px] text-faint shrink-0">{timeAgo(conv.updated_at, t)}</span>
                       </div>
                       <p className="text-[10px] text-faint truncate">{conv.last_message || "—"}</p>
                       {tags.length > 0 && (
@@ -188,8 +190,8 @@ export default function InboxClient({
           ) : (
             <div className="text-center py-12 text-faint px-4">
               <MessageSquare className="size-6 mx-auto mb-2 opacity-40" />
-              <p className="text-xs">No conversations</p>
-              <p className="text-[10px] mt-1">Messages from Facebook Messenger will appear here</p>
+              <p className="text-xs">{t("fbLive.inbox.noConversations")}</p>
+              <p className="text-[10px] mt-1">{t("fbLive.inbox.noConversationsHint")}</p>
             </div>
           )}
         </div>
@@ -209,15 +211,15 @@ export default function InboxClient({
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="text-sm font-semibold text-default">{selected.sender_name}</p>
-                  <span className="text-[10px] text-faint">{timeAgo(selected.updated_at)}</span>
+                  <span className="text-[10px] text-faint">{timeAgo(selected.updated_at, t)}</span>
                 </div>
-                <p className="text-[10px] text-faint">ID: {selected.sender_id}</p>
+                <p className="text-[10px] text-faint">{t("fbLive.inbox.id", { id: selected.sender_id })}</p>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={() => setShowTagInput(!showTagInput)} className="p-1.5 rounded-lg text-muted hover:text-violet-400 hover:bg-violet-500/10 transition-colors cursor-pointer" title="Tag">
+                <button onClick={() => setShowTagInput(!showTagInput)} className="p-1.5 rounded-lg text-muted hover:text-violet-400 hover:bg-violet-500/10 transition-colors cursor-pointer" title={t("fbLive.inbox.tag")}>
                   <Tag className="size-3.5" />
                 </button>
-                <button onClick={() => setShowAssign(!showAssign)} className="p-1.5 rounded-lg text-muted hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer" title="Assign">
+                <button onClick={() => setShowAssign(!showAssign)} className="p-1.5 rounded-lg text-muted hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors cursor-pointer" title={t("fbLive.inbox.assign")}>
                   <UserPlus className="size-3.5" />
                 </button>
               </div>
@@ -226,14 +228,14 @@ export default function InboxClient({
             {/* Tag/Assign inline forms */}
             {showTagInput && (
               <div className="p-2 border-b border-surface flex gap-2 bg-black/20">
-                <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder="e.g. support, vip, complaint" className="input-field text-xs flex-1" />
+                <input value={tagInput} onChange={(e) => setTagInput(e.target.value)} placeholder={t("fbLive.inbox.tagPlaceholder")} className="input-field text-xs flex-1" />
                 <button onClick={handleTag} className="px-2 py-1 rounded-lg text-xs bg-violet-600/30 text-violet-300 cursor-pointer"><CheckCircle className="size-3" /></button>
                 <button onClick={() => setShowTagInput(false)} className="px-2 py-1 rounded-lg text-xs text-muted cursor-pointer"><X className="size-3" /></button>
               </div>
             )}
             {showAssign && (
               <div className="p-2 border-b border-surface flex gap-2 bg-black/20">
-                <input value={assignInput} onChange={(e) => setAssignInput(e.target.value)} placeholder="Assignee name" className="input-field text-xs flex-1" />
+                <input value={assignInput} onChange={(e) => setAssignInput(e.target.value)} placeholder={t("fbLive.inbox.assignPlaceholder")} className="input-field text-xs flex-1" />
                 <button onClick={handleAssign} className="px-2 py-1 rounded-lg text-xs bg-emerald-600/30 text-emerald-300 cursor-pointer"><CheckCircle className="size-3" /></button>
                 <button onClick={() => setShowAssign(false)} className="px-2 py-1 rounded-lg text-xs text-muted cursor-pointer"><X className="size-3" /></button>
               </div>
@@ -256,7 +258,7 @@ export default function InboxClient({
                       }`}>
                         <p>{msg.text}</p>
                       </div>
-                      <p className="text-[9px] text-faint mt-0.5 px-1">{timeAgo(msg.created_at)}</p>
+                      <p className="text-[9px] text-faint mt-0.5 px-1">{timeAgo(msg.created_at, t)}</p>
                     </div>
                   </div>
                 </div>
@@ -280,7 +282,7 @@ export default function InboxClient({
             )}
 
             <form onSubmit={handleSend} className="p-3 border-t border-surface flex gap-2">
-              <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type your reply..." className="input-field flex-1 text-xs" disabled={sending} />
+              <input value={text} onChange={(e) => setText(e.target.value)} placeholder={t("fbLive.inbox.replyPlaceholder")} className="input-field flex-1 text-xs" disabled={sending} />
               <button type="submit" disabled={!text.trim() || sending} className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer">
                 <Send className="size-4" />
               </button>
@@ -290,8 +292,8 @@ export default function InboxClient({
           <div className="flex-1 flex items-center justify-center text-faint">
             <div className="text-center">
               <MessageSquare className="size-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">Select a conversation</p>
-              <p className="text-xs mt-1">Choose a conversation from the left to view and reply</p>
+              <p className="text-sm">{t("fbLive.inbox.selectConversation")}</p>
+              <p className="text-xs mt-1">{t("fbLive.inbox.selectConversationHint")}</p>
             </div>
           </div>
         )}

@@ -97,9 +97,10 @@ export async function createUser(formData: FormData) {
   const hash = bcrypt.hashSync(password, 10);
   try {
     db.prepare("INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)").run(name, email, hash, role || "cashier", pin);
-  } catch (e: any) {
-    if (e.message.includes("UNIQUE")) return { error: "Email already exists" };
-    return { error: e.message };
+  } catch (e: unknown) {
+    const msg = (e as Error).message;
+    if (msg.includes("UNIQUE")) return { error: "Email already exists" };
+    return { error: msg };
   }
   return { success: true };
 }
@@ -124,8 +125,8 @@ export async function updateUser(id: number, formData: FormData) {
     } else {
       db.prepare("UPDATE users SET name=?, email=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, role, pin, active, id);
     }
-  } catch (e: any) {
-    return { error: e.message };
+  } catch (e: unknown) {
+    return { error: (e as Error).message };
   }
   return { success: true };
 }

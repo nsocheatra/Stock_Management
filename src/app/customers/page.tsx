@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { Plus, Edit, Users, Building2, Store } from "lucide-react";
@@ -22,29 +23,29 @@ export default function CustomersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-            Customers
+            <T k="customers.title" />
           </h1>
-          <p className="text-sm text-faint mt-1">Manage wholesale and retail customers.</p>
+          <p className="text-sm text-faint mt-1"><T k="customers.subtitle" /></p>
         </div>
         <Link
           href="/customers/new"
           className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4.5 py-2.5 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-500/10 border border-violet-500/20"
         >
           <Plus className="size-4" />
-          <span className="text-sm font-semibold">Add Customer</span>
+          <span className="text-sm font-semibold"><T k="customers.add" /></span>
         </Link>
       </div>
 
       {customers.length === 0 ? (
         <div className="text-center py-20 bg-surface border-surface rounded-2xl">
           <Users className="size-14 mx-auto mb-4 text-muted opacity-70" />
-          <p className="text-lg text-default font-medium">No customers yet</p>
-          <p className="text-sm text-faint mt-1 mb-4">Add wholesale and retail customers</p>
+          <p className="text-lg text-default font-medium"><T k="customers.empty" /></p>
+          <p className="text-sm text-faint mt-1 mb-4"><T k="customers.emptyHint" /></p>
           <Link
             href="/customers/new"
             className="text-violet-400 hover:text-violet-300 font-semibold text-sm hover:underline"
           >
-            Add your first customer &rarr;
+            <T k="customers.emptyCta" />
           </Link>
         </div>
       ) : (
@@ -53,12 +54,12 @@ export default function CustomersPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-surface bg-header">
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Name</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Type</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Phone</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Address</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Credit</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Actions</th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="customers.table.name" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="customers.table.type" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="customers.table.phone" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="customers.table.address" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="customers.table.credit" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="common.actions" /></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface">
@@ -69,12 +70,12 @@ export default function CustomersPage() {
                       {c.customer_type === "wholesale" ? (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                           <Building2 className="size-3" />
-                          Wholesaler
+                          <T k="customers.types.wholesaler" />
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs font-semibold text-sky-400 bg-sky-500/10 px-2.5 py-1 rounded-full border border-sky-500/20">
                           <Store className="size-3" />
-                          Retailer
+                          <T k="customers.types.retailer" />
                         </span>
                       )}
                     </td>

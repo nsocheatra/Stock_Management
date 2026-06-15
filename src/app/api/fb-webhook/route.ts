@@ -27,7 +27,6 @@ export async function POST(request: NextRequest) {
           if (change.field === "comments" && change.value?.message) {
             const commentText = change.value.message;
             const customerName = change.value.from?.name || "Facebook User";
-            const commentId = change.value.comment_id;
 
             const matchMode = db.prepare("SELECT value FROM fb_settings WHERE key = 'match_mode'").get("match_mode") as { value: string } | undefined;
             const mode = matchMode?.value || "contains";

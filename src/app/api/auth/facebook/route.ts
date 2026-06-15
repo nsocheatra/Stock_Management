@@ -13,7 +13,6 @@ function setSetting(key: string, value: string) {
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const code = searchParams.get("code");
-  const state = searchParams.get("state");
   const error = searchParams.get("error");
 
   const appId = getSetting("app_id");

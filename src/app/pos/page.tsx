@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import POSClient from "./POSClient";
+import { T } from "@/components/T";
 
 interface ProductRow {
   id: number;
@@ -14,6 +15,7 @@ interface ProductRow {
   price_per_case: number | null;
   quantity: number;
   image_url: string | null;
+  category: string | null;
 }
 
 interface CustomerRow {
@@ -23,7 +25,7 @@ interface CustomerRow {
 }
 
 export default function POSPage() {
-  const products = db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url FROM products ORDER BY name ASC").all() as ProductRow[];
+  const products = db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category FROM products ORDER BY name ASC").all() as ProductRow[];
   const customers = db.prepare("SELECT id, name, customer_type FROM customers ORDER BY name ASC").all() as CustomerRow[];
 
   return (
@@ -31,9 +33,9 @@ export default function POSPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-            Point of Sale
+            <T k="pos.title" />
           </h1>
-          <p className="text-sm text-faint mt-1">Scan barcode or search products to process sales. Select a customer to apply pricing.</p>
+          <p className="text-sm text-faint mt-1"><T k="pos.subtitle" /></p>
         </div>
       </div>
       <div className="flex-1 bg-surface-blur border-surface rounded-2xl shadow-xl overflow-hidden">

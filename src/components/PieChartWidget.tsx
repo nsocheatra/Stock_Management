@@ -8,6 +8,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { useTranslation } from "@/i18n/useTranslation";
 
 // Vibrant gradient palette colors
 const COLORS = [
@@ -19,13 +20,19 @@ const COLORS = [
   "#22d3ee", // cyan-400
 ];
 
-const CustomTooltip = ({ active, payload }: any) => {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number }>;
+}
+
+const CustomTooltip = ({ active, payload }: TooltipProps) => {
+  const { t } = useTranslation();
   if (active && payload && payload.length) {
     return (
       <div className="bg-zinc-950/80 backdrop-blur-md border border-zinc-800 p-3.5 rounded-xl shadow-xl">
         <p className="text-xs text-zinc-400 font-medium mb-1">{payload[0].name}</p>
         <p className="text-sm font-bold text-emerald-400">
-          Quantity: <span className="text-white">{payload[0].value} units</span>
+          {t("chart.quantity")} <span className="text-white">{payload[0].value} {t("chart.units")}</span>
         </p>
       </div>
     );

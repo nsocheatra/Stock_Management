@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { createStockMovement } from "@/lib/actions";
 import Link from "next/link";
+import { useTranslation } from "@/i18n/useTranslation";
 
 type Product = { id: number; name: string; sku: string; quantity: number };
 
@@ -18,7 +19,8 @@ export default function StockForm({
   products: Product[];
   type: "IN" | "OUT";
 }) {
-  const [state, formAction] = useActionState(
+  const { t } = useTranslation();
+  const [, formAction] = useActionState(
     async (_prev: unknown, formData: FormData) => {
       formData.set("type", type);
       await createStockMovement(formData);
@@ -29,16 +31,16 @@ export default function StockForm({
   return (
     <form action={formAction} className="space-y-6">
       <div>
-        <label className="input-label">Select Product</label>
+        <label className="input-label">{t("stock.form.selectProduct")}</label>
         <select
           name="productId"
           required
           className="input-field"
         >
-          <option value="" className="select-option">Select product to update</option>
+          <option value="" className="select-option">{t("stock.form.selectPlaceholder")}</option>
           {products.map((p) => (
             <option key={p.id} value={p.id} className="select-option">
-              {p.name} ({p.sku}) - Current Stock: {p.quantity}
+              {t("stock.form.productOption", { name: p.name, sku: p.sku, qty: p.quantity })}
             </option>
           ))}
         </select>
@@ -47,19 +49,19 @@ export default function StockForm({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="input-label">
-            Quantity {type === "OUT" ? "(must not exceed current stock)" : ""}
+            {t("stock.form.quantity")} {type === "OUT" ? t("stock.form.outHint") : ""}
           </label>
           <input
             name="quantity"
             type="number"
             min="1"
             required
-            placeholder="Enter quantity"
+            placeholder={t("stock.form.qtyPlaceholder")}
             className="input-field"
           />
         </div>
         <div>
-          <label className="input-label">Date</label>
+          <label className="input-label">{t("stock.form.date")}</label>
           <input
             name="date"
             type="date"
@@ -73,7 +75,7 @@ export default function StockForm({
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="input-label">Quantity for Case</label>
+              <label className="input-label">{t("stock.form.quantityForCase")}</label>
               <input
                 name="case_quantity"
                 type="number"
@@ -83,7 +85,7 @@ export default function StockForm({
               />
             </div>
             <div>
-              <label className="input-label">Cost per Unit ($)</label>
+              <label className="input-label">{t("stock.form.costPerUnit")}</label>
               <input
                 name="unit_cost"
                 type="number"
@@ -96,7 +98,7 @@ export default function StockForm({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="input-label">Cost per Case ($)</label>
+              <label className="input-label">{t("stock.form.costPerCase")}</label>
               <input
                 name="case_cost"
                 type="number"
@@ -112,10 +114,10 @@ export default function StockForm({
       )}
 
       <div>
-        <label className="input-label">Note / Reference</label>
+        <label className="input-label">{t("stock.form.note")}</label>
         <input
           name="note"
-          placeholder="e.g. Purchase order #9213"
+          placeholder={t("stock.form.notePlaceholder")}
           className="input-field"
         />
       </div>
@@ -129,13 +131,13 @@ export default function StockForm({
               : "bg-gradient-to-r from-rose-600 to-red-650 hover:from-rose-500 hover:to-red-600 border-rose-500/20 text-white shadow-rose-500/15"
           }`}
         >
-          {type === "IN" ? "Add Stock Entry" : "Remove Stock Entry"}
+          {type === "IN" ? t("stock.form.add") : t("stock.form.remove")}
         </button>
         <Link
           href="/stock"
           className="cancel-btn"
         >
-          Cancel
+          {t("common.cancel")}
         </Link>
       </div>
     </form>

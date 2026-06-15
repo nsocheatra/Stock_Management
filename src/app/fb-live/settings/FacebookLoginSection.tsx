@@ -13,6 +13,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { saveFBSettings, selectFBPage } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 function FacebookIcon({ className }: { className?: string }) {
   return (
@@ -62,6 +63,7 @@ export default function FacebookLoginSection({
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const router = useRouter();
+  const { t } = useTranslation();
 
   const pages: FBPage[] = pagesJson ? JSON.parse(pagesJson) : [];
   const businesses: FBBusiness[] = businessesJson ? JSON.parse(businessesJson) : [];
@@ -91,7 +93,7 @@ export default function FacebookLoginSection({
     const appId = fd.get("app_id") as string;
     const appSecret = fd.get("app_secret") as string;
     if (!appId || !appSecret) {
-      setSaveError("Please enter both App ID and App Secret.");
+      setSaveError(t("fbLive.settings.facebookLogin.validationError"));
       return;
     }
     setSaveError("");
@@ -100,7 +102,7 @@ export default function FacebookLoginSection({
       await saveFBSettings(fd);
       window.location.href = "/api/auth/facebook";
     } catch {
-      setSaveError("Failed to save settings.");
+      setSaveError(t("fbLive.settings.facebookLogin.saveError"));
     } finally {
       setSaving(false);
     }
@@ -118,13 +120,13 @@ export default function FacebookLoginSection({
         <div className="flex items-center gap-2">
           <FacebookIcon className="size-5 text-[#1877F2]" />
           <span className="text-sm font-semibold text-default">
-            Facebook Account
+            {t("fbLive.settings.facebookLogin.connected")}
           </span>
         </div>
         {isConnected ? (
           <span className="flex items-center gap-1.5 text-xs font-medium text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
             <CheckCircle className="size-3" />
-            Connected
+            {t("fbLive.settings.facebookLogin.connectedBadge")}
           </span>
         ) : null}
       </div>
@@ -156,7 +158,7 @@ export default function FacebookLoginSection({
               >
                 <span className="flex items-center gap-1.5">
                   <Building2 className="size-3" />
-                  {pages.length} Pages available
+                  {t("fbLive.settings.facebookLogin.pagesAvailable", { count: pages.length })}
                 </span>
                 {showPages ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
               </button>
@@ -176,7 +178,7 @@ export default function FacebookLoginSection({
                     >
                       <span className="font-semibold">{page.name}</span>
                       {page.id === currentPageId && (
-                        <span className="float-right text-[10px] text-violet-400">Active</span>
+                        <span className="float-right text-[10px] text-violet-400">{t("fbLive.settings.facebookLogin.active")}</span>
                       )}
                     </button>
                   ))}
@@ -194,7 +196,7 @@ export default function FacebookLoginSection({
               >
                 <span className="flex items-center gap-1.5">
                   <Building2 className="size-3" />
-                  {businesses.length} Businesses
+                  {t("fbLive.settings.facebookLogin.businesses", { count: businesses.length })}
                 </span>
                 {showBiz ? <ChevronUp className="size-3.5" /> : <ChevronDown className="size-3.5" />}
               </button>
@@ -217,7 +219,7 @@ export default function FacebookLoginSection({
               className="text-xs text-[#1877F2] hover:text-[#166FE5] transition-colors flex items-center gap-1.5 font-medium cursor-pointer"
             >
               <RefreshCw className="size-3" />
-              Sign in with a different Facebook account
+              {t("fbLive.settings.facebookLogin.switchAccount")}
             </a>
           </div>
 
@@ -225,9 +227,7 @@ export default function FacebookLoginSection({
             <div className="flex items-start gap-2 text-xs text-amber-300 bg-amber-500/5 border border-amber-500/20 rounded-lg px-3 py-2">
               <AlertCircle className="size-3.5 mt-0.5 shrink-0" />
               <span>
-                No Pages found. Make sure your Facebook App has the{" "}
-                <strong>Pages API</strong> product added and you have
-                admin/editor access to at least one Facebook Page.
+                {t("fbLive.settings.facebookLogin.noPages")}
               </span>
             </div>
           )}
@@ -235,19 +235,18 @@ export default function FacebookLoginSection({
       ) : (
         <>
           <p className="text-xs text-faint">
-            Sign in to grant access to your Facebook Pages and Businesses, then
-            select the Page to use for auto-ordering.
+            {t("fbLive.settings.facebookLogin.notConnected")}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <label className="input-label">App ID</label>
+              <label className="input-label">{t("fbLive.settings.facebookLogin.appId")}</label>
               <div className="relative">
                 <input
                   name="app_id"
                   type={showAppId ? "text" : "password"}
                   defaultValue={savedAppId}
-                  placeholder="Facebook App ID"
+                  placeholder={t("fbLive.settings.facebookLogin.appIdPlaceholder")}
                   className="input-field pr-10 font-mono text-xs"
                 />
                 <button
@@ -260,13 +259,13 @@ export default function FacebookLoginSection({
               </div>
             </div>
             <div>
-              <label className="input-label">App Secret</label>
+              <label className="input-label">{t("fbLive.settings.facebookLogin.appSecret")}</label>
               <div className="relative">
                 <input
                   name="app_secret"
                   type={showAppSecret ? "text" : "password"}
                   defaultValue={savedAppSecret}
-                  placeholder="Facebook App Secret"
+                  placeholder={t("fbLive.settings.facebookLogin.appSecretPlaceholder")}
                   className="input-field pr-10 font-mono text-xs"
                 />
                 <button
@@ -293,12 +292,11 @@ export default function FacebookLoginSection({
             className="w-full py-3 rounded-lg text-sm font-semibold text-white bg-[#1877F2] hover:bg-[#166FE5] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-[#1877F2]/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             <FacebookIcon className="size-5" />
-            {saving ? "Saving..." : "Sign in with Facebook"}
+            {saving ? t("fbLive.settings.facebookLogin.saving") : t("fbLive.settings.facebookLogin.signIn")}
           </button>
 
           <p className="text-xs text-faint text-center">
-            Clicking above will save your App ID & App Secret first, then
-            redirect to Facebook for authorization.
+            {t("fbLive.settings.facebookLogin.note")}
           </p>
         </>
       )}

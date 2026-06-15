@@ -6,6 +6,7 @@ import SidebarNav from "@/components/SidebarNav";
 import ThemeToggle from "@/components/ThemeToggle";
 import LocaleSwitcher from "@/components/LocaleSwitcher";
 import LogoutButton from "@/components/LogoutButton";
+import { T } from "@/components/T";
 import { Warehouse } from "lucide-react";
 
 type User = { name: string; role: string } | null;
@@ -34,7 +35,7 @@ export default function LayoutClient({
                 <div className="p-1.5 rounded-lg bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg" style={{ boxShadow: "0 4px 20px -5px rgba(139, 92, 246, 0.3)" }}>
                   <Warehouse className="size-5 text-white" />
                 </div>
-                Stock Manager
+                <T k="app.title" />
               </h1>
               <ThemeToggle />
             </div>

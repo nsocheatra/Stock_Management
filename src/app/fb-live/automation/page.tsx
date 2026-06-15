@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import AutomationClient from "./AutomationClient";
 
@@ -21,19 +22,17 @@ export default function AutomationPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-default">Automation</h2>
-          <p className="text-sm text-faint mt-1">
-            Auto-reply rules, quick replies, and built-in commands for your Messenger chatbot.
-          </p>
+          <h2 className="text-xl font-bold text-default"><T k="fbLive.automation.title" /></h2>
+          <p className="text-sm text-faint mt-1"><T k="fbLive.automation.subtitle" /></p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-center px-3 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20">
             <p className="text-xs font-bold text-violet-300">{stats.active}/{stats.total}</p>
-            <p className="text-[10px] text-faint">Rules Active</p>
+            <p className="text-[10px] text-faint"><T k="fbLive.automation.rulesActive" /></p>
           </div>
           <div className="text-center px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
             <p className="text-xs font-bold text-emerald-300">{stats.totalTriggered}</p>
-            <p className="text-[10px] text-faint">Triggered</p>
+            <p className="text-[10px] text-faint"><T k="fbLive.automation.triggered" /></p>
           </div>
         </div>
       </div>
@@ -53,10 +52,10 @@ export default function AutomationPage() {
             <div key={cat} className="bg-surface-blur border border-surface rounded-xl p-3 shadow-sm">
               <div className="flex items-center gap-2 mb-1.5">
                 <div className={`size-2 rounded-full bg-gradient-to-br ${colors[cat] || "from-zinc-500 to-zinc-600"}`} />
-                <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">{cat}</span>
+                <span className="text-[10px] font-semibold text-muted uppercase tracking-wider"><T k={"fbLive.automation.categories." + cat} /></span>
               </div>
               <p className="text-lg font-bold text-default">{count}</p>
-              <p className="text-[10px] text-faint">{activeCount} active</p>
+              <p className="text-[10px] text-faint"><T k="fbLive.automation.active" vars={{ count: activeCount }} /></p>
             </div>
           );
         })}
@@ -65,8 +64,8 @@ export default function AutomationPage() {
       {/* Built-in commands */}
       <div className="bg-surface-blur border border-surface rounded-2xl p-5 shadow-xl">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-default">Built-in Commands</h3>
-          <span className="text-[10px] text-faint">Always active</span>
+          <h3 className="text-sm font-semibold text-default"><T k="fbLive.automation.builtInCommands" /></h3>
+          <span className="text-[10px] text-faint"><T k="fbLive.automation.alwaysActive" /></span>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
           {[

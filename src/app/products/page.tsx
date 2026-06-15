@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { Plus, Edit, Package, Image as ImageIcon } from "lucide-react";
 import DeleteProductButton from "./DeleteButton";
+import { T } from "@/components/T";
 
 interface ProductRow {
   id: number;
@@ -32,29 +33,29 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-            Products Directory
+            <T k="products.title" />
           </h1>
-          <p className="text-sm text-faint mt-1">Monitor, adjust safety stock levels, and assign suppliers.</p>
+          <p className="text-sm text-faint mt-1"><T k="products.subtitle" /></p>
         </div>
         <Link
           href="/products/new"
           className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4.5 py-2.5 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-500/10 border border-violet-500/20"
         >
           <Plus className="size-4" />
-          <span className="text-sm font-semibold">Add Product</span>
+          <span className="text-sm font-semibold"><T k="products.add" /></span>
         </Link>
       </div>
 
       {products.length === 0 ? (
         <div className="text-center py-20 bg-surface border-surface rounded-2xl">
           <Package className="size-14 mx-auto mb-4 text-muted opacity-70" />
-          <p className="text-lg text-default font-medium">No products registered yet</p>
-          <p className="text-sm text-faint mt-1 mb-4">Start populate your warehouse index</p>
+          <p className="text-lg text-default font-medium"><T k="products.empty" /></p>
+          <p className="text-sm text-faint mt-1 mb-4"><T k="products.emptyHint" /></p>
           <Link
             href="/products/new"
             className="text-violet-400 hover:text-violet-300 font-semibold text-sm hover:underline"
           >
-            Add your first product &rarr;
+            <T k="products.emptyCta" />
           </Link>
         </div>
       ) : (
@@ -63,16 +64,16 @@ export default function ProductsPage() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b border-surface bg-header">
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Image</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Product Name</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">SKU</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Barcode</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Category</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Unit</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Per Case</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Quantity</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider">Supplier</th>
-                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right">Actions</th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="products.table.image" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="products.table.productName" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="products.table.sku" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="products.table.barcode" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="products.table.category" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="products.table.unit" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="products.table.perCase" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="products.table.quantity" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider"><T k="products.table.supplier" /></th>
+                  <th className="p-4 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="common.actions" /></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-surface">
@@ -86,6 +87,7 @@ export default function ProductsPage() {
                       <td className="p-4">
                         {p.image_url ? (
                           <div className="size-10 rounded-lg overflow-hidden border border-surface">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={p.image_url}
                               alt=""
@@ -137,7 +139,7 @@ export default function ProductsPage() {
                               : "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                           }`}
                         >
-                          {p.quantity} / {p.min_stock} min
+                          <T k="products.stockBadge" vars={{ qty: p.quantity, min: p.min_stock }} />
                         </span>
                       </td>
                       <td className="p-4 text-default">{p.supplier_name || <span className="text-faint">-</span>}</td>

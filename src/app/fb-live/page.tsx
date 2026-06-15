@@ -1,3 +1,4 @@
+import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import Link from "next/link";
 import { Hash, MessageCircle, Package, Settings } from "lucide-react";
@@ -60,9 +61,9 @@ export default function FBLivePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-            Facebook Live Auto-Ordering
+            <T k="fbLive.main.title" />
           </h1>
-          <p className="text-sm text-faint mt-1">Link keywords to products and auto-process orders from live comments.</p>
+          <p className="text-sm text-faint mt-1"><T k="fbLive.main.subtitle" /></p>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -70,13 +71,13 @@ export default function FBLivePage() {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-surface text-muted hover:text-default hover:bg-surface transition-all duration-200"
           >
             <Settings className="size-4" />
-            <span className="text-sm font-semibold">Settings</span>
+            <span className="text-sm font-semibold"><T k="nav.settings" /></span>
           </Link>
           <div className="flex items-center gap-2 bg-surface-blur border-surface rounded-xl px-4 py-2.5">
             <span className={`size-2 rounded-full ${fbEnabled ? "bg-emerald-400 shadow-lg shadow-emerald-500/50 animate-pulse" : "bg-zinc-600"}`} />
-            <span className="text-sm font-semibold text-default">Live</span>
+            <span className="text-sm font-semibold text-default"><T k="fbLive.main.live" /></span>
             <span className={`text-xs px-2 py-0.5 rounded-full font-bold ${pendingOrders > 0 ? "bg-emerald-500/15 text-emerald-400" : "text-muted bg-surface"}`}>
-              {pendingOrders} pending
+              <T k="fbLive.main.pending" vars={{ count: pendingOrders }} />
             </span>
           </div>
         </div>
@@ -88,16 +89,16 @@ export default function FBLivePage() {
           <div className="bg-surface-blur border-surface rounded-2xl p-5 shadow-xl">
             <h2 className="text-sm font-semibold text-default flex items-center gap-2 mb-3">
               <MessageCircle className="size-4 text-muted" />
-              Simulate Comment
+              <T k="fbLive.main.simulate" />
             </h2>
-            <p className="text-xs text-faint mb-3">Test your keyword setup by simulating a Facebook comment.</p>
+            <p className="text-xs text-faint mb-3"><T k="fbLive.main.simulateHint" /></p>
             <FBCommentSimulator keywords={keywords.map(k => k.keyword)} />
           </div>
 
           <div className="bg-surface-blur border-surface rounded-2xl p-5 shadow-xl">
             <h2 className="text-sm font-semibold text-default flex items-center gap-2 mb-4">
               <Hash className="size-4 text-muted" />
-              Link Keyword to Product
+              <T k="fbLive.main.linkKeyword" />
             </h2>
             <FBLiveClient products={products} keywords={keywords} />
           </div>
@@ -111,9 +112,9 @@ export default function FBLivePage() {
         <div className="p-4 border-b border-surface flex items-center justify-between">
           <h2 className="text-sm font-semibold text-default flex items-center gap-2">
             <MessageCircle className="size-4 text-muted" />
-            Order Feed
+            <T k="fbLive.main.orderFeed" />
           </h2>
-          <span className="text-xs text-faint">{orders.length} orders</span>
+          <span className="text-xs text-faint"><T k="fbLive.main.orders" vars={{ count: orders.length }} /></span>
         </div>
 
             {orders.length > 0 ? (
@@ -121,12 +122,12 @@ export default function FBLivePage() {
                 <table className="w-full text-left border-collapse">
                   <thead className="sticky top-0" style={{ backgroundColor: "var(--bg-header)" }}>
                     <tr className="border-b border-surface">
-                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider w-10">No</th>
-                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider">Name</th>
-                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider">Comment</th>
-                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider">Time</th>
-                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right">Action</th>
-                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-center">Status</th>
+                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider w-10"><T k="fbLive.main.table.no" /></th>
+                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider"><T k="fbLive.main.table.name" /></th>
+                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider"><T k="fbLive.main.table.comment" /></th>
+                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider"><T k="fbLive.main.table.time" /></th>
+                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-right"><T k="fbLive.main.table.action" /></th>
+                      <th className="p-3 font-semibold text-muted text-xs uppercase tracking-wider text-center"><T k="fbLive.main.table.status" /></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-surface">
@@ -156,12 +157,12 @@ export default function FBLivePage() {
                             {o.comment_deleted ? (
                               <span className="text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1">
                                 <span className="size-1.5 rounded-full bg-rose-400 animate-pulse" />
-                                Deleted
+                                <T k="fbLive.main.statuses.deleted" />
                               </span>
                             ) : (
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
                                 o.status === "pending" ? "bg-emerald-500/15 text-emerald-400" : "bg-zinc-500/15 text-zinc-400"
-                              }`}>{o.status === "pending" ? "New" : "Old"}</span>
+                              }`}>{o.status === "pending" ? <T k="fbLive.main.statuses.new" /> : <T k="fbLive.main.statuses.old" />}</span>
                             )}
                           </div>
                         </td>
@@ -173,8 +174,8 @@ export default function FBLivePage() {
             ) : (
               <div className="text-center py-16 text-faint">
                 <MessageCircle className="size-10 mx-auto mb-3 opacity-40" />
-                <p className="text-sm">No orders yet</p>
-                <p className="text-xs mt-1">Link keywords and simulate comments to test</p>
+                <p className="text-sm"><T k="fbLive.main.noOrders" /></p>
+                <p className="text-xs mt-1"><T k="fbLive.main.noOrdersHint" /></p>
               </div>
             )}
         </div>

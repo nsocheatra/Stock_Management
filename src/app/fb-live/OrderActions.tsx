@@ -3,14 +3,15 @@
 import { useState, useTransition } from "react";
 import { FileText, Printer, Loader, RotateCcw } from "lucide-react";
 import { draftOrderFromFB, getOrderReceipt, resetFBOrder } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
-function openPrintReceipt(orderId: number) {
+function openPrintReceipt(orderId: number, t: (key: string, vars?: Record<string, string | number>) => string) {
   getOrderReceipt(orderId).then((order) => {
     if (!order) return;
     const w = window.open("", "_blank");
     if (!w) return;
     w.document.write(`
-      <html><head><title>Receipt #${order.id}</title>
+      <html><head><title>${t("receipt.title")} #${order.id}</title>
       <style>body{font-family:monospace;font-size:14px;padding:20px;max-width:300px;margin:auto}
       h2{text-align:center}h3{text-align:center;color:#888}
       table{width:100%;border-collapse:collapse;margin:12px 0}
@@ -18,15 +19,15 @@ function openPrintReceipt(orderId: number) {
       .right{text-align:right}.total{font-weight:bold;border-top:2px dashed #000;padding-top:8px}
       .center{text-align:center;color:#888;margin-top:20px}
       </style></head><body>
-      <h2>Order Receipt</h2>
+      <h2>${t("receipt.title")}</h2>
       <h3>#${order.id}</h3>
       <p><strong>${order.customer_name}</strong></p>
       <p style="color:#888;font-size:12px">${new Date(order.created_at).toLocaleString()}</p>
       <table>
-        <tr><th>Item</th><th class="right">Qty</th><th class="right">Price</th></tr>
+        <tr><th>${t("receipt.item")}</th><th class="right">${t("receipt.qty")}</th><th class="right">${t("receipt.price")}</th></tr>
         <tr><td>${order.product_name || "N/A"}</td><td class="right">${order.quantity}</td><td class="right">$${((order.price ?? 0) * order.quantity).toFixed(2)}</td></tr>
       </table>
-      <p class="center">Thank you!</p>
+      <p class="center">${t("receipt.thankYou")}</p>
       <script>window.print();window.close();</script>
       </body></html>
     `);
@@ -37,10 +38,11 @@ function openPrintReceipt(orderId: number) {
 export default function OrderActions({ orderId }: { orderId: number }) {
   const [phase, setPhase] = useState<"draft" | "processing" | "done">("draft");
   const [pending, startTransition] = useTransition();
+  const { t } = useTranslation();
 
   const handleClick = () => {
     if (phase === "done") {
-      openPrintReceipt(orderId);
+      openPrintReceipt(orderId, t);
       return;
     }
     startTransition(async () => {
@@ -52,7 +54,7 @@ export default function OrderActions({ orderId }: { orderId: number }) {
         return;
       }
       setPhase("done");
-      openPrintReceipt(orderId);
+      openPrintReceipt(orderId, t);
     });
   };
 
@@ -75,11 +77,11 @@ export default function OrderActions({ orderId }: { orderId: number }) {
         }`}
       >
         {phase === "processing" ? (
-          <><Loader className="size-3 animate-spin" /> Processing</>
+          <><Loader className="size-3 animate-spin" /> {t("fbLive.main.processing")}</>
         ) : phase === "done" ? (
-          <><Printer className="size-3" /> Print</>
+          <><Printer className="size-3" /> {t("receipt.print")}</>
         ) : (
-          <><FileText className="size-3" /> Draft</>
+          <><FileText className="size-3" /> {t("fbLive.main.draft")}</>
         )}
       </button>
       {phase === "done" && (
@@ -89,7 +91,7 @@ export default function OrderActions({ orderId }: { orderId: number }) {
           className="inline-flex items-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-zinc-500/10 text-zinc-400 border border-zinc-500/20 hover:bg-zinc-500/20 transition-all cursor-pointer whitespace-nowrap disabled:opacity-40"
         >
           <RotateCcw className="size-3" />
-          Clear
+          {t("fbLive.main.clear")}
         </button>
       )}
     </div>

@@ -226,9 +226,10 @@ export async function addFBKeyword(formData: FormData) {
 
   try {
     db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(keyword, productId, quantity);
-  } catch (e: any) {
-    if (e.message.includes("UNIQUE")) return { error: "Keyword already exists" };
-    return { error: e.message };
+  } catch (e: unknown) {
+    const msg = (e as Error).message;
+    if (msg.includes("UNIQUE")) return { error: "Keyword already exists" };
+    return { error: msg };
   }
 
   revalidatePath("/fb-live");
@@ -756,7 +757,7 @@ export async function saveCustomer(formData: FormData) {
     revalidatePath("/customers");
     redirect("/customers");
   } else {
-    const result = db.prepare("INSERT INTO customers (name, phone, email, address, customer_type, credit) VALUES (?, ?, ?, ?, ?, ?)")
+    db.prepare("INSERT INTO customers (name, phone, email, address, customer_type, credit) VALUES (?, ?, ?, ?, ?, ?)")
       .run(name, phone, email, address, customerType, credit);
     revalidatePath("/customers");
     redirect("/customers");

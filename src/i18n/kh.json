@@ -11,6 +11,8 @@
     "products": "ផលិតផល",
     "inventory": "ស្តុក",
     "fbLive": "FB ផ្សាយផ្ទាល់",
+    "stock": "ស្តុក",
+    "fblive": "FB ផ្សាយផ្ទាល់",
     "suppliers": "អ្នកផ្គត់ផ្គង់",
     "reports": "របាយការណ៍",
     "settings": "ការកំណត់",
@@ -35,7 +37,16 @@
     "credit": "ឥណទាន",
     "date": "កាលបរិច្ឆេទ",
     "note": "ចំណាំ",
-    "copied": "បានចម្លង!"
+    "copied": "បានចម្លង!",
+    "justNow": "ទើបតែប៉ុន្មានវិនាទី",
+    "minutesAgo": "{n}ន មុន",
+    "hoursAgo": "{n}ម មុន",
+    "daysAgo": "{n}ថ មុន"
+  },
+  "chart": {
+    "stock": "ស្តុក:",
+    "quantity": "បរិមាណ:",
+    "units": "ឯកតា"
   },
   "pos": {
     "title": "កន្លែងលក់",
@@ -169,6 +180,10 @@
     "stockOut": "ដកស្តុក",
     "stockInEntry": "បញ្ចូលស្តុក",
     "stockOutEntry": "ដកស្តុក",
+    "currentInventory": "សារពើភ័ណ្ឌបច្ចុប្បន្ន",
+    "productCount": "{count} ផលិតផល",
+    "stockInTooltip": "បញ្ចូលស្តុក",
+    "stockOutTooltip": "ដកស្តុក",
     "kpi": {
       "totalProducts": "ផលិតផលសរុប",
       "totalStock": "ស្តុកសរុប",
@@ -203,7 +218,10 @@
       "notePlaceholder": "ឧ. លេខបញ្ជាទិញ #៩២១៣",
       "productOption": "{name} ({sku}) - ស្តុកបច្ចុប្បន្ន: {qty}",
       "add": "បន្ថែមចូលស្តុក",
-      "remove": "ដកចេញពីស្តុក"
+      "remove": "ដកចេញពីស្តុក",
+      "quantityForCase": "បរិមាណក្នុងមួយកេស",
+      "costPerUnit": "តម្លៃក្នុងមួយឯកតា ($)",
+      "costPerCase": "តម្លៃក្នុងមួយកេស ($)"
     }
   },
   "suppliers": {
@@ -254,6 +272,7 @@
       "total": "សរុប",
       "date": "កាលបរិច្ឆេទ"
     },
+    "uncategorized": "មិនមានប្រភេទ",
     "walkIn": "អតិថិជនទូទៅ",
     "allocation": {
       "byProduct": "ការបែងចែកស្តុកតាមផលិតផល",
@@ -278,7 +297,7 @@
     "pin": "PIN",
     "email": "អ៊ីមែល",
     "password": "ពាក្យសម្ងាត់",
-    "emailPlaceholder": "admin@system.local",
+    "emailPlaceholder": "you@example.com",
     "passwordPlaceholder": "បញ្ចូលពាក្យសម្ងាត់",
     "signIn": "ចូលប្រើ",
     "signingIn": "កំពុងចូលប្រើ...",
@@ -288,7 +307,7 @@
     "quickLoginLoading": "កំពុងចូលប្រើ...",
     "invalidPin": "PIN មិនត្រឹមត្រូវ",
     "loginFailed": "ការចូលប្រើបរាជ័យ",
-    "defaultHint": "លំនាំដើម: admin@system.local / admin123"
+    "defaultHint": ""
   },
   "dashboard": {
     "title": "ទិដ្ឋភាពទូទៅ",
@@ -305,7 +324,9 @@
       "recentActivities": "សកម្មភាពស្តុកថ្មីៗ",
       "noMovements": "មិនទាន់មានចលនាអ្វីនៅឡើយទេ"
     },
-    "noReference": "គ្មានឯកសារយោង"
+    "noReference": "គ្មានឯកសារយោង",
+    "movementIn": "បញ្ចូលស្តុក +",
+    "movementOut": "ដកស្តុក -"
   },
   "settings": {
     "title": "ការកំណត់",
@@ -386,6 +407,24 @@
       "productOption": "{name} ({sku}) — {qty} នៅក្នុងស្តុក",
       "addKeyword": "បន្ថែមពាក្យគន្លឹះ",
       "activeKeywords": "ពាក្យគន្លឹះសកម្ម",
+      "inStock": "នៅក្នុងស្តុក",
+      "untitled": "គ្មានចំណងជើង",
+      "processing": "កំពុងដំណើរការ",
+      "draft": "ពង្រាង",
+      "clear": "សម្អាត",
+      "table": {
+        "no": "លេខ",
+        "name": "ឈ្មោះ",
+        "comment": "មតិយោបល់",
+        "time": "ម៉ោង",
+        "action": "សកម្មភាព",
+        "status": "ស្ថានភាព"
+      },
+      "statuses": {
+        "deleted": "បានលុប",
+        "new": "ថ្មី",
+        "old": "ចាស់"
+      },
       "simulate": {
         "customerName": "ឈ្មោះអតិថិជន",
         "commentText": "អត្ថបទមតិយោបល់",
@@ -675,7 +714,7 @@
     "allUsers": "អ្នកប្រើប្រាស់ទាំងអស់",
     "usersCount": "{count} អ្នកប្រើប្រាស់",
     "noUsers": "មិនទាន់មានអ្នកប្រើប្រាស់នៅឡើយទេ",
-    "defaultHint": "អ្នកគ្រប់គ្រងលំនាំដើម: admin@system.local / admin123",
+    "defaultHint": "",
     "roles": {
       "admin": "អ្នកគ្រប់គ្រង",
       "cashier": "អ្នកគិតលុយ",
@@ -698,6 +737,7 @@
       "cashier": "អ្នកគិតលុយ",
       "admin": "អ្នកគ្រប់គ្រង"
     },
+    "pinLabel": "PIN: {pin}",
     "add": "បន្ថែមអ្នកប្រើប្រាស់",
     "failed": "បរាជ័យក្នុងការបង្កើតអ្នកប្រើប្រាស់"
   },

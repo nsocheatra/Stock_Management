@@ -7,10 +7,8 @@ import {
 } from "lucide-react";
 
 import { saveFBSettings, saveMessengerSettings } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 import FacebookLoginSection from "./FacebookLoginSection";
-
-const liveTab = "live";
-const chatbotTab = "chatbot";
 
 export default function FBSettingsForm({
   settings,
@@ -31,21 +29,24 @@ export default function FBSettingsForm({
   const [showToken, setShowToken] = useState(false);
   const [showMsgToken, setShowMsgToken] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [origin, setOrigin] = useState("");
-  const [fbConnected, setFbConnected] = useState<string | null>(null);
-  const [fbError, setFbError] = useState<string | null>(null);
+  const [origin] = useState(() => typeof window !== "undefined" ? window.location.origin : "");
+  const [fbConnected] = useState<string | null>(() => {
+    try {
+      return typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("fb_connected") : null;
+    } catch { return null; }
+  });
+  const [fbError] = useState<string | null>(() => {
+    try {
+      return typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("fb_error") : null;
+    } catch { return null; }
+  });
   const router = useRouter();
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("fb_connected");
     const error = params.get("fb_error");
-    if (connected) setFbConnected(connected);
-    if (error) setFbError(error);
     if (connected || error) {
       const newParams = new URLSearchParams(window.location.search);
       newParams.delete("fb_connected");
@@ -94,7 +95,7 @@ export default function FBSettingsForm({
           }`}
         >
           <RadioTower className="size-4" />
-          Live Auto-Ordering
+          {t("fbLive.settings.liveTab")}
         </button>
         <button
           type="button"
@@ -104,7 +105,7 @@ export default function FBSettingsForm({
           }`}
         >
           <MessageCircle className="size-4" />
-          Messenger Chatbot
+          {t("fbLive.settings.chatbotTab")}
         </button>
       </div>
 
@@ -114,20 +115,17 @@ export default function FBSettingsForm({
           {/* Facebook Login for Business */}
           <div>
             <h3 className="text-sm font-semibold text-default mb-3">
-              Sign in with your Facebook Account
+              {t("fbLive.settings.live.signIn")}
             </h3>
             <p className="text-xs text-faint mb-3">
-              As Instagram is a part of Meta (ex. Facebook) ecosystem, sign in with
-              your Facebook account to create automation. By continuing, Rika System
-              will receive ongoing access to the information you share and Meta will
-              record when Rika System accesses it.{" "}
+              {t("fbLive.settings.live.description")}{" "}
               <a
                 href="https://www.facebook.com/help"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-violet-400 hover:text-violet-300 underline"
               >
-                Learn more about this sharing and the settings you have
+                {t("fbLive.settings.live.learnMore")}
               </a>.
             </p>
         <FacebookLoginSection
@@ -146,7 +144,7 @@ export default function FBSettingsForm({
           <div className="flex items-center justify-between p-3 rounded-xl border border-surface">
             <div className="flex items-center gap-2">
               <Radio className={`size-4 ${enabled ? "text-emerald-400" : "text-muted"}`} />
-              <span className="text-sm font-semibold text-default">Live Listening</span>
+              <span className="text-sm font-semibold text-default">{t("fbLive.settings.live.liveListening")}</span>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
               <input type="hidden" name="listening_enabled" value={enabled ? "1" : "0"} />
@@ -166,24 +164,24 @@ export default function FBSettingsForm({
           {/* Page Settings */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="input-label">Facebook Page Name</label>
-              <input name="page_name" defaultValue={settings.page_name} placeholder="e.g. My Store" className="input-field" />
+              <label className="input-label">{t("fbLive.settings.live.pageName")}</label>
+              <input name="page_name" defaultValue={settings.page_name} placeholder={t("fbLive.settings.live.pageNamePlaceholder")} className="input-field" />
             </div>
             <div>
-              <label className="input-label">Facebook Page ID</label>
-              <input name="page_id" defaultValue={settings.page_id} placeholder="e.g. 123456789" className="input-field" />
+              <label className="input-label">{t("fbLive.settings.live.pageId")}</label>
+              <input name="page_id" defaultValue={settings.page_id} placeholder={t("fbLive.settings.live.pageIdPlaceholder")} className="input-field" />
             </div>
           </div>
 
           {/* Access Token */}
           <div>
-            <label className="input-label">Page Access Token</label>
+            <label className="input-label">{t("fbLive.settings.live.pageToken")}</label>
             <div className="relative">
               <input
                 name="access_token"
                 type={showToken ? "text" : "password"}
                 defaultValue={settings.access_token}
-                placeholder="EAAxxx..."
+                placeholder={t("fbLive.settings.live.pageTokenPlaceholder")}
                 className="input-field pr-10 font-mono text-xs"
               />
               <button type="button" onClick={() => setShowToken(!showToken)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-default cursor-pointer">
@@ -194,17 +192,17 @@ export default function FBSettingsForm({
 
           {/* Match Mode */}
           <div>
-            <label className="input-label">Keyword Match Mode</label>
+            <label className="input-label">{t("fbLive.settings.live.keywordMatchMode")}</label>
             <select name="match_mode" defaultValue={settings.match_mode || "contains"} className="input-field">
-              <option value="contains">Contains (e.g. #product matches any comment with #product)</option>
-              <option value="exact">Exact match (comment must be exactly the keyword)</option>
-              <option value="starts">Starts with (comment starts with keyword)</option>
+              <option value="contains">{t("fbLive.settings.live.matchModes.contains")}</option>
+              <option value="exact">{t("fbLive.settings.live.matchModes.exact")}</option>
+              <option value="starts">{t("fbLive.settings.live.matchModes.startsWith")}</option>
             </select>
           </div>
 
           {/* Webhook Info */}
           <div className="border border-surface rounded-xl p-4 space-y-2">
-            <label className="input-label">Webhook Callback URL</label>
+            <label className="input-label">{t("fbLive.settings.live.webhookUrl")}</label>
             <div className="flex items-center gap-2">
               <code className="flex-1 p-2 rounded-lg bg-black/30 border border-surface text-xs font-mono text-violet-300 break-all">
                 {origin || "/api/fb-webhook"}
@@ -218,7 +216,7 @@ export default function FBSettingsForm({
               </button>
             </div>
             <div className="flex items-center justify-between pt-2">
-              <label className="input-label">Verify Token</label>
+              <label className="input-label">{t("fbLive.settings.live.verifyToken")}</label>
               <div className="flex items-center gap-2">
                 <code className="p-1.5 rounded-lg bg-black/30 border border-surface text-xs font-mono text-amber-300">
                   {settings.verify_token || "—"}
@@ -232,23 +230,23 @@ export default function FBSettingsForm({
                 </button>
               </div>
             </div>
-            <p className="text-xs text-faint">Enter this token as the <strong>Verify Token</strong> in your Facebook App webhook settings.</p>
+            <p className="text-xs text-faint">{t("fbLive.settings.live.verifyTokenHint")}</p>
           </div>
 
           {/* Auto-reply Templates */}
           <div>
-            <label className="input-label">Auto-Reply Template (on success)</label>
+            <label className="input-label">{t("fbLive.settings.live.autoReplySuccess")}</label>
             <textarea
               name="auto_reply"
               defaultValue={settings.auto_reply}
               rows={2}
               className="input-field resize-none"
             />
-            <p className="text-xs text-faint mt-1">Use {'{{name}}'}, {'{{product}}'}, {'{{qty}}'} as placeholders</p>
+            <p className="text-xs text-faint mt-1">{t("fbLive.settings.live.autoReplySuccessHint")}</p>
           </div>
 
           <div>
-            <label className="input-label">Auto-Reply Template (no match)</label>
+            <label className="input-label">{t("fbLive.settings.live.autoReplyNoMatch")}</label>
             <textarea
               name="auto_reply_not_found"
               defaultValue={settings.auto_reply_not_found}
@@ -262,39 +260,39 @@ export default function FBSettingsForm({
             className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-500/15 border border-violet-500/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Save className="size-4" />
-            Save Live Settings
+            {t("fbLive.settings.live.save")}
           </button>
 
           {saved && (
             <div className="text-xs text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-              Settings saved successfully!
+              {t("fbLive.settings.status.saved")}
             </div>
           )}
 
           {/* Status messages */}
           {fbConnected && (
             <div className="text-xs text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-              Facebook account connected successfully! Your first Page has been auto-selected.
+              {t("fbLive.settings.status.connected")}
             </div>
           )}
           {fbError === "missing_app_id" && (
             <div className="text-xs text-center py-2 rounded-lg bg-rose-500/10 text-rose-400">
-              Please save your Facebook App ID and App Secret before signing in with Facebook.
+              {t("fbLive.settings.status.idSecretRequired")}
             </div>
           )}
           {fbError === "token_exchange_failed" && (
             <div className="text-xs text-center py-2 rounded-lg bg-rose-500/10 text-rose-400">
-              Failed to exchange authorization code. Check your App ID and App Secret.
+              {t("fbLive.settings.status.codeExchangeFailed")}
             </div>
           )}
           {fbError === "user_denied" && (
             <div className="text-xs text-center py-2 rounded-lg bg-amber-500/10 text-amber-400">
-              You denied the Facebook login request. Please try again and grant the requested permissions.
+              {t("fbLive.settings.status.denied")}
             </div>
           )}
           {fbError === "unexpected" && (
             <div className="text-xs text-center py-2 rounded-lg bg-rose-500/10 text-rose-400">
-              An unexpected error occurred during Facebook login. Please try again.
+              {t("fbLive.settings.status.unexpectedError")}
             </div>
           )}
         </form>
@@ -305,7 +303,7 @@ export default function FBSettingsForm({
         <form onSubmit={handleChatbotSubmit} className="bg-surface-blur border-surface rounded-2xl p-6 shadow-xl space-y-6">
           <h2 className="text-sm font-semibold text-default flex items-center gap-2">
             <MessageCircle className="size-4 text-muted" />
-            Facebook Messenger Chatbot
+            {t("fbLive.settings.chatbot.title")}
           </h2>
 
           <div className="bg-sky-500/5 border border-sky-500/20 rounded-xl p-4 text-sm text-sky-300 space-y-2">
@@ -322,13 +320,13 @@ export default function FBSettingsForm({
           </div>
 
           <div>
-            <label className="input-label">Page Access Token</label>
+            <label className="input-label">{t("fbLive.settings.chatbot.pageToken")}</label>
             <div className="relative">
               <input
                 name="messenger_page_token"
                 type={showMsgToken ? "text" : "password"}
                 defaultValue={messengerSettings.messenger_page_token}
-                placeholder="EAAxxx..."
+                placeholder={t("fbLive.settings.chatbot.pageTokenPlaceholder")}
                 className="input-field pr-10 font-mono text-xs"
               />
               <button type="button" onClick={() => setShowMsgToken(!showMsgToken)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-default cursor-pointer">
@@ -338,20 +336,20 @@ export default function FBSettingsForm({
           </div>
 
           <div className="flex items-center justify-between p-3 rounded-xl border border-surface">
-            <label className="input-label mb-0">Webhook Verify Token</label>
+            <label className="input-label mb-0">{t("fbLive.settings.chatbot.verifyToken")}</label>
             <code className="p-1.5 rounded-lg bg-black/30 border border-surface text-xs font-mono text-amber-300">
               {messengerSettings.messenger_verify_token || "—"}
             </code>
           </div>
 
           <div>
-            <label className="input-label">Greeting Message</label>
+            <label className="input-label">{t("fbLive.settings.chatbot.greeting")}</label>
             <textarea name="messenger_greeting" defaultValue={messengerSettings.messenger_greeting} rows={2} className="input-field resize-none" />
-            <p className="text-xs text-faint mt-1">Sent when a user starts a conversation or types &ldquo;menu&rdquo;.</p>
+            <p className="text-xs text-faint mt-1">{t("fbLive.settings.chatbot.greetingHint")}</p>
           </div>
 
           <div>
-            <label className="input-label">Product Not Found Message</label>
+            <label className="input-label">{t("fbLive.settings.chatbot.notFoundMessage")}</label>
             <textarea name="messenger_not_found" defaultValue={messengerSettings.messenger_not_found} rows={2} className="input-field resize-none" />
           </div>
 
@@ -364,7 +362,7 @@ export default function FBSettingsForm({
               className="sr-only peer"
             />
             <div className="w-9 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 bg-zinc-700 relative" />
-            <span className="text-sm text-default">Enable Messenger Chatbot</span>
+            <span className="text-sm text-default">{t("fbLive.settings.chatbot.enable")}</span>
           </label>
 
           <button
@@ -372,12 +370,12 @@ export default function FBSettingsForm({
             className="w-full py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all duration-200 shadow-lg shadow-violet-500/15 border border-violet-500/20 flex items-center justify-center gap-2 cursor-pointer"
           >
             <Save className="size-4" />
-            Save Chatbot Settings
+            {t("fbLive.settings.chatbot.save")}
           </button>
 
           {saved && (
             <div className="text-xs text-center py-2 rounded-lg bg-emerald-500/10 text-emerald-400">
-              Settings saved successfully!
+              {t("fbLive.settings.status.saved")}
             </div>
           )}
         </form>

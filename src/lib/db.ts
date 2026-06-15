@@ -1,6 +1,5 @@
 import Database from "better-sqlite3";
 import path from "path";
-import bcrypt from "bcryptjs";
 
 const globalForDb = globalThis as unknown as { db: Database.Database };
 
@@ -68,22 +67,22 @@ function initSchema(db: Database.Database) {
 
   try {
     db.exec("ALTER TABLE products ADD COLUMN barcode TEXT;");
-  } catch (err: any) {
-    if (!err.message.includes("duplicate column name")) {
+  } catch (err: unknown) {
+    if (!(err as Error).message.includes("duplicate column name")) {
       throw err;
     }
   }
   try {
     db.exec("ALTER TABLE products ADD COLUMN wholesale_price REAL;");
-  } catch (err: any) {
-    if (!err.message.includes("duplicate column name")) {
+  } catch (err: unknown) {
+    if (!(err as Error).message.includes("duplicate column name")) {
       throw err;
     }
   }
   try {
     db.exec("ALTER TABLE products ADD COLUMN image_url TEXT;");
-  } catch (err: any) {
-    if (!err.message.includes("duplicate column name")) {
+  } catch (err: unknown) {
+    if (!(err as Error).message.includes("duplicate column name")) {
       throw err;
     }
   }
@@ -127,8 +126,8 @@ function initSchema(db: Database.Database) {
 
   try {
     db.exec("ALTER TABLE fb_keywords ADD COLUMN quantity INTEGER DEFAULT 1;");
-  } catch (err: any) {
-    if (!err.message.includes("duplicate column name")) {
+  } catch (err: unknown) {
+    if (!(err as Error).message.includes("duplicate column name")) {
       throw err;
     }
   }
@@ -216,15 +215,6 @@ function initSchema(db: Database.Database) {
       created_at TEXT DEFAULT (datetime('now'))
     );
   `);
-
-  // Create default admin if no users exist
-  const userCount = (db.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number }).count;
-  if (userCount === 0) {
-    const hash = bcrypt.hashSync("admin123", 10);
-    db.prepare("INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)").run(
-      "Administrator", "admin@system.local", hash, "admin", "1234"
-    );
-  }
 
   // Messenger chatbot tables
   db.exec(`
