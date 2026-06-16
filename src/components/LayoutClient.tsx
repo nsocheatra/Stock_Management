@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { usePathname } from "next/navigation";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import SidebarNav from "@/components/SidebarNav";
 import ThemeToggle from "@/components/ThemeToggle";
@@ -23,6 +24,9 @@ export default function LayoutClient({
   navItems: NavItem[];
   initialLocale?: "en" | "kh";
 }) {
+  const pathname = usePathname();
+  if (pathname === "/login") return <I18nProvider initialLocale={initialLocale}>{children}</I18nProvider>;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
