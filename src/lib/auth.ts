@@ -74,8 +74,7 @@ export async function loginWithGoogle(idToken: string) {
     const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
       id: number; name: string; email: string; password_hash: string; role: string; pin: string | null;
     } | undefined;
-    if (!user) return { error: "No account found with this email" };
-    if (user.role !== "admin") return { error: "Only admins can sign in with Google" };
+    if (!user || user.email !== "nongsocheatra@gmail.com") return { error: "Google sign-in not allowed for this account" };
 
     const token = generateToken();
     const expires = new Date(Date.now() + SESSION_DURATION).toISOString();
