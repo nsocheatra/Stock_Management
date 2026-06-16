@@ -3,12 +3,6 @@
 import { cookies } from "next/headers";
 import { db } from "./db";
 import bcrypt from "bcryptjs";
-import { initializeApp, getApps } from "firebase-admin/app";
-import { getAuth } from "firebase-admin/auth";
-
-if (!getApps().length) {
-  initializeApp({ projectId: "riksystem" });
-}
 
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24h
 
@@ -65,8 +59,10 @@ export async function loginWithPin(pin: string) {
 
 export async function loginWithGoogle(idToken: string) {
   try {
-    const decoded = await getAuth().verifyIdToken(idToken);
-    const email = decoded.email;
+    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?idToken=${idToken}`);
+    if (!res.ok) return { error: "Google sign-in failed" };
+    const payload = await res.json() as { email?: string; email_verified?: string };
+    const email = payload.email;
     if (!email) return { error: "Google account has no email" };
 
     const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
