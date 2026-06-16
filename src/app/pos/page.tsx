@@ -24,9 +24,9 @@ interface CustomerRow {
   customer_type: string;
 }
 
-export default function POSPage() {
-  const products = db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category FROM products ORDER BY name ASC").all() as ProductRow[];
-  const customers = db.prepare("SELECT id, name, customer_type FROM customers ORDER BY name ASC").all() as CustomerRow[];
+export default async function POSPage() {
+  const products = await db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category FROM products ORDER BY name ASC").all() as ProductRow[];
+  const customers = await db.prepare("SELECT id, name, customer_type FROM customers ORDER BY name ASC").all() as CustomerRow[];
 
   return (
     <div className="h-full flex flex-col animate-in fade-in duration-500">

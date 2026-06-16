@@ -9,7 +9,7 @@ export async function createProduct(formData: FormData) {
     INSERT INTO products (name, sku, price, cost_price, selling_price, original_price, unit_price, price_per_case, quantity, description, category, min_stock, supplier_id, barcode, image_url)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  stmt.run(
+  await stmt.run(
     formData.get("name"),
     formData.get("sku"),
     parseFloat(formData.get("price") as string),
@@ -35,7 +35,7 @@ export async function updateProduct(id: number, formData: FormData) {
     UPDATE products SET name=?, sku=?, price=?, cost_price=?, selling_price=?, original_price=?, unit_price=?, price_per_case=?, quantity=?, description=?, category=?, min_stock=?, supplier_id=?, barcode=?, image_url=?, updated_at=datetime('now')
     WHERE id=?
   `);
-  stmt.run(
+  await stmt.run(
     formData.get("name"),
     formData.get("sku"),
     parseFloat(formData.get("price") as string),
@@ -58,8 +58,8 @@ export async function updateProduct(id: number, formData: FormData) {
 }
 
 export async function deleteProduct(id: number) {
-  db.prepare("DELETE FROM stock_movements WHERE product_id = ?").run(id);
-  db.prepare("DELETE FROM products WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM stock_movements WHERE product_id = ?").run(id);
+  await db.prepare("DELETE FROM products WHERE id = ?").run(id);
   revalidatePath("/products");
   redirect("/products");
 }
@@ -74,7 +74,7 @@ export async function createStockMovement(formData: FormData) {
   const caseCost = type === "IN" ? parseFloat(formData.get("case_cost") as string) || null : null;
   const caseQuantity = type === "IN" ? parseInt(formData.get("case_quantity") as string) || null : null;
 
-  const product = db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as { quantity: number } | undefined;
+  const product = await db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as { quantity: number } | undefined;
   if (!product) throw new Error("Product not found");
 
   const newQty = type === "IN" ? product.quantity + quantity : product.quantity - quantity;
@@ -83,10 +83,10 @@ export async function createStockMovement(formData: FormData) {
   const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, unit_cost, case_cost, case_quantity, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
   const updateProduct = db.prepare("UPDATE products SET quantity = ?, updated_at = datetime('now') WHERE id = ?");
 
-  db.transaction(() => {
+  await db.transaction(async () => {
     const ts = date ? `${date} ${new Date().toTimeString().slice(0, 8)}` : undefined;
-    insertMovement.run(productId, type, quantity, unitCost, caseCost, caseQuantity, note, ts || null);
-    updateProduct.run(newQty, productId);
+    await insertMovement.run(productId, type, quantity, unitCost, caseCost, caseQuantity, note, ts || null);
+    await updateProduct.run(newQty, productId);
   })();
 
   revalidatePath("/stock");
@@ -111,30 +111,30 @@ export async function processPOS(formData: FormData) {
   const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)");
   const updateStock = db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?");
 
-  const sale = db.transaction(() => {
+  const sale = db.transaction(async () => {
     let total = 0;
     let itemCount = 0;
     const saleItems: Array<{ product_id: number; product_name: string; sku: string; price: number; quantity: number }> = [];
 
     for (const item of items) {
-      const product = getProduct.get(item.productId) as { id: number; name: string; sku: string; quantity: number; price: number } | undefined;
+      const product = await getProduct.get(item.productId) as { id: number; name: string; sku: string; quantity: number; price: number } | undefined;
       if (!product) throw new Error(`Product ${item.productId} not found`);
       if (product.quantity < item.quantity) throw new Error(`Insufficient stock for product ${item.productId}`);
-      insertMovement.run(item.productId, item.quantity, "POS sale");
-      updateStock.run(item.quantity, item.productId);
+      await insertMovement.run(item.productId, item.quantity, "POS sale");
+      await updateStock.run(item.quantity, item.productId);
       const itemTotal = item.price * item.quantity;
       total += itemTotal;
       itemCount += item.quantity;
       saleItems.push({ product_id: item.productId, product_name: product.name, sku: product.sku, price: item.price, quantity: item.quantity });
     }
 
-    const saleResult = db.prepare("INSERT INTO sales (customer_id, total, item_count, customer_type) VALUES (?, ?, ?, ?)")
+    const saleResult = await db.prepare("INSERT INTO sales (customer_id, total, item_count, customer_type) VALUES (?, ?, ?, ?)")
       .run(customerId, total, itemCount, customerType);
     const saleId = saleResult.lastInsertRowid as number;
 
     const insertItem = db.prepare("INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity) VALUES (?, ?, ?, ?, ?, ?)");
     for (const si of saleItems) {
-      insertItem.run(saleId, si.product_id, si.product_name, si.sku, si.price, si.quantity);
+      await insertItem.run(saleId, si.product_id, si.product_name, si.sku, si.price, si.quantity);
     }
 
     return { saleId, total, itemCount };
@@ -142,7 +142,7 @@ export async function processPOS(formData: FormData) {
 
   let saleResult;
   try {
-    saleResult = sale();
+    saleResult = await sale();
   } catch (e) {
     return { error: (e as Error).message };
   }
@@ -156,7 +156,7 @@ export async function processPOS(formData: FormData) {
 }
 
 export async function draftOrderFromFB(orderId: number) {
-  const order = db.prepare("SELECT * FROM fb_orders WHERE id = ?").get(orderId) as {
+  const order = await db.prepare("SELECT * FROM fb_orders WHERE id = ?").get(orderId) as {
     id: number; customer_name: string; product_id: number | null; quantity: number; status: string; comment_text: string;
   } | undefined;
   if (!order) return { error: "Order not found" };
@@ -168,21 +168,21 @@ export async function draftOrderFromFB(orderId: number) {
 
   if (!order.product_id) return { error: "No product linked" };
 
-  const product = getProduct.get(order.product_id) as { id: number; name: string; sku: string; quantity: number; price: number } | undefined;
+  const product = await getProduct.get(order.product_id) as { id: number; name: string; sku: string; quantity: number; price: number } | undefined;
   if (!product) return { error: "Product not found" };
   if (product.quantity < order.quantity) return { error: "Insufficient stock" };
 
   try {
     const newTotal = product.price * order.quantity;
-    db.transaction(() => {
-      insertMovement.run(order.product_id, order.quantity, `FB order #${order.id}: ${order.comment_text}`);
-      updateStock.run(order.quantity, order.product_id);
-      const saleResult = db.prepare("INSERT INTO sales (customer_id, total, item_count, customer_type) VALUES (?, ?, ?, ?)")
+    await db.transaction(async () => {
+      await insertMovement.run(order.product_id, order.quantity, `FB order #${order.id}: ${order.comment_text}`);
+      await updateStock.run(order.quantity, order.product_id);
+      const saleResult = await db.prepare("INSERT INTO sales (customer_id, total, item_count, customer_type) VALUES (?, ?, ?, ?)")
         .run(null, newTotal, order.quantity, null);
       const saleId = saleResult.lastInsertRowid as number;
-      db.prepare("INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity) VALUES (?, ?, ?, ?, ?, ?)")
+      await db.prepare("INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity) VALUES (?, ?, ?, ?, ?, ?)")
         .run(saleId, order.product_id, product.name, product.sku, product.price, order.quantity);
-      db.prepare("UPDATE fb_orders SET status = 'processed' WHERE id = ?").run(order.id);
+      await db.prepare("UPDATE fb_orders SET status = 'processed' WHERE id = ?").run(order.id);
     })();
   } catch (e) {
     return { error: (e as Error).message };
@@ -197,7 +197,7 @@ export async function draftOrderFromFB(orderId: number) {
 }
 
 export async function getOrderReceipt(orderId: number) {
-  const order = db.prepare(`
+  const order = await db.prepare(`
     SELECT o.*, p.name as product_name, p.price
     FROM fb_orders o
     LEFT JOIN products p ON p.id = o.product_id
@@ -212,12 +212,12 @@ export async function getOrderReceipt(orderId: number) {
 }
 
 export async function clearFBOrders() {
-  db.prepare("DELETE FROM fb_orders").run();
+  await db.prepare("DELETE FROM fb_orders").run();
   revalidatePath("/fb-live");
 }
 
 export async function resetFBOrder(orderId: number) {
-  db.prepare("UPDATE fb_orders SET status = 'pending' WHERE id = ?").run(orderId);
+  await db.prepare("UPDATE fb_orders SET status = 'pending' WHERE id = ?").run(orderId);
   revalidatePath("/fb-live");
   return { success: true };
 }
@@ -230,7 +230,7 @@ export async function addFBKeyword(formData: FormData) {
   if (!keyword || !productId) return { error: "Keyword and product are required" };
 
   try {
-    db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(keyword, productId, quantity);
+    await db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(keyword, productId, quantity);
   } catch (e: unknown) {
     const msg = (e as Error).message;
     if (msg.includes("UNIQUE")) return { error: "Keyword already exists" };
@@ -242,23 +242,23 @@ export async function addFBKeyword(formData: FormData) {
 }
 
 export async function deleteFBKeyword(id: number) {
-  db.prepare("DELETE FROM fb_keywords WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM fb_keywords WHERE id = ?").run(id);
   revalidatePath("/fb-live");
 }
 
-function getSetting(key: string): string {
-  const row = db.prepare("SELECT value FROM fb_settings WHERE key = ?").get(key) as { value: string } | undefined;
+async function getSetting(key: string): Promise<string> {
+  const row = await db.prepare("SELECT value FROM fb_settings WHERE key = ?").get(key) as { value: string } | undefined;
   return row?.value ?? "";
 }
 
 export async function simulateFBComment(formData: FormData) {
   const customerName = formData.get("customer") as string;
   const comment = (formData.get("comment") as string).trim().toLowerCase();
-  const matchMode = getSetting("match_mode") || "contains";
+  const matchMode = await getSetting("match_mode") || "contains";
 
   if (!comment) return { error: "Comment is required" };
 
-  const keywords = db.prepare(`
+  const keywords = await db.prepare(`
     SELECT f.id, f.keyword, f.product_id, f.quantity, p.name as product_name, p.quantity as stock
     FROM fb_keywords f
     JOIN products p ON p.id = f.product_id
@@ -272,7 +272,7 @@ export async function simulateFBComment(formData: FormData) {
   });
 
   if (!matched) {
-    db.prepare("INSERT INTO fb_orders (customer_name, comment_text, status) VALUES (?, ?, 'cancelled')").run(
+    await db.prepare("INSERT INTO fb_orders (customer_name, comment_text, status) VALUES (?, ?, 'cancelled')").run(
       customerName || "Anonymous", comment
     );
     revalidatePath("/fb-live");
@@ -285,29 +285,29 @@ export async function simulateFBComment(formData: FormData) {
   const insertOrder = db.prepare(
     "INSERT INTO fb_orders (customer_name, comment_text, keyword, product_id, quantity, status) VALUES (?, ?, ?, ?, ?, ?)"
   );
-  insertOrder.run(
+  await insertOrder.run(
     customerName || "Anonymous", comment, matched.keyword, matched.product_id, orderQty,
     insufficient ? "cancelled" : "pending"
   );
 
   if (!insufficient) {
-    const processOrder = db.transaction(() => {
-      db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)").run(
+    const processOrder = db.transaction(async () => {
+      await db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)").run(
         matched.product_id, orderQty, `FB Live: ${matched.keyword}`
       );
-      db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?").run(
+      await db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?").run(
         orderQty, matched.product_id
       );
-      db.prepare("UPDATE fb_orders SET status = 'processed' WHERE id = ?").run(
-        (db.prepare("SELECT last_insert_rowid() as id").get() as { id: number }).id
+      await db.prepare("UPDATE fb_orders SET status = 'processed' WHERE id = ?").run(
+        (await db.prepare("SELECT last_insert_rowid() as id").get() as { id: number }).id
       );
     });
-    processOrder();
+    await processOrder();
   }
 
   const autoReply = insufficient
     ? `Sorry ${customerName}, ${matched.product_name} is out of stock.`
-    : getSetting("auto_reply")
+    : (await getSetting("auto_reply"))
         .replace("{{name}}", customerName || "there")
         .replace("{{product}}", matched.product_name)
         .replace("{{qty}}", String(orderQty));
@@ -319,7 +319,7 @@ export async function simulateFBComment(formData: FormData) {
 }
 
 export async function getFBSettings() {
-  const rows = db.prepare("SELECT key, value FROM fb_settings").all() as Array<{ key: string; value: string }>;
+  const rows = await db.prepare("SELECT key, value FROM fb_settings").all() as Array<{ key: string; value: string }>;
   const settings: Record<string, string> = {};
   for (const row of rows) settings[row.key] = row.value;
   return settings;
@@ -330,7 +330,7 @@ export async function saveFBSettings(formData: FormData) {
   const upsert = db.prepare("INSERT OR REPLACE INTO fb_settings (key, value) VALUES (?, ?)");
   for (const key of keys) {
     const val = formData.get(key) as string;
-    if (val !== null) upsert.run(key, val);
+    if (val !== null) await upsert.run(key, val);
   }
   revalidatePath("/fb-live");
   revalidatePath("/fb-live/settings");
@@ -344,9 +344,9 @@ export async function selectFBPage(formData: FormData) {
   const accessToken = formData.get("access_token") as string;
 
   const upsert = db.prepare("INSERT OR REPLACE INTO fb_settings (key, value) VALUES (?, ?)");
-  upsert.run("page_id", pageId);
-  upsert.run("page_name", pageName);
-  upsert.run("access_token", accessToken);
+  await upsert.run("page_id", pageId);
+  await upsert.run("page_name", pageName);
+  await upsert.run("access_token", accessToken);
 
   revalidatePath("/fb-live/settings");
   return { success: true };
@@ -354,7 +354,7 @@ export async function selectFBPage(formData: FormData) {
 
 // ─── Settings ────────────────────────────────────────────────
 export async function getSettings() {
-  const rows = db.prepare("SELECT key, value FROM settings").all() as Array<{ key: string; value: string }>;
+  const rows = await db.prepare("SELECT key, value FROM settings").all() as Array<{ key: string; value: string }>;
   const s: Record<string, string> = {};
   for (const row of rows) s[row.key] = row.value;
   return s;
@@ -371,7 +371,7 @@ export async function saveSettings(formData: FormData) {
   const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
   for (const key of keys) {
     const val = formData.get(key);
-    if (val !== null) upsert.run(key, String(val));
+    if (val !== null) await upsert.run(key, String(val));
   }
   return { success: true };
 }
@@ -382,19 +382,19 @@ export async function saveReceipt(formData: FormData) {
   const total = parseFloat(formData.get("total") as string);
   const count = parseInt(formData.get("count") as string);
   const parsed = JSON.parse(data);
-  db.prepare("INSERT INTO receipts (receipt_data, total, item_count) VALUES (?, ?, ?)").run(JSON.stringify(parsed), total, count);
+  await db.prepare("INSERT INTO receipts (receipt_data, total, item_count) VALUES (?, ?, ?)").run(JSON.stringify(parsed), total, count);
   return { success: true };
 }
 
 export async function getReceipts(limit = 50) {
-  return db.prepare("SELECT * FROM receipts ORDER BY created_at DESC LIMIT ?").all(limit);
+  return await db.prepare("SELECT * FROM receipts ORDER BY created_at DESC LIMIT ?").all(limit);
 }
 
 // ─── Telegram ────────────────────────────────────────────────
 export async function sendTelegramNotification(message: string) {
-  const token = (db.prepare("SELECT value FROM settings WHERE key = 'telegram_bot_token'").get() as { value: string } | undefined)?.value;
-  const chatIds = (db.prepare("SELECT value FROM settings WHERE key = 'telegram_chat_ids'").get() as { value: string } | undefined)?.value;
-  const enabled = (db.prepare("SELECT value FROM settings WHERE key = 'telegram_enabled'").get() as { value: string } | undefined)?.value === "1";
+  const token = (await db.prepare("SELECT value FROM settings WHERE key = 'telegram_bot_token'").get() as { value: string } | undefined)?.value;
+  const chatIds = (await db.prepare("SELECT value FROM settings WHERE key = 'telegram_chat_ids'").get() as { value: string } | undefined)?.value;
+  const enabled = (await db.prepare("SELECT value FROM settings WHERE key = 'telegram_enabled'").get() as { value: string } | undefined)?.value === "1";
   if (!token || !chatIds || !enabled) return;
 
   for (const chatId of chatIds.split(",").map((s: string) => s.trim())) {
@@ -411,7 +411,7 @@ export async function sendTelegramNotification(message: string) {
 
 // ─── Messenger (Facebook Chatbot) ────────────────────────────
 export async function sendMessengerMessage(recipientId: string, text: string) {
-  const token = (db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
+  const token = (await db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
   if (!token) return;
 
   try {
@@ -425,7 +425,7 @@ export async function sendMessengerMessage(recipientId: string, text: string) {
 
 // ─── Messenger Rules (Automation) ───────────────────────────
 export async function getMessengerRules() {
-  return db.prepare("SELECT * FROM messenger_rules ORDER BY created_at DESC").all() as Array<{
+  return await db.prepare("SELECT * FROM messenger_rules ORDER BY created_at DESC").all() as Array<{
     id: number; keyword: string; response: string; match_mode: string; category: string; enabled: number; times_triggered: number; created_at: string;
   }>;
 }
@@ -438,7 +438,7 @@ export async function addMessengerRule(formData: FormData) {
 
   if (!keyword || !response) return { error: "Keyword and response are required" };
 
-  db.prepare("INSERT INTO messenger_rules (keyword, response, match_mode, category) VALUES (?, ?, ?, ?)").run(keyword, response, matchMode, category);
+  await db.prepare("INSERT INTO messenger_rules (keyword, response, match_mode, category) VALUES (?, ?, ?, ?)").run(keyword, response, matchMode, category);
   revalidatePath("/fb-live/automation");
   return { success: true };
 }
@@ -450,20 +450,20 @@ export async function updateMessengerRule(formData: FormData) {
   const matchMode = formData.get("match_mode") as string || "contains";
   const category = formData.get("category") as string || "general";
 
-  db.prepare("UPDATE messenger_rules SET keyword=?, response=?, match_mode=?, category=? WHERE id=?").run(keyword, response, matchMode, category, id);
+  await db.prepare("UPDATE messenger_rules SET keyword=?, response=?, match_mode=?, category=? WHERE id=?").run(keyword, response, matchMode, category, id);
   revalidatePath("/fb-live/automation");
   return { success: true };
 }
 
 export async function deleteMessengerRule(id: number) {
-  db.prepare("DELETE FROM messenger_rules WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM messenger_rules WHERE id = ?").run(id);
   revalidatePath("/fb-live/automation");
 }
 
 export async function toggleMessengerRule(id: number) {
-  const rule = db.prepare("SELECT enabled FROM messenger_rules WHERE id = ?").get(id) as { enabled: number } | undefined;
+  const rule = await db.prepare("SELECT enabled FROM messenger_rules WHERE id = ?").get(id) as { enabled: number } | undefined;
   if (rule) {
-    db.prepare("UPDATE messenger_rules SET enabled = ? WHERE id = ?").run(rule.enabled ? 0 : 1, id);
+    await db.prepare("UPDATE messenger_rules SET enabled = ? WHERE id = ?").run(rule.enabled ? 0 : 1, id);
     revalidatePath("/fb-live/automation");
   }
 }
@@ -472,7 +472,7 @@ export async function testMessengerRule(formData: FormData) {
   const testText = (formData.get("test_text") as string).trim().toLowerCase();
   if (!testText) return { error: "Test text is required" };
 
-  const rules = db.prepare("SELECT * FROM messenger_rules WHERE enabled = 1 ORDER BY created_at DESC").all() as Array<{
+  const rules = await db.prepare("SELECT * FROM messenger_rules WHERE enabled = 1 ORDER BY created_at DESC").all() as Array<{
     id: number; keyword: string; response: string; match_mode: string; category: string;
   }>;
 
@@ -483,7 +483,7 @@ export async function testMessengerRule(formData: FormData) {
   });
 
   if (matched) {
-    db.prepare("UPDATE messenger_rules SET times_triggered = times_triggered + 1 WHERE id = ?").run(matched.id);
+    await db.prepare("UPDATE messenger_rules SET times_triggered = times_triggered + 1 WHERE id = ?").run(matched.id);
     return { success: true, matched: matched.keyword, response: matched.response, category: matched.category };
   }
   return { success: true, matched: null, response: null };
@@ -491,7 +491,7 @@ export async function testMessengerRule(formData: FormData) {
 
 // ─── Quick Replies ──────────────────────────────────────────
 export async function getQuickReplies() {
-  return db.prepare("SELECT * FROM messenger_quick_replies ORDER BY created_at DESC").all() as Array<{
+  return await db.prepare("SELECT * FROM messenger_quick_replies ORDER BY created_at DESC").all() as Array<{
     id: number; title: string; text: string; payload: string;
   }>;
 }
@@ -500,21 +500,21 @@ export async function addQuickReply(formData: FormData) {
   const title = (formData.get("title") as string).trim();
   const text = (formData.get("text") as string).trim();
   if (!title || !text) return { error: "Title and text are required" };
-  db.prepare("INSERT INTO messenger_quick_replies (title, text) VALUES (?, ?)").run(title, text);
+  await db.prepare("INSERT INTO messenger_quick_replies (title, text) VALUES (?, ?)").run(title, text);
   revalidatePath("/fb-live/automation");
   revalidatePath("/fb-live/inbox");
   return { success: true };
 }
 
 export async function deleteQuickReply(id: number) {
-  db.prepare("DELETE FROM messenger_quick_replies WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM messenger_quick_replies WHERE id = ?").run(id);
   revalidatePath("/fb-live/automation");
   revalidatePath("/fb-live/inbox");
 }
 
 // ─── FAQ (AI Knowledge Base) ─────────────────────────────────
 export async function getFAQs() {
-  return db.prepare("SELECT * FROM messenger_faq ORDER BY created_at DESC").all() as Array<{
+  return await db.prepare("SELECT * FROM messenger_faq ORDER BY created_at DESC").all() as Array<{
     id: number; question: string; answer: string; category: string;
   }>;
 }
@@ -524,19 +524,19 @@ export async function addFAQ(formData: FormData) {
   const answer = (formData.get("answer") as string).trim();
   const category = formData.get("category") as string || "general";
   if (!question || !answer) return { error: "Question and answer are required" };
-  db.prepare("INSERT INTO messenger_faq (question, answer, category) VALUES (?, ?, ?)").run(question, answer, category);
+  await db.prepare("INSERT INTO messenger_faq (question, answer, category) VALUES (?, ?, ?)").run(question, answer, category);
   revalidatePath("/fb-live/ai");
   return { success: true };
 }
 
 export async function deleteFAQ(id: number) {
-  db.prepare("DELETE FROM messenger_faq WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM messenger_faq WHERE id = ?").run(id);
   revalidatePath("/fb-live/ai");
 }
 
 // ─── Messenger Conversations (Inbox) ─────────────────────────
 export async function getConversations() {
-  return db.prepare("SELECT * FROM messenger_conversations ORDER BY updated_at DESC LIMIT 50").all() as Array<{
+  return await db.prepare("SELECT * FROM messenger_conversations ORDER BY updated_at DESC LIMIT 50").all() as Array<{
     id: number; sender_id: string; sender_name: string; last_message: string; unread: number; tags: string; assigned_to: string; updated_at: string;
   }>;
 }
@@ -544,7 +544,7 @@ export async function getConversations() {
 export async function searchConversations(formData: FormData) {
   const query = (formData.get("query") as string).trim();
   if (!query) return [];
-  return db.prepare(
+  return await db.prepare(
     "SELECT * FROM messenger_conversations WHERE sender_name LIKE ? OR last_message LIKE ? OR tags LIKE ? ORDER BY updated_at DESC LIMIT 50"
   ).all(`%${query}%`, `%${query}%`, `%${query}%`) as Array<{
     id: number; sender_id: string; sender_name: string; last_message: string; unread: number; tags: string; assigned_to: string; updated_at: string;
@@ -552,7 +552,7 @@ export async function searchConversations(formData: FormData) {
 }
 
 export async function getConversationMessages(conversationId: number) {
-  return db.prepare("SELECT * FROM messenger_messages WHERE conversation_id = ? ORDER BY created_at ASC").all(conversationId) as Array<{
+  return await db.prepare("SELECT * FROM messenger_messages WHERE conversation_id = ? ORDER BY created_at ASC").all(conversationId) as Array<{
     id: number; sender: string; text: string; created_at: string;
   }>;
 }
@@ -563,10 +563,10 @@ export async function replyToConversation(formData: FormData) {
 
   if (!text) return { error: "Message is required" };
 
-  db.prepare("INSERT INTO messenger_messages (conversation_id, sender, text) VALUES (?, 'bot', ?)").run(conversationId, text);
-  db.prepare("UPDATE messenger_conversations SET last_message = ?, updated_at = datetime('now'), unread = 0 WHERE id = ?").run(text, conversationId);
+  await db.prepare("INSERT INTO messenger_messages (conversation_id, sender, text) VALUES (?, 'bot', ?)").run(conversationId, text);
+  await db.prepare("UPDATE messenger_conversations SET last_message = ?, updated_at = datetime('now'), unread = 0 WHERE id = ?").run(text, conversationId);
 
-  const conversation = db.prepare("SELECT sender_id FROM messenger_conversations WHERE id = ?").get(conversationId) as { sender_id: string } | undefined;
+  const conversation = await db.prepare("SELECT sender_id FROM messenger_conversations WHERE id = ?").get(conversationId) as { sender_id: string } | undefined;
   if (conversation) {
     await sendMessengerMessage(conversation.sender_id, text);
   }
@@ -576,31 +576,31 @@ export async function replyToConversation(formData: FormData) {
 }
 
 export async function markConversationRead(id: number) {
-  db.prepare("UPDATE messenger_conversations SET unread = 0 WHERE id = ?").run(id);
+  await db.prepare("UPDATE messenger_conversations SET unread = 0 WHERE id = ?").run(id);
   revalidatePath("/fb-live/inbox");
 }
 
 export async function assignConversation(formData: FormData) {
   const id = parseInt(formData.get("id") as string);
   const assignedTo = (formData.get("assigned_to") as string).trim();
-  db.prepare("UPDATE messenger_conversations SET assigned_to = ? WHERE id = ?").run(assignedTo, id);
+  await db.prepare("UPDATE messenger_conversations SET assigned_to = ? WHERE id = ?").run(assignedTo, id);
   revalidatePath("/fb-live/inbox");
 }
 
 export async function tagConversation(formData: FormData) {
   const id = parseInt(formData.get("id") as string);
   const tags = (formData.get("tags") as string).trim();
-  db.prepare("UPDATE messenger_conversations SET tags = ? WHERE id = ?").run(tags, id);
+  await db.prepare("UPDATE messenger_conversations SET tags = ? WHERE id = ?").run(tags, id);
   revalidatePath("/fb-live/inbox");
 }
 
 export async function importFBPageConversations() {
-  const pageToken = (db.prepare("SELECT value FROM fb_settings WHERE key = 'access_token'").get() as { value: string } | undefined)?.value
-    || (db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
+  const pageToken = (await db.prepare("SELECT value FROM fb_settings WHERE key = 'access_token'").get() as { value: string } | undefined)?.value
+    || (await db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
 
   if (!pageToken) return { error: "No Facebook page connected. Connect a page in Settings first." };
 
-  const pageId = (db.prepare("SELECT value FROM fb_settings WHERE key = 'page_id'").get() as { value: string } | undefined)?.value;
+  const pageId = (await db.prepare("SELECT value FROM fb_settings WHERE key = 'page_id'").get() as { value: string } | undefined)?.value;
   if (!pageId) return { error: "No page ID found. Connect a page in Settings first." };
 
   try {
@@ -638,21 +638,21 @@ export async function importFBPageConversations() {
         ? new Date(conv.updated_time).toISOString().replace("T", " ").replace("Z", "")
         : new Date().toISOString().replace("T", " ").replace("Z", "");
 
-      const existing = db.prepare("SELECT id FROM messenger_conversations WHERE sender_id = ?").get(senderId) as { id: number } | undefined;
+      const existing = await db.prepare("SELECT id FROM messenger_conversations WHERE sender_id = ?").get(senderId) as { id: number } | undefined;
 
       let convId: number;
       if (existing) {
         convId = existing.id;
-        db.prepare("UPDATE messenger_conversations SET sender_name=?, last_message=?, updated_at=? WHERE id=?").run(senderName, lastMsg, updatedTime, convId);
+        await db.prepare("UPDATE messenger_conversations SET sender_name=?, last_message=?, updated_at=? WHERE id=?").run(senderName, lastMsg, updatedTime, convId);
       } else {
-        const result = upsertConv.run(senderId, senderName, lastMsg, updatedTime);
+        const result = await upsertConv.run(senderId, senderName, lastMsg, updatedTime);
         convId = result.lastInsertRowid as number;
         imported++;
       }
 
       if (conv.messages?.data) {
         for (const msg of conv.messages.data.reverse()) {
-          const existingMsg = db.prepare(
+          const existingMsg = await db.prepare(
             "SELECT id FROM messenger_messages WHERE conversation_id = ? AND text = ? AND created_at = ?"
           ).get(convId, msg.message, msg.created_time) as { id: number } | undefined;
 
@@ -661,7 +661,7 @@ export async function importFBPageConversations() {
             const created = msg.created_time
               ? new Date(msg.created_time).toISOString().replace("T", " ").replace("Z", "")
               : new Date().toISOString().replace("T", " ").replace("Z", "");
-            insertMsg.run(convId, sender, msg.message, created);
+            await insertMsg.run(convId, sender, msg.message, created);
           }
         }
       }
@@ -676,7 +676,7 @@ export async function importFBPageConversations() {
 
 // ─── Messenger Broadcasts ────────────────────────────────────
 export async function getBroadcasts() {
-  return db.prepare("SELECT * FROM messenger_broadcasts ORDER BY created_at DESC LIMIT 50").all() as Array<{
+  return await db.prepare("SELECT * FROM messenger_broadcasts ORDER BY created_at DESC LIMIT 50").all() as Array<{
     id: number; name: string; message: string; recipient_count: number; sent_count: number; status: string; scheduled_at: string | null; created_at: string;
   }>;
 }
@@ -687,7 +687,7 @@ export async function createBroadcast(formData: FormData) {
   const scheduledAt = (formData.get("scheduled_at") as string) || null;
   if (!message) return { error: "Message is required" };
 
-  db.prepare("INSERT INTO messenger_broadcasts (name, message, status, scheduled_at) VALUES (?, ?, 'draft', ?)").run(name, message, scheduledAt);
+  await db.prepare("INSERT INTO messenger_broadcasts (name, message, status, scheduled_at) VALUES (?, ?, 'draft', ?)").run(name, message, scheduledAt);
   revalidatePath("/fb-live/broadcasts");
   return { success: true };
 }
@@ -697,19 +697,19 @@ export async function updateBroadcast(formData: FormData) {
   const name = (formData.get("name") as string).trim() || "Untitled";
   const message = (formData.get("message") as string).trim();
   if (!message) return { error: "Message is required" };
-  db.prepare("UPDATE messenger_broadcasts SET name=?, message=? WHERE id=?").run(name, message, id);
+  await db.prepare("UPDATE messenger_broadcasts SET name=?, message=? WHERE id=?").run(name, message, id);
   revalidatePath("/fb-live/broadcasts");
   return { success: true };
 }
 
 export async function sendBroadcast(id: number) {
-  const broadcast = db.prepare("SELECT * FROM messenger_broadcasts WHERE id = ?").get(id) as { id: number; message: string; name: string } | undefined;
+  const broadcast = await db.prepare("SELECT * FROM messenger_broadcasts WHERE id = ?").get(id) as { id: number; message: string; name: string } | undefined;
   if (!broadcast) return { error: "Broadcast not found" };
 
-  db.prepare("UPDATE messenger_broadcasts SET status = 'sending' WHERE id = ?").run(id);
+  await db.prepare("UPDATE messenger_broadcasts SET status = 'sending' WHERE id = ?").run(id);
 
-  const conversations = db.prepare("SELECT sender_id, sender_name FROM messenger_conversations").all() as Array<{ sender_id: string; sender_name: string }>;
-  const token = (db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
+  const conversations = await db.prepare("SELECT sender_id, sender_name FROM messenger_conversations").all() as Array<{ sender_id: string; sender_name: string }>;
+  const token = (await db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
 
   let sentCount = 0;
   if (token) {
@@ -725,19 +725,19 @@ export async function sendBroadcast(id: number) {
     }
   }
 
-  db.prepare("UPDATE messenger_broadcasts SET status = 'sent', sent_count = ?, recipient_count = ? WHERE id = ?").run(sentCount, conversations.length, id);
+  await db.prepare("UPDATE messenger_broadcasts SET status = 'sent', sent_count = ?, recipient_count = ? WHERE id = ?").run(sentCount, conversations.length, id);
   revalidatePath("/fb-live/broadcasts");
   return { success: true, sent: sentCount, total: conversations.length };
 }
 
 export async function deleteBroadcast(id: number) {
-  db.prepare("DELETE FROM messenger_broadcasts WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM messenger_broadcasts WHERE id = ?").run(id);
   revalidatePath("/fb-live/broadcasts");
 }
 
 // ─── Message Templates ───────────────────────────────────────
 export async function getTemplates() {
-  return db.prepare("SELECT * FROM messenger_templates ORDER BY created_at DESC").all() as Array<{
+  return await db.prepare("SELECT * FROM messenger_templates ORDER BY created_at DESC").all() as Array<{
     id: number; name: string; message: string;
   }>;
 }
@@ -746,13 +746,13 @@ export async function addTemplate(formData: FormData) {
   const name = (formData.get("name") as string).trim();
   const message = (formData.get("message") as string).trim();
   if (!name || !message) return { error: "Name and message are required" };
-  db.prepare("INSERT INTO messenger_templates (name, message) VALUES (?, ?)").run(name, message);
+  await db.prepare("INSERT INTO messenger_templates (name, message) VALUES (?, ?)").run(name, message);
   revalidatePath("/fb-live/broadcasts");
   return { success: true };
 }
 
 export async function deleteTemplate(id: number) {
-  db.prepare("DELETE FROM messenger_templates WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM messenger_templates WHERE id = ?").run(id);
   revalidatePath("/fb-live/broadcasts");
 }
 
@@ -762,7 +762,7 @@ export async function saveAISettings(formData: FormData) {
   const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
   for (const key of keys) {
     const val = formData.get(key);
-    if (val !== null) upsert.run(key, String(val));
+    if (val !== null) await upsert.run(key, String(val));
   }
   revalidatePath("/fb-live/ai");
   return { success: true };
@@ -774,14 +774,14 @@ export async function saveMessengerSettings(formData: FormData) {
   const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
   for (const key of keys) {
     const val = formData.get(key);
-    if (val !== null) upsert.run(key, String(val));
+    if (val !== null) await upsert.run(key, String(val));
   }
   revalidatePath("/fb-live/settings");
   return { success: true };
 }
 
 export async function createSupplier(formData: FormData) {
-  db.prepare("INSERT INTO suppliers (name, email, phone, address) VALUES (?, ?, ?, ?)").run(
+  await db.prepare("INSERT INTO suppliers (name, email, phone, address) VALUES (?, ?, ?, ?)").run(
     formData.get("name"),
     formData.get("email"),
     formData.get("phone"),
@@ -792,7 +792,7 @@ export async function createSupplier(formData: FormData) {
 }
 
 export async function updateSupplier(id: number, formData: FormData) {
-  db.prepare("UPDATE suppliers SET name=?, email=?, phone=?, address=?, updated_at=datetime('now') WHERE id=?").run(
+  await db.prepare("UPDATE suppliers SET name=?, email=?, phone=?, address=?, updated_at=datetime('now') WHERE id=?").run(
     formData.get("name"),
     formData.get("email"),
     formData.get("phone"),
@@ -804,22 +804,22 @@ export async function updateSupplier(id: number, formData: FormData) {
 }
 
 export async function deleteSupplier(id: number) {
-  db.prepare("UPDATE products SET supplier_id = NULL WHERE supplier_id = ?").run(id);
-  db.prepare("DELETE FROM suppliers WHERE id = ?").run(id);
+  await db.prepare("UPDATE products SET supplier_id = NULL WHERE supplier_id = ?").run(id);
+  await db.prepare("DELETE FROM suppliers WHERE id = ?").run(id);
   revalidatePath("/suppliers");
   redirect("/suppliers");
 }
 
 // ─── Customers ────────────────────────────────────────────────
 export async function getCustomers() {
-  return db.prepare("SELECT * FROM customers ORDER BY name ASC").all() as Array<{
+  return await db.prepare("SELECT * FROM customers ORDER BY name ASC").all() as Array<{
     id: number; name: string; phone: string | null; email: string | null; address: string | null;
     customer_type: string; credit: number; created_at: string; updated_at: string;
   }>;
 }
 
 export async function getCustomer(id: number) {
-  return db.prepare("SELECT * FROM customers WHERE id = ?").get(id) as {
+  return await db.prepare("SELECT * FROM customers WHERE id = ?").get(id) as {
     id: number; name: string; phone: string | null; email: string | null; address: string | null;
     customer_type: string; credit: number; created_at: string; updated_at: string;
   } | undefined;
@@ -837,12 +837,12 @@ export async function saveCustomer(formData: FormData) {
   if (!name) return { error: "Name is required" };
 
   if (id) {
-    db.prepare("UPDATE customers SET name=?, phone=?, email=?, address=?, customer_type=?, credit=?, updated_at=datetime('now') WHERE id=?")
+    await db.prepare("UPDATE customers SET name=?, phone=?, email=?, address=?, customer_type=?, credit=?, updated_at=datetime('now') WHERE id=?")
       .run(name, phone, email, address, customerType, credit, id);
     revalidatePath("/customers");
     redirect("/customers");
   } else {
-    db.prepare("INSERT INTO customers (name, phone, email, address, customer_type, credit) VALUES (?, ?, ?, ?, ?, ?)")
+    await db.prepare("INSERT INTO customers (name, phone, email, address, customer_type, credit) VALUES (?, ?, ?, ?, ?, ?)")
       .run(name, phone, email, address, customerType, credit);
     revalidatePath("/customers");
     redirect("/customers");
@@ -850,13 +850,13 @@ export async function saveCustomer(formData: FormData) {
 }
 
 export async function deleteCustomer(id: number) {
-  db.prepare("DELETE FROM customers WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM customers WHERE id = ?").run(id);
   revalidatePath("/customers");
   redirect("/customers");
 }
 
 export async function getSales(limit = 100) {
-  return db.prepare(`
+  return await db.prepare(`
     SELECT s.*, c.name as customer_name
     FROM sales s
     LEFT JOIN customers c ON c.id = s.customer_id
@@ -868,7 +868,7 @@ export async function getSales(limit = 100) {
 }
 
 export async function getSaleItems(saleId: number) {
-  return db.prepare("SELECT * FROM sale_items WHERE sale_id = ?").all(saleId) as Array<{
+  return await db.prepare("SELECT * FROM sale_items WHERE sale_id = ?").all(saleId) as Array<{
     id: number; sale_id: number; product_id: number; product_name: string;
     sku: string | null; price: number; quantity: number;
   }>;
@@ -882,7 +882,7 @@ export async function createDebt(formData: FormData) {
   const due_date = formData.get("due_date") as string || null;
   const note = formData.get("note") as string || null;
   if (!type || !reference_id || !amount) throw new Error("Missing required fields");
-  db.prepare("INSERT INTO debts (type, reference_id, amount, due_date, note) VALUES (?, ?, ?, ?, ?)").run(type, reference_id, amount, due_date, note);
+  await db.prepare("INSERT INTO debts (type, reference_id, amount, due_date, note) VALUES (?, ?, ?, ?, ?)").run(type, reference_id, amount, due_date, note);
   revalidatePath("/debts");
   redirect("/debts");
 }
@@ -893,12 +893,12 @@ export async function addDebtPayment(formData: FormData) {
   if (!debt_id || !amount) throw new Error("Missing fields");
   const paymentMethod = formData.get("payment_method") as string || "cash";
   const note = formData.get("note") as string || null;
-  db.transaction(() => {
-    db.prepare("INSERT INTO debt_payments (debt_id, amount, payment_method, note) VALUES (?, ?, ?, ?)").run(debt_id, amount, paymentMethod, note);
-    const debt = db.prepare("SELECT amount, paid_amount FROM debts WHERE id = ?").get(debt_id) as any;
+  await db.transaction(async () => {
+    await db.prepare("INSERT INTO debt_payments (debt_id, amount, payment_method, note) VALUES (?, ?, ?, ?)").run(debt_id, amount, paymentMethod, note);
+    const debt = await db.prepare("SELECT amount, paid_amount FROM debts WHERE id = ?").get(debt_id) as any;
     const newPaid = debt.paid_amount + amount;
     const status = newPaid >= debt.amount ? "paid" : "partial";
-    db.prepare("UPDATE debts SET paid_amount = ?, status = ? WHERE id = ?").run(newPaid, status, debt_id);
+    await db.prepare("UPDATE debts SET paid_amount = ?, status = ? WHERE id = ?").run(newPaid, status, debt_id);
   })();
   revalidatePath("/debts");
   redirect("/debts");
@@ -911,19 +911,19 @@ export async function createCashFlowEntry(formData: FormData) {
   const amount = parseFloat(formData.get("amount") as string);
   const description = formData.get("description") as string || null;
   if (!type || !category || !amount) throw new Error("Missing fields");
-  db.prepare("INSERT INTO cash_flow (type, category, amount, description) VALUES (?, ?, ?, ?)").run(type, category, amount, description);
+  await db.prepare("INSERT INTO cash_flow (type, category, amount, description) VALUES (?, ?, ?, ?)").run(type, category, amount, description);
   revalidatePath("/cash-flow");
   redirect("/cash-flow");
 }
 
 // === PHYSICAL AUDITS ===
 export async function clearAllAudits() {
-  const audits = db.prepare("SELECT id FROM physical_audits").all() as any[];
+  const audits = await db.prepare("SELECT id FROM physical_audits").all() as any[];
   const deleteItems = db.prepare("DELETE FROM physical_audit_items WHERE audit_id = ?");
   const deleteAudit = db.prepare("DELETE FROM physical_audits WHERE id = ?");
   for (const a of audits) {
-    deleteItems.run(a.id);
-    deleteAudit.run(a.id);
+    await deleteItems.run(a.id);
+    await deleteAudit.run(a.id);
   }
   revalidatePath("/audit");
 }
@@ -931,11 +931,11 @@ export async function clearAllAudits() {
 export async function createAudit(formData: FormData) {
   const name = formData.get("name") as string;
   if (!name) throw new Error("Name required");
-  const result = db.prepare("INSERT INTO physical_audits (name) VALUES (?)").run(name);
+  const result = await db.prepare("INSERT INTO physical_audits (name) VALUES (?)").run(name);
   const auditId = result.lastInsertRowid as number;
-  const products = db.prepare("SELECT id, name, quantity FROM products ORDER BY name ASC").all() as any[];
+  const products = await db.prepare("SELECT id, name, quantity FROM products ORDER BY name ASC").all() as any[];
   const insert = db.prepare("INSERT INTO physical_audit_items (audit_id, product_id, expected_qty) VALUES (?, ?, ?)");
-  for (const p of products) insert.run(auditId, p.id, p.quantity);
+  for (const p of products) await insert.run(auditId, p.id, p.quantity);
   revalidatePath("/audit");
   redirect(`/audit/${auditId}`);
 }
@@ -945,16 +945,16 @@ export async function updateAuditItem(formData: FormData) {
   const actualQty = parseFloat(formData.get("actual_qty") as string);
   const note = formData.get("note") as string || null;
   if (!itemId || isNaN(actualQty)) throw new Error("Invalid data");
-  const item = db.prepare("SELECT aai.*, p.quantity FROM physical_audit_items aai JOIN products p ON p.id = aai.product_id WHERE aai.id = ?").get(itemId) as any;
+  const item = await db.prepare("SELECT aai.*, p.quantity FROM physical_audit_items aai JOIN products p ON p.id = aai.product_id WHERE aai.id = ?").get(itemId) as any;
   const difference = actualQty - item.expected_qty;
-  db.prepare("UPDATE physical_audit_items SET actual_qty = ?, difference = ?, note = ? WHERE id = ?").run(actualQty, difference, note, itemId);
+  await db.prepare("UPDATE physical_audit_items SET actual_qty = ?, difference = ?, note = ? WHERE id = ?").run(actualQty, difference, note, itemId);
   revalidatePath(`/audit/${item.audit_id}`);
 }
 
 export async function completeAudit(formData: FormData) {
   const auditId = parseInt(formData.get("audit_id") as string);
   if (!auditId) throw new Error("Missing audit ID");
-  db.prepare("UPDATE physical_audits SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(auditId);
+  await db.prepare("UPDATE physical_audits SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(auditId);
   revalidatePath("/audit");
   redirect("/audit");
 }
@@ -962,7 +962,7 @@ export async function completeAudit(formData: FormData) {
 export async function applyAuditCorrections(formData: FormData) {
   const auditId = parseInt(formData.get("audit_id") as string);
   if (!auditId) throw new Error("Missing audit ID");
-  const items = db.prepare(`
+  const items = await db.prepare(`
     SELECT aai.product_id, aai.actual_qty, p.quantity as current_qty
     FROM physical_audit_items aai
     JOIN products p ON p.id = aai.product_id
@@ -970,7 +970,7 @@ export async function applyAuditCorrections(formData: FormData) {
   `).all(auditId) as any[];
   const update = db.prepare("UPDATE products SET quantity = ? WHERE id = ?");
   for (const item of items) {
-    update.run(item.actual_qty, item.product_id);
+    await update.run(item.actual_qty, item.product_id);
   }
   revalidatePath("/audit");
   redirect(`/audit/${auditId}`);
@@ -987,11 +987,11 @@ export async function createCustomerOrder(formData: FormData) {
   const items = JSON.parse(itemsJson) as Array<{ product_id: number; product_name: string; price: number; quantity: number }>;
   if (items.length === 0) throw new Error("Cart empty");
   const total = items.reduce((s, i) => s + i.price * i.quantity, 0);
-  db.transaction(() => {
-    const result = db.prepare("INSERT INTO customer_orders (customer_id, total, delivery_address, delivery_fee, note) VALUES (?, ?, ?, ?, ?)").run(customer_id, total + delivery_fee, delivery_address, delivery_fee, note);
+  await db.transaction(async () => {
+    const result = await db.prepare("INSERT INTO customer_orders (customer_id, total, delivery_address, delivery_fee, note) VALUES (?, ?, ?, ?, ?)").run(customer_id, total + delivery_fee, delivery_address, delivery_fee, note);
     const orderId = result.lastInsertRowid as number;
     const insert = db.prepare("INSERT INTO customer_order_items (order_id, product_id, product_name, price, quantity) VALUES (?, ?, ?, ?, ?)");
-    for (const item of items) insert.run(orderId, item.product_id, item.product_name, item.price, item.quantity);
+    for (const item of items) await insert.run(orderId, item.product_id, item.product_name, item.price, item.quantity);
   })();
   revalidatePath("/orders");
   redirect("/orders");
@@ -1001,16 +1001,16 @@ export async function updateOrderStatus(formData: FormData) {
   const orderId = parseInt(formData.get("order_id") as string);
   const status = formData.get("status") as string;
   if (!orderId || !status) throw new Error("Missing fields");
-  db.prepare("UPDATE customer_orders SET status = ? WHERE id = ?").run(status, orderId);
+  await db.prepare("UPDATE customer_orders SET status = ? WHERE id = ?").run(status, orderId);
   revalidatePath("/orders");
 }
 
 export async function convertOrderToSale(orderId: number) {
-  const order = db.prepare("SELECT * FROM customer_orders WHERE id = ?").get(orderId) as any;
+  const order = await db.prepare("SELECT * FROM customer_orders WHERE id = ?").get(orderId) as any;
   if (!order) return { error: "Order not found" };
   if (order.sale_id) return { error: "Already converted to sale" };
 
-  const items = db.prepare("SELECT * FROM customer_order_items WHERE order_id = ?").all(orderId) as any[];
+  const items = await db.prepare("SELECT * FROM customer_order_items WHERE order_id = ?").all(orderId) as any[];
   if (items.length === 0) return { error: "No items in order" };
 
   const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)");
@@ -1018,26 +1018,26 @@ export async function convertOrderToSale(orderId: number) {
   const getProduct = db.prepare("SELECT id, quantity, price FROM products WHERE id = ?");
 
   try {
-    db.transaction(() => {
+    await db.transaction(async () => {
       for (const item of items) {
-        const product = getProduct.get(item.product_id) as any;
+        const product = await getProduct.get(item.product_id) as any;
         if (product && product.quantity < item.quantity) {
           throw new Error(`Insufficient stock for ${item.product_name}`);
         }
         if (product) {
-          insertMovement.run(item.product_id, item.quantity, `Customer order #${orderId}: ${item.product_name}`);
-          updateStock.run(item.quantity, item.product_id);
+          await insertMovement.run(item.product_id, item.quantity, `Customer order #${orderId}: ${item.product_name}`);
+          await updateStock.run(item.quantity, item.product_id);
         }
       }
-      const saleResult = db.prepare("INSERT INTO sales (customer_id, total, item_count) VALUES (?, ?, ?)")
+      const saleResult = await db.prepare("INSERT INTO sales (customer_id, total, item_count) VALUES (?, ?, ?)")
         .run(order.customer_id, order.total, items.length);
       const saleId = saleResult.lastInsertRowid as number;
       const insert = db.prepare("INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity) VALUES (?, ?, ?, ?, ?, ?)");
       for (const item of items) {
-        const product = getProduct.get(item.product_id) as any;
-        insert.run(saleId, item.product_id, item.product_name, product?.sku || null, item.price, item.quantity);
+        const product = await getProduct.get(item.product_id) as any;
+        await insert.run(saleId, item.product_id, item.product_name, product?.sku || null, item.price, item.quantity);
       }
-      db.prepare("UPDATE customer_orders SET sale_id = ?, status = 'delivered' WHERE id = ?").run(saleId, orderId);
+      await db.prepare("UPDATE customer_orders SET sale_id = ?, status = 'delivered' WHERE id = ?").run(saleId, orderId);
     })();
   } catch (e) {
     return { error: (e as Error).message };
@@ -1049,14 +1049,14 @@ export async function convertOrderToSale(orderId: number) {
 }
 
 export async function getCustomerOrderReceipt(orderId: number) {
-  const order = db.prepare(`
+  const order = await db.prepare(`
     SELECT co.*, c.name as customer_name
     FROM customer_orders co
     LEFT JOIN customers c ON c.id = co.customer_id
     WHERE co.id = ?
   `).get(orderId) as any;
   if (!order) return null;
-  const items = db.prepare("SELECT * FROM customer_order_items WHERE order_id = ?").all(orderId) as any[];
+  const items = await db.prepare("SELECT * FROM customer_order_items WHERE order_id = ?").all(orderId) as any[];
   return { ...order, items };
 }
 
@@ -1067,7 +1067,7 @@ export async function createDeliveryPartner(formData: FormData) {
   const commission_type = formData.get("commission_type") as string || "fixed";
   const commission_value = parseFloat(formData.get("commission_value") as string) || 0;
   if (!name) throw new Error("Name required");
-  db.prepare("INSERT INTO delivery_partners (name, phone, commission_type, commission_value) VALUES (?, ?, ?, ?)").run(name, phone, commission_type, commission_value);
+  await db.prepare("INSERT INTO delivery_partners (name, phone, commission_type, commission_value) VALUES (?, ?, ?, ?)").run(name, phone, commission_type, commission_value);
   revalidatePath("/delivery");
   redirect("/delivery");
 }
@@ -1077,7 +1077,7 @@ export async function createDelivery(formData: FormData) {
   const partner_id = formData.get("partner_id") ? parseInt(formData.get("partner_id") as string) : null;
   const fee = parseFloat(formData.get("fee") as string) || 0;
   const note = formData.get("note") as string || null;
-  db.prepare("INSERT INTO deliveries (order_id, partner_id, fee, note) VALUES (?, ?, ?, ?)").run(order_id, partner_id, fee, note);
+  await db.prepare("INSERT INTO deliveries (order_id, partner_id, fee, note) VALUES (?, ?, ?, ?)").run(order_id, partner_id, fee, note);
   revalidatePath("/delivery");
   redirect("/delivery");
 }
@@ -1094,7 +1094,7 @@ export async function createPromotion(formData: FormData) {
   const buy_qty = parseInt(formData.get("buy_qty") as string) || 0;
   const get_qty = parseInt(formData.get("get_qty") as string) || 0;
   if (!name || !type) throw new Error("Missing fields");
-  db.prepare("INSERT INTO promotions (name, type, value, min_purchase, start_date, end_date, product_id, buy_qty, get_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+  await db.prepare("INSERT INTO promotions (name, type, value, min_purchase, start_date, end_date, product_id, buy_qty, get_qty) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
     .run(name, type, value, min_purchase, start_date, end_date, product_id, buy_qty, get_qty);
   revalidatePath("/promotions");
   redirect("/promotions");
@@ -1107,7 +1107,7 @@ export async function createMembershipTier(formData: FormData) {
   const discount_percent = parseFloat(formData.get("discount_percent") as string) || 0;
   const benefits = formData.get("benefits") as string || null;
   if (!name) throw new Error("Name required");
-  db.prepare("INSERT INTO membership_tiers (name, min_spend, discount_percent, benefits) VALUES (?, ?, ?, ?)").run(name, min_spend, discount_percent, benefits);
+  await db.prepare("INSERT INTO membership_tiers (name, min_spend, discount_percent, benefits) VALUES (?, ?, ?, ?)").run(name, min_spend, discount_percent, benefits);
   revalidatePath("/membership");
   redirect("/membership");
 }
@@ -1116,6 +1116,6 @@ export async function enrollMember(formData: FormData) {
   const customer_id = parseInt(formData.get("customer_id") as string);
   const tier_id = formData.get("tier_id") ? parseInt(formData.get("tier_id") as string) : null;
   if (!customer_id) return { error: "Customer required" };
-  db.prepare("INSERT OR IGNORE INTO members (customer_id, tier_id) VALUES (?, ?)").run(customer_id, tier_id);
+  await db.prepare("INSERT OR IGNORE INTO members (customer_id, tier_id) VALUES (?, ?)").run(customer_id, tier_id);
   revalidatePath("/membership");
 }

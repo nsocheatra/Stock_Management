@@ -23,13 +23,13 @@ interface MovementRow {
   product_name: string;
 }
 
-export default function StockPage() {
-  const products = db.prepare(`
+export default async function StockPage() {
+  const products = await db.prepare(`
     SELECT id, name, sku, barcode, price, quantity, min_stock, category
     FROM products ORDER BY name ASC
   `).all() as ProductRow[];
 
-  const movements = db.prepare(`
+  const movements = await db.prepare(`
     SELECT m.id, m.type, m.quantity, m.note, m.created_at, p.name as product_name
     FROM stock_movements m
     JOIN products p ON p.id = m.product_id

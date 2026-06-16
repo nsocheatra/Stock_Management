@@ -3,29 +3,29 @@ import { getFBSettings } from "@/lib/actions";
 import { db } from "@/lib/db";
 import FBSettingsForm from "./FBSettingsForm";
 
-function getSetting(key: string): string {
-  const row = db.prepare("SELECT value FROM fb_settings WHERE key = ?").get(key) as { value: string } | undefined;
+async function getSetting(key: string): Promise<string> {
+  const row = await db.prepare("SELECT value FROM fb_settings WHERE key = ?").get(key) as { value: string } | undefined;
   return row?.value ?? "";
 }
 
-function getGlobalSetting(key: string): string {
-  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as { value: string } | undefined;
+async function getGlobalSetting(key: string): Promise<string> {
+  const row = await db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as { value: string } | undefined;
   return row?.value ?? "";
 }
 
 export default async function FBLiveSettingsPage() {
   const settings = await getFBSettings();
-  const fbUserId = getSetting("fb_user_id");
-  const fbUserName = getSetting("fb_user_name");
-  const fbPages = getSetting("fb_pages");
-  const fbBusinesses = getSetting("fb_businesses");
+  const fbUserId = await getSetting("fb_user_id");
+  const fbUserName = await getSetting("fb_user_name");
+  const fbPages = await getSetting("fb_pages");
+  const fbBusinesses = await getSetting("fb_businesses");
 
   const messengerSettings: Record<string, string> = {
-    messenger_page_token: getGlobalSetting("messenger_page_token"),
-    messenger_verify_token: getGlobalSetting("messenger_verify_token"),
-    messenger_greeting: getGlobalSetting("messenger_greeting"),
-    messenger_not_found: getGlobalSetting("messenger_not_found"),
-    messenger_enabled: getGlobalSetting("messenger_enabled"),
+    messenger_page_token: await getGlobalSetting("messenger_page_token"),
+    messenger_verify_token: await getGlobalSetting("messenger_verify_token"),
+    messenger_greeting: await getGlobalSetting("messenger_greeting"),
+    messenger_not_found: await getGlobalSetting("messenger_not_found"),
+    messenger_enabled: await getGlobalSetting("messenger_enabled"),
   };
 
   return (

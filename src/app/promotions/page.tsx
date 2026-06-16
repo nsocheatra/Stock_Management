@@ -3,9 +3,9 @@ import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus, Percent, Gift } from "lucide-react";
 
-export default function PromotionsPage() {
+export default async function PromotionsPage() {
   const now = new Date().toISOString().slice(0, 10);
-  const promotions = db.prepare("SELECT * FROM promotions ORDER BY created_at DESC").all() as any[];
+  const promotions = await db.prepare("SELECT * FROM promotions ORDER BY created_at DESC").all() as any[];
   const activeCount = promotions.filter((p: any) => p.active && (!p.end_date || p.end_date >= now)).length;
 
   return (

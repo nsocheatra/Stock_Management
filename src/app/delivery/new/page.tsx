@@ -4,9 +4,9 @@ import { createDelivery } from "@/lib/actions";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default function NewDeliveryPage() {
-  const partners = db.prepare("SELECT id, name FROM delivery_partners WHERE active = 1 ORDER BY name ASC").all() as any[];
-  const orders = db.prepare(`
+export default async function NewDeliveryPage() {
+  const partners = await db.prepare("SELECT id, name FROM delivery_partners WHERE active = 1 ORDER BY name ASC").all() as any[];
+  const orders = await db.prepare(`
     SELECT co.id, co.total, c.name as customer_name
     FROM customer_orders co
     LEFT JOIN customers c ON c.id = co.customer_id

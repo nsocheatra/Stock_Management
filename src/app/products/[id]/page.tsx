@@ -32,10 +32,10 @@ export default async function EditProductPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const product = db.prepare("SELECT * FROM products WHERE id = ?").get(parseInt(id)) as ProductRow | undefined;
+  const product = await db.prepare("SELECT * FROM products WHERE id = ?").get(parseInt(id)) as ProductRow | undefined;
   if (!product) notFound();
 
-  const suppliers = db.prepare("SELECT id, name FROM suppliers ORDER BY name ASC").all() as SupplierRow[];
+  const suppliers = await db.prepare("SELECT id, name FROM suppliers ORDER BY name ASC").all() as SupplierRow[];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">

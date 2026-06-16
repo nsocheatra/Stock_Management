@@ -13,7 +13,7 @@ function generateToken() {
 }
 
 export async function login(email: string, password: string) {
-  const user = db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
+  const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
     id: number; name: string; email: string; password_hash: string; role: string; pin: string | null;
   } | undefined;
   if (!user) return { error: "Invalid credentials" };
@@ -21,7 +21,7 @@ export async function login(email: string, password: string) {
 
   const token = generateToken();
   const expires = new Date(Date.now() + SESSION_DURATION).toISOString();
-  db.prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expires);
+  await db.prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expires);
 
   const cookieStore = await cookies();
   cookieStore.set("session", token, {
@@ -36,14 +36,14 @@ export async function login(email: string, password: string) {
 }
 
 export async function loginWithPin(pin: string) {
-  const user = db.prepare("SELECT * FROM users WHERE pin = ? AND active = 1 AND role = 'cashier'").get(pin) as {
+  const user = await db.prepare("SELECT * FROM users WHERE pin = ? AND active = 1 AND role = 'cashier'").get(pin) as {
     id: number; name: string; email: string; password_hash: string; role: string; pin: string | null;
   } | undefined;
   if (!user) return { error: "Invalid PIN" };
 
   const token = generateToken();
   const expires = new Date(Date.now() + SESSION_DURATION).toISOString();
-  db.prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expires);
+  await db.prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expires);
 
   const cookieStore = await cookies();
   cookieStore.set("session", token, {
@@ -61,7 +61,7 @@ export async function logout() {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
   if (token) {
-    db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
+    await db.prepare("DELETE FROM sessions WHERE token = ?").run(token);
   }
   cookieStore.delete("session");
   return { success: true };
@@ -72,7 +72,7 @@ export async function getCurrentUser() {
   const token = cookieStore.get("session")?.value;
   if (!token) return null;
 
-  const session = db.prepare(`
+  const session = await db.prepare(`
     SELECT s.user_id, s.expires_at, u.id, u.name, u.email, u.role
     FROM sessions s JOIN users u ON u.id = s.user_id
     WHERE s.token = ? AND s.expires_at > datetime('now') AND u.active = 1
@@ -96,7 +96,7 @@ export async function createUser(formData: FormData) {
 
   const hash = bcrypt.hashSync(password, 10);
   try {
-    db.prepare("INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)").run(name, email, hash, role || "cashier", pin);
+    await db.prepare("INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)").run(name, email, hash, role || "cashier", pin);
   } catch (e: unknown) {
     const msg = (e as Error).message;
     if (msg.includes("UNIQUE")) return { error: "Email already exists" };
@@ -121,9 +121,9 @@ export async function updateUser(id: number, formData: FormData) {
   try {
     if (password) {
       const hash = bcrypt.hashSync(password, 10);
-      db.prepare("UPDATE users SET name=?, email=?, password_hash=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, hash, role, pin, active, id);
+      await db.prepare("UPDATE users SET name=?, email=?, password_hash=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, hash, role, pin, active, id);
     } else {
-      db.prepare("UPDATE users SET name=?, email=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, role, pin, active, id);
+      await db.prepare("UPDATE users SET name=?, email=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, role, pin, active, id);
     }
   } catch (e: unknown) {
     return { error: (e as Error).message };
@@ -136,15 +136,15 @@ export async function deleteUser(id: number) {
   if (!currentUser || currentUser.role !== "admin") return { error: "Unauthorized" };
   if (id === currentUser.id) return { error: "Cannot delete yourself" };
 
-  db.prepare("DELETE FROM sessions WHERE user_id = ?").run(id);
-  db.prepare("DELETE FROM users WHERE id = ?").run(id);
+  await db.prepare("DELETE FROM sessions WHERE user_id = ?").run(id);
+  await db.prepare("DELETE FROM users WHERE id = ?").run(id);
   return { success: true };
 }
 
 export async function getUsers() {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "admin") return [];
-  return db.prepare("SELECT id, name, email, role, pin, active, created_at FROM users ORDER BY created_at DESC").all();
+  return await db.prepare("SELECT id, name, email, role, pin, active, created_at FROM users ORDER BY created_at DESC").all();
 }
 
 export async function requireAuth() {

@@ -2,27 +2,27 @@ import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import AIClient from "./AIClient";
 
-function getSetting(key: string): string {
-  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as { value: string } | undefined;
+async function getSetting(key: string): Promise<string> {
+  const row = await db.prepare("SELECT value FROM settings WHERE key = ?").get(key) as { value: string } | undefined;
   return row?.value ?? "";
 }
 
-export default function AIPage() {
+export default async function AIPage() {
   const settings = {
-    ai_provider: getSetting("ai_provider"),
-    ai_model: getSetting("ai_model"),
-    ai_system_prompt: getSetting("ai_system_prompt"),
-    ai_temperature: getSetting("ai_temperature"),
-    ai_max_tokens: getSetting("ai_max_tokens"),
-    ai_enabled: getSetting("ai_enabled"),
-    ai_persona_tone: getSetting("ai_persona_tone"),
-    ai_context_messages: getSetting("ai_context_messages"),
-    ai_openai_key: getSetting("ai_openai_key"),
-    ai_gemini_key: getSetting("ai_gemini_key"),
-    ai_claude_key: getSetting("ai_claude_key"),
+    ai_provider: await getSetting("ai_provider"),
+    ai_model: await getSetting("ai_model"),
+    ai_system_prompt: await getSetting("ai_system_prompt"),
+    ai_temperature: await getSetting("ai_temperature"),
+    ai_max_tokens: await getSetting("ai_max_tokens"),
+    ai_enabled: await getSetting("ai_enabled"),
+    ai_persona_tone: await getSetting("ai_persona_tone"),
+    ai_context_messages: await getSetting("ai_context_messages"),
+    ai_openai_key: await getSetting("ai_openai_key"),
+    ai_gemini_key: await getSetting("ai_gemini_key"),
+    ai_claude_key: await getSetting("ai_claude_key"),
   };
 
-  const faqs = db.prepare("SELECT * FROM messenger_faq ORDER BY created_at DESC").all() as Array<{
+  const faqs = await db.prepare("SELECT * FROM messenger_faq ORDER BY created_at DESC").all() as Array<{
     id: number; question: string; answer: string; category: string;
   }>;
 

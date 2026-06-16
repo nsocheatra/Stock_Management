@@ -20,8 +20,8 @@ interface ProductRow {
   image_url: string | null;
 }
 
-export default function ProductsPage() {
-  const products = db.prepare(`
+export default async function ProductsPage() {
+  const products = await db.prepare(`
     SELECT p.id, p.name, p.sku, p.barcode, p.price, p.wholesale_price, p.unit_price, p.price_per_case, p.quantity, p.category, p.min_stock, p.image_url, s.name as supplier_name
     FROM products p
     LEFT JOIN suppliers s ON s.id = p.supplier_id

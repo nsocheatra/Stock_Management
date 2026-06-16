@@ -7,8 +7,8 @@ interface SupplierRow {
   name: string;
 }
 
-export default function NewProductPage() {
-  const suppliers = db.prepare("SELECT id, name FROM suppliers ORDER BY name ASC").all() as SupplierRow[];
+export default async function NewProductPage() {
+  const suppliers = await db.prepare("SELECT id, name FROM suppliers ORDER BY name ASC").all() as SupplierRow[];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">

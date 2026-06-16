@@ -4,9 +4,9 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import OrderForm from "./OrderForm";
 
-export default function NewOrderPage() {
-  const customers = db.prepare("SELECT id, name, phone FROM customers ORDER BY name ASC").all() as any[];
-  const products = db.prepare("SELECT id, name, sku, price, selling_price, quantity FROM products WHERE quantity > 0 ORDER BY name ASC").all() as any[];
+export default async function NewOrderPage() {
+  const customers = await db.prepare("SELECT id, name, phone FROM customers ORDER BY name ASC").all() as any[];
+  const products = await db.prepare("SELECT id, name, sku, price, selling_price, quantity FROM products WHERE quantity > 0 ORDER BY name ASC").all() as any[];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">

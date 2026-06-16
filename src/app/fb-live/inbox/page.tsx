@@ -2,24 +2,24 @@ import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import InboxClient from "./InboxClient";
 
-export default function InboxPage() {
-  const pageToken = (db.prepare("SELECT value FROM fb_settings WHERE key = 'access_token'").get() as { value: string } | undefined)?.value
-    || (db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
+export default async function InboxPage() {
+  const pageToken = (await db.prepare("SELECT value FROM fb_settings WHERE key = 'access_token'").get() as { value: string } | undefined)?.value
+    || (await db.prepare("SELECT value FROM settings WHERE key = 'messenger_page_token'").get() as { value: string } | undefined)?.value;
   const pageConnected = !!pageToken;
-  const pageName = (db.prepare("SELECT value FROM fb_settings WHERE key = 'page_name'").get() as { value: string } | undefined)?.value || "";
+  const pageName = (await db.prepare("SELECT value FROM fb_settings WHERE key = 'page_name'").get() as { value: string } | undefined)?.value || "";
 
-  const conversations = db.prepare("SELECT * FROM messenger_conversations ORDER BY updated_at DESC LIMIT 50").all() as Array<{
+  const conversations = await db.prepare("SELECT * FROM messenger_conversations ORDER BY updated_at DESC LIMIT 50").all() as Array<{
     id: number; sender_id: string; sender_name: string; last_message: string; unread: number; tags: string; assigned_to: string; updated_at: string;
   }>;
 
   const messagesMap: Record<number, Array<{ id: number; sender: string; text: string; created_at: string }>> = {};
   for (const conv of conversations) {
-    messagesMap[conv.id] = db.prepare(
+    messagesMap[conv.id] = await db.prepare(
       "SELECT * FROM messenger_messages WHERE conversation_id = ? ORDER BY created_at ASC"
     ).all(conv.id) as Array<{ id: number; sender: string; text: string; created_at: string }>;
   }
 
-  const quickReplies = db.prepare("SELECT * FROM messenger_quick_replies ORDER BY created_at DESC").all() as Array<{
+  const quickReplies = await db.prepare("SELECT * FROM messenger_quick_replies ORDER BY created_at DESC").all() as Array<{
     id: number; title: string; text: string; payload: string;
   }>;
 

@@ -18,7 +18,7 @@ export default async function EditSupplierPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const supplier = db.prepare("SELECT * FROM suppliers WHERE id = ?").get(parseInt(id)) as SupplierRow | undefined;
+  const supplier = await db.prepare("SELECT * FROM suppliers WHERE id = ?").get(parseInt(id)) as SupplierRow | undefined;
   if (!supplier) notFound();
 
   return (

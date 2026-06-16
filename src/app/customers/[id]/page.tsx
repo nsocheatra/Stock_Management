@@ -19,7 +19,7 @@ export default async function EditCustomerPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const customer = db.prepare("SELECT * FROM customers WHERE id = ?").get(parseInt(id)) as CustomerRow | undefined;
+  const customer = await db.prepare("SELECT * FROM customers WHERE id = ?").get(parseInt(id)) as CustomerRow | undefined;
   if (!customer) notFound();
 
   return (

@@ -3,9 +3,9 @@ import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus, Truck } from "lucide-react";
 
-export default function DeliveryPage() {
-  const partners = db.prepare("SELECT * FROM delivery_partners ORDER BY name ASC").all() as any[];
-  const deliveries = db.prepare(`
+export default async function DeliveryPage() {
+  const partners = await db.prepare("SELECT * FROM delivery_partners ORDER BY name ASC").all() as any[];
+  const deliveries = await db.prepare(`
     SELECT d.*, dp.name as partner_name, co.total as order_total,
       c.name as customer_name
     FROM deliveries d

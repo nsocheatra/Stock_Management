@@ -4,8 +4,8 @@ import Link from "next/link";
 import { ArrowLeft, Gem, Plus } from "lucide-react";
 import { createMembershipTier } from "@/lib/actions";
 
-export default function TiersPage() {
-  const tiers = db.prepare("SELECT * FROM membership_tiers ORDER BY min_spend ASC").all() as any[];
+export default async function TiersPage() {
+  const tiers = await db.prepare("SELECT * FROM membership_tiers ORDER BY min_spend ASC").all() as any[];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">

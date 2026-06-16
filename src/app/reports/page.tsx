@@ -25,12 +25,12 @@ interface SaleRow {
   customer_name: string | null;
 }
 
-export default function ReportsPage() {
-  const products = db.prepare("SELECT name, quantity, min_stock, category FROM products ORDER BY quantity ASC").all() as ProductRow[];
-  const movements = db.prepare("SELECT type, quantity FROM stock_movements").all() as MovementRow[];
-  const supplierCount = (db.prepare("SELECT COUNT(*) as count FROM suppliers").get() as { count: number }).count;
+export default async function ReportsPage() {
+  const products = await db.prepare("SELECT name, quantity, min_stock, category FROM products ORDER BY quantity ASC").all() as ProductRow[];
+  const movements = await db.prepare("SELECT type, quantity FROM stock_movements").all() as MovementRow[];
+  const supplierCount = (await db.prepare("SELECT COUNT(*) as count FROM suppliers").get() as { count: number }).count;
 
-  const sales = db.prepare(`
+  const sales = await db.prepare(`
     SELECT s.*, c.name as customer_name
     FROM sales s
     LEFT JOIN customers c ON c.id = s.customer_id

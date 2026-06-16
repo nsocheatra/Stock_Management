@@ -4,8 +4,8 @@ import { createPromotion } from "@/lib/actions";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default function NewPromotionPage() {
-  const products = db.prepare("SELECT id, name, sku, price FROM products ORDER BY name ASC").all() as any[];
+export default async function NewPromotionPage() {
+  const products = await db.prepare("SELECT id, name, sku, price FROM products ORDER BY name ASC").all() as any[];
 
   return (
     <div className="max-w-lg mx-auto space-y-6 animate-in fade-in duration-500">

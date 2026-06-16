@@ -15,8 +15,8 @@ interface CustomerRow {
   created_at: string;
 }
 
-export default function CustomersPage() {
-  const customers = db.prepare("SELECT * FROM customers ORDER BY name ASC").all() as CustomerRow[];
+export default async function CustomersPage() {
+  const customers = await db.prepare("SELECT * FROM customers ORDER BY name ASC").all() as CustomerRow[];
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

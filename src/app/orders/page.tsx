@@ -4,8 +4,8 @@ import Link from "next/link";
 import { Plus, ReceiptText } from "lucide-react";
 import OrderActions from "./OrderActions";
 
-export default function OrdersPage() {
-  const orders = db.prepare(`
+export default async function OrdersPage() {
+  const orders = await db.prepare(`
     SELECT co.*, c.name as customer_name, c.phone as customer_phone,
       (SELECT COUNT(*) FROM customer_order_items WHERE order_id = co.id) as item_count
     FROM customer_orders co

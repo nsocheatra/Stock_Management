@@ -31,10 +31,10 @@ export default async function AuditDetailPage({ params }: Props) {
   const auditId = parseInt(id);
   if (isNaN(auditId)) notFound();
 
-  const audit = db.prepare("SELECT id, name, status, created_at, completed_at FROM physical_audits WHERE id = ?").get(auditId) as AuditInfo | undefined;
+  const audit = await db.prepare("SELECT id, name, status, created_at, completed_at FROM physical_audits WHERE id = ?").get(auditId) as AuditInfo | undefined;
   if (!audit) notFound();
 
-  const items = db.prepare(`
+  const items = await db.prepare(`
     SELECT ai.id, p.name as product_name, p.sku, ai.expected_qty, ai.actual_qty, ai.difference, ai.note
     FROM physical_audit_items ai
     JOIN products p ON p.id = ai.product_id

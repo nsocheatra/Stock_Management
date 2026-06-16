@@ -3,16 +3,16 @@ import { T } from "@/components/T";
 import Link from "next/link";
 import { Gem, Settings } from "lucide-react";
 
-export default function MembershipPage() {
-  const tiers = db.prepare("SELECT * FROM membership_tiers ORDER BY min_spend ASC").all() as any[];
-  const members = db.prepare(`
+export default async function MembershipPage() {
+  const tiers = await db.prepare("SELECT * FROM membership_tiers ORDER BY min_spend ASC").all() as any[];
+  const members = await db.prepare(`
     SELECT m.*, mt.name as tier_name, c.name as customer_name, c.phone, c.email
     FROM members m
     LEFT JOIN membership_tiers mt ON mt.id = m.tier_id
     LEFT JOIN customers c ON c.id = m.customer_id
     ORDER BY m.total_spent DESC LIMIT 50
   `).all() as any[];
-  const stats = db.prepare(`
+  const stats = await db.prepare(`
     SELECT COUNT(*) as total, COALESCE(SUM(points),0) as total_points, COALESCE(SUM(total_spent),0) as total_spent
     FROM members
   `).get() as any;

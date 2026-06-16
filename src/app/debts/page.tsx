@@ -18,8 +18,8 @@ interface DebtRow {
   phone: string | null;
 }
 
-export default function DebtsPage() {
-  const debts = db.prepare(`
+export default async function DebtsPage() {
+  const debts = await db.prepare(`
     SELECT d.*,
       CASE WHEN d.type = 'customer' THEN c.name WHEN d.type = 'supplier' THEN s.name END as name,
       CASE WHEN d.type = 'customer' THEN c.phone WHEN d.type = 'supplier' THEN s.phone END as phone

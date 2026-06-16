@@ -28,26 +28,26 @@ interface DashboardData {
   pendingDeliveries: number;
 }
 
-function getDashboardData(): DashboardData {
-  const totalProducts = (db.prepare("SELECT COUNT(*) as count FROM products").get() as { count: number }).count;
-  const totalSuppliers = (db.prepare("SELECT COUNT(*) as count FROM suppliers").get() as { count: number }).count;
-  const lowStock = (db.prepare("SELECT COUNT(*) as count FROM products WHERE quantity <= min_stock").get() as { count: number }).count;
-  const movements = db.prepare(`
+async function getDashboardData(): Promise<DashboardData> {
+  const totalProducts = (await db.prepare("SELECT COUNT(*) as count FROM products").get() as { count: number }).count;
+  const totalSuppliers = (await db.prepare("SELECT COUNT(*) as count FROM suppliers").get() as { count: number }).count;
+  const lowStock = (await db.prepare("SELECT COUNT(*) as count FROM products WHERE quantity <= min_stock").get() as { count: number }).count;
+  const movements = await db.prepare(`
     SELECT m.id, p.name as product_name, m.note, m.type, m.quantity
     FROM stock_movements m
     JOIN products p ON p.id = m.product_id
     ORDER BY m.created_at DESC
     LIMIT 5
   `).all() as DashboardData["movements"];
-  const products = db.prepare("SELECT name, quantity FROM products ORDER BY quantity ASC LIMIT 10").all() as DashboardData["products"];
+  const products = await db.prepare("SELECT name, quantity FROM products ORDER BY quantity ASC LIMIT 10").all() as DashboardData["products"];
 
-  const pendingDebts = (db.prepare("SELECT COUNT(*) as count FROM debts WHERE status IN ('pending','partial')").get() as { count: number }).count;
-  const debtRow = db.prepare("SELECT COALESCE(SUM(amount - paid_amount), 0) as total FROM debts WHERE status IN ('pending','partial')").get() as { total: number };
-  const todayRow = db.prepare("SELECT COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE -amount END), 0) as net FROM cash_flow WHERE date(created_at) = date('now')").get() as { net: number };
-  const pendingOrders = (db.prepare("SELECT COUNT(*) as count FROM customer_orders WHERE status NOT IN ('delivered','cancelled')").get() as { count: number }).count;
-  const activePromotions = (db.prepare("SELECT COUNT(*) as count FROM promotions WHERE active = 1").get() as { count: number }).count;
-  const totalMembers = (db.prepare("SELECT COUNT(*) as count FROM members").get() as { count: number }).count;
-  const pendingDeliveries = (db.prepare("SELECT COUNT(*) as count FROM deliveries WHERE status NOT IN ('delivered','failed')").get() as { count: number }).count;
+  const pendingDebts = (await db.prepare("SELECT COUNT(*) as count FROM debts WHERE status IN ('pending','partial')").get() as { count: number }).count;
+  const debtRow = await db.prepare("SELECT COALESCE(SUM(amount - paid_amount), 0) as total FROM debts WHERE status IN ('pending','partial')").get() as { total: number };
+  const todayRow = await db.prepare("SELECT COALESCE(SUM(CASE WHEN type='income' THEN amount ELSE -amount END), 0) as net FROM cash_flow WHERE date(created_at) = date('now')").get() as { net: number };
+  const pendingOrders = (await db.prepare("SELECT COUNT(*) as count FROM customer_orders WHERE status NOT IN ('delivered','cancelled')").get() as { count: number }).count;
+  const activePromotions = (await db.prepare("SELECT COUNT(*) as count FROM promotions WHERE active = 1").get() as { count: number }).count;
+  const totalMembers = (await db.prepare("SELECT COUNT(*) as count FROM members").get() as { count: number }).count;
+  const pendingDeliveries = (await db.prepare("SELECT COUNT(*) as count FROM deliveries WHERE status NOT IN ('delivered','failed')").get() as { count: number }).count;
 
   return {
     totalProducts, totalSuppliers, lowStock, movements, products,
@@ -56,8 +56,8 @@ function getDashboardData(): DashboardData {
   };
 }
 
-export default function DashboardPage() {
-  const data = getDashboardData();
+export default async function DashboardPage() {
+  const data = await getDashboardData();
 
   const cards = [
     {

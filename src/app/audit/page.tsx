@@ -15,8 +15,8 @@ interface AuditRow {
   discrepancies: number;
 }
 
-export default function AuditListPage() {
-  const audits = db.prepare(`
+export default async function AuditListPage() {
+  const audits = await db.prepare(`
     SELECT
       a.id, a.name, a.status, a.created_at, a.completed_at,
       COUNT(ai.id) as total_items,

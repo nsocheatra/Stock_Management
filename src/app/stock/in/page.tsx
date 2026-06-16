@@ -9,8 +9,8 @@ interface ProductRow {
   quantity: number;
 }
 
-export default function StockInPage() {
-  const products = db.prepare("SELECT id, name, sku, quantity FROM products ORDER BY name ASC").all() as ProductRow[];
+export default async function StockInPage() {
+  const products = await db.prepare("SELECT id, name, sku, quantity FROM products ORDER BY name ASC").all() as ProductRow[];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">

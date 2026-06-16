@@ -36,15 +36,15 @@ interface ProductRow {
   quantity: number;
 }
 
-export default function FBLivePage() {
-  const keywords = db.prepare(`
+export default async function FBLivePage() {
+  const keywords = await db.prepare(`
     SELECT f.id, f.keyword, f.product_id, f.quantity, p.name as product_name, p.sku
     FROM fb_keywords f
     JOIN products p ON p.id = f.product_id
     ORDER BY f.created_at DESC
   `).all() as KeywordRow[];
 
-  const orders = db.prepare(`
+  const orders = await db.prepare(`
     SELECT o.id, o.customer_name, o.comment_text, o.keyword, o.product_id, o.quantity, o.status, o.comment_deleted, o.created_at, p.name as product_name
     FROM fb_orders o
     LEFT JOIN products p ON p.id = o.product_id
@@ -52,10 +52,10 @@ export default function FBLivePage() {
     LIMIT 50
   `).all() as OrderRow[];
 
-  const products = db.prepare("SELECT id, name, sku, quantity FROM products ORDER BY name ASC").all() as ProductRow[];
+  const products = await db.prepare("SELECT id, name, sku, quantity FROM products ORDER BY name ASC").all() as ProductRow[];
 
   const pendingOrders = orders.filter((o) => o.status === "pending").length;
-  const fbEnabled = (db.prepare("SELECT value FROM fb_settings WHERE key = 'listening_enabled'").get() as { value: string } | undefined)?.value === "1";
+  const fbEnabled = (await db.prepare("SELECT value FROM fb_settings WHERE key = 'listening_enabled'").get() as { value: string } | undefined)?.value === "1";
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

@@ -13,8 +13,8 @@ interface SupplierRow {
   product_count: number;
 }
 
-export default function SuppliersPage() {
-  const suppliers = db.prepare(`
+export default async function SuppliersPage() {
+  const suppliers = await db.prepare(`
     SELECT s.id, s.name, s.email, s.phone, s.address, COUNT(p.id) as product_count
     FROM suppliers s
     LEFT JOIN products p ON p.supplier_id = s.id

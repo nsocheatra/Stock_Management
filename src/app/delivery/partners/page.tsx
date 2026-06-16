@@ -4,8 +4,8 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Truck } from "lucide-react";
 import { createDeliveryPartner } from "@/lib/actions";
 
-export default function PartnersPage() {
-  const partners = db.prepare("SELECT * FROM delivery_partners ORDER BY name ASC").all() as any[];
+export default async function PartnersPage() {
+  const partners = await db.prepare("SELECT * FROM delivery_partners ORDER BY name ASC").all() as any[];
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">

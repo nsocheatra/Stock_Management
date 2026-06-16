@@ -2,12 +2,12 @@ import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import BroadcastsClient from "./BroadcastsClient";
 
-export default function BroadcastsPage() {
-  const broadcasts = db.prepare("SELECT * FROM messenger_broadcasts ORDER BY created_at DESC LIMIT 50").all() as Array<{
+export default async function BroadcastsPage() {
+  const broadcasts = await db.prepare("SELECT * FROM messenger_broadcasts ORDER BY created_at DESC LIMIT 50").all() as Array<{
     id: number; name: string; message: string; recipient_count: number; sent_count: number; status: string; scheduled_at: string | null; created_at: string;
   }>;
 
-  const templates = db.prepare("SELECT * FROM messenger_templates ORDER BY created_at DESC").all() as Array<{
+  const templates = await db.prepare("SELECT * FROM messenger_templates ORDER BY created_at DESC").all() as Array<{
     id: number; name: string; message: string;
   }>;
 

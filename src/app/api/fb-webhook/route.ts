@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const token = request.nextUrl.searchParams.get("hub.verify_token");
   const challenge = request.nextUrl.searchParams.get("hub.challenge");
 
-  const settings = db.prepare("SELECT key, value FROM fb_settings").all() as Array<{ key: string; value: string }>;
+  const settings = await db.prepare("SELECT key, value FROM fb_settings").all() as Array<{ key: string; value: string }>;
   const config: Record<string, string> = {};
   for (const row of settings) config[row.key] = row.value;
 
@@ -28,10 +28,10 @@ export async function POST(request: NextRequest) {
             const commentText = change.value.message;
             const customerName = change.value.from?.name || "Facebook User";
 
-            const matchMode = db.prepare("SELECT value FROM fb_settings WHERE key = 'match_mode'").get("match_mode") as { value: string } | undefined;
+            const matchMode = await db.prepare("SELECT value FROM fb_settings WHERE key = 'match_mode'").get("match_mode") as { value: string } | undefined;
             const mode = matchMode?.value || "contains";
 
-            const keywords = db.prepare(`
+            const keywords = await db.prepare(`
               SELECT f.id, f.keyword, f.product_id, f.quantity, p.name as product_name, p.quantity as stock
               FROM fb_keywords f
               JOIN products p ON p.id = f.product_id
@@ -49,22 +49,23 @@ export async function POST(request: NextRequest) {
               const orderQty = matched.quantity;
               const insufficient = matched.stock < orderQty;
 
-              db.prepare(
+              await db.prepare(
                 "INSERT INTO fb_orders (customer_name, comment_text, keyword, product_id, quantity, status) VALUES (?, ?, ?, ?, ?, ?)"
               ).run(customerName, commentText, matched.keyword, matched.product_id, orderQty, insufficient ? "cancelled" : "pending");
 
               if (!insufficient) {
-                db.transaction(() => {
-                  db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)").run(
+                const processTransaction = db.transaction(async () => {
+                  await db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)").run(
                     matched.product_id, orderQty, `FB Live: ${matched.keyword}`
                   );
-                  db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?").run(
+                  await db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?").run(
                     orderQty, matched.product_id
                   );
-                })();
+                });
+                await processTransaction();
               }
             } else {
-              db.prepare("INSERT INTO fb_orders (customer_name, comment_text, status) VALUES (?, ?, 'cancelled')").run(
+              await db.prepare("INSERT INTO fb_orders (customer_name, comment_text, status) VALUES (?, ?, 'cancelled')").run(
                 customerName, commentText
               );
             }

@@ -2,12 +2,12 @@ import { T } from "@/components/T";
 import { db } from "@/lib/db";
 import AutomationClient from "./AutomationClient";
 
-export default function AutomationPage() {
-  const rules = db.prepare("SELECT * FROM messenger_rules ORDER BY created_at DESC").all() as Array<{
+export default async function AutomationPage() {
+  const rules = await db.prepare("SELECT * FROM messenger_rules ORDER BY created_at DESC").all() as Array<{
     id: number; keyword: string; response: string; match_mode: string; category: string; enabled: number; times_triggered: number; created_at: string;
   }>;
 
-  const quickReplies = db.prepare("SELECT * FROM messenger_quick_replies ORDER BY created_at DESC").all() as Array<{
+  const quickReplies = await db.prepare("SELECT * FROM messenger_quick_replies ORDER BY created_at DESC").all() as Array<{
     id: number; title: string; text: string; payload: string;
   }>;
 

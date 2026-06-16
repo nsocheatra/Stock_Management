@@ -3,10 +3,10 @@ import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
-export default function CashFlowPage() {
-  const entries = db.prepare("SELECT * FROM cash_flow ORDER BY created_at DESC LIMIT 200").all() as any[];
-  const totalIncome = db.prepare("SELECT COALESCE(SUM(amount),0) as total FROM cash_flow WHERE type = 'income'").get() as any;
-  const totalExpense = db.prepare("SELECT COALESCE(SUM(amount),0) as total FROM cash_flow WHERE type = 'expense'").get() as any;
+export default async function CashFlowPage() {
+  const entries = await db.prepare("SELECT * FROM cash_flow ORDER BY created_at DESC LIMIT 200").all() as any[];
+  const totalIncome = await db.prepare("SELECT COALESCE(SUM(amount),0) as total FROM cash_flow WHERE type = 'income'").get() as any;
+  const totalExpense = await db.prepare("SELECT COALESCE(SUM(amount),0) as total FROM cash_flow WHERE type = 'expense'").get() as any;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">

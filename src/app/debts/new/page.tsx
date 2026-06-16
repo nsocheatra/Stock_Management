@@ -4,9 +4,9 @@ import { createDebt } from "@/lib/actions";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 
-export default function NewDebtPage() {
-  const customers = db.prepare("SELECT id, name, phone FROM customers ORDER BY name ASC").all() as any[];
-  const suppliers = db.prepare("SELECT id, name, phone FROM suppliers ORDER BY name ASC").all() as any[];
+export default async function NewDebtPage() {
+  const customers = await db.prepare("SELECT id, name, phone FROM customers ORDER BY name ASC").all() as any[];
+  const suppliers = await db.prepare("SELECT id, name, phone FROM suppliers ORDER BY name ASC").all() as any[];
 
   return (
     <div className="max-w-lg mx-auto space-y-6 animate-in fade-in duration-500">
