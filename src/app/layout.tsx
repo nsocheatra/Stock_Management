@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Noto_Sans_Khmer } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import LayoutClient from "@/components/LayoutClient";
 import { LangUpdater } from "@/components/LangUpdater";
+import PWARegister from "@/components/PWARegister";
 import { getCurrentUser } from "@/lib/auth";
 import { cookies } from "next/headers";
 
@@ -23,9 +24,24 @@ const notoSansKhmer = Noto_Sans_Khmer({
   weight: ["300", "400", "500", "600", "700"],
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0f172a",
+};
+
 export const metadata: Metadata = {
   title: "Stock Management System",
   description: "Manage products, stock, and suppliers",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Stock Manager",
+  },
+  icons: {
+    apple: "/icon-192.svg",
+  },
 };
 
 const navItems = [
@@ -75,6 +91,7 @@ export default async function RootLayout({
             } catch(e) {}
           `
         }} />
+        <PWARegister />
         <LangUpdater />
         <LayoutClient user={user} navItems={navItems} initialLocale={initialLocale}>
           {children}

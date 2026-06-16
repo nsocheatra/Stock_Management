@@ -49,7 +49,7 @@ interface NavItem {
   icon: string;
 }
 
-export default function SidebarNav({ items }: { items: NavItem[] }) {
+export default function SidebarNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
   const pathname = usePathname();
   const { t } = useTranslation();
 
@@ -63,6 +63,7 @@ export default function SidebarNav({ items }: { items: NavItem[] }) {
           <Link
             key={item.href}
             href={item.href}
+            onClick={onNavigate}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
               isActive
                 ? "bg-gradient-to-r from-violet-600/20 to-indigo-600/5 border-l-2 border-violet-500 text-violet-300 shadow-md shadow-violet-950/20"
