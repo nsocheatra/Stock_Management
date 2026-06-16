@@ -3,6 +3,12 @@
 import { cookies } from "next/headers";
 import { db } from "./db";
 import bcrypt from "bcryptjs";
+import { initializeApp, getApps } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+
+if (!getApps().length) {
+  initializeApp({ projectId: "riksystem" });
+}
 
 const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24h
 
@@ -55,6 +61,37 @@ export async function loginWithPin(pin: string) {
   });
 
   return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+}
+
+export async function loginWithGoogle(idToken: string) {
+  try {
+    const decoded = await getAuth().verifyIdToken(idToken);
+    const email = decoded.email;
+    if (!email) return { error: "Google account has no email" };
+
+    const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
+      id: number; name: string; email: string; password_hash: string; role: string; pin: string | null;
+    } | undefined;
+    if (!user) return { error: "No account found with this email" };
+    if (user.role !== "admin") return { error: "Only admins can sign in with Google" };
+
+    const token = generateToken();
+    const expires = new Date(Date.now() + SESSION_DURATION).toISOString();
+    await db.prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expires);
+
+    const cookieStore = await cookies();
+    cookieStore.set("session", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      expires: new Date(Date.now() + SESSION_DURATION),
+      path: "/",
+    });
+
+    return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+  } catch {
+    return { error: "Google sign-in failed" };
+  }
 }
 
 export async function logout() {
