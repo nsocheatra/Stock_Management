@@ -492,11 +492,11 @@ class DbWrapper {
     if (userCount === 0) {
       await this.prepare(
         "INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)"
-      ).run("Administrator", "admin@system.local", adminHash, "admin", "1234");
+      ).run("Administrator", "nongsocheatra@gmail.com", adminHash, "admin", "1234");
     } else {
       await this.prepare(
-        "UPDATE users SET password_hash = ? WHERE email = ?"
-      ).run(adminHash, "admin@system.local");
+        "UPDATE users SET password_hash = ?, email = ? WHERE email = ?"
+      ).run(adminHash, "nongsocheatra@gmail.com", "admin@system.local");
     }
   }
 }
