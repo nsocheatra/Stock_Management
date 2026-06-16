@@ -495,8 +495,8 @@ class DbWrapper {
       ).run("Administrator", "nongsocheatra@gmail.com", adminHash, "admin", "1234");
     } else {
       await this.prepare(
-        "UPDATE users SET password_hash = ?, email = ? WHERE email = ?"
-      ).run(adminHash, "nongsocheatra@gmail.com", "admin@system.local");
+        "UPDATE users SET password_hash = ?, email = 'nongsocheatra@gmail.com' WHERE email IN (?, ?)"
+      ).run(adminHash, "admin@system.local", "nongsocheatra@gmail.com");
     }
   }
 }
