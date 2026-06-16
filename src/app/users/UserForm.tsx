@@ -2,13 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Eye, EyeOff } from "lucide-react";
+import { Plus } from "lucide-react";
 import { createUser } from "@/lib/auth";
 import { useTranslation } from "@/i18n/useTranslation";
 
 export default function UserForm() {
   const [error, setError] = useState("");
-  const [showPass, setShowPass] = useState(false);
   const router = useRouter();
   const { t } = useTranslation();
 
@@ -35,15 +34,7 @@ export default function UserForm() {
         <label className="input-label">{t("users.fields.email")}</label>
         <input name="email" type="email" required className="input-field" placeholder={t("users.placeholders.email")} />
       </div>
-      <div>
-        <label className="input-label">{t("users.fields.password")}</label>
-        <div className="relative">
-          <input name="password" type={showPass ? "text" : "password"} required className="input-field pr-10" placeholder={t("users.placeholders.password")} minLength={6} />
-          <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-default cursor-pointer">
-            {showPass ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-          </button>
-        </div>
-      </div>
+
       <div>
         <label className="input-label">{t("users.fields.role")}</label>
         <select name="role" className="input-field">

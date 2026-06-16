@@ -770,14 +770,12 @@
     "fields": {
       "name": "Name",
       "email": "Email",
-      "password": "Password",
       "role": "Role",
       "pin": "PIN (for quick login)"
     },
     "placeholders": {
       "name": "Full name",
       "email": "email@example.com",
-      "password": "Min 6 characters",
       "pin": "6-digit PIN"
     },
     "rolesDropdown": {

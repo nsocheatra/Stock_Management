@@ -127,15 +127,13 @@ export async function createUser(formData: FormData) {
 
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
   const role = formData.get("role") as string;
   const pin = (formData.get("pin") as string) || null;
 
-  if (!name || !email || !password) return { error: "Name, email, and password are required" };
+  if (!name || !email) return { error: "Name and email are required" };
 
-  const hash = bcrypt.hashSync(password, 10);
   try {
-    await db.prepare("INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)").run(name, email, hash, role || "cashier", pin);
+    await db.prepare("INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, '', ?, ?)").run(name, email, role || "cashier", pin);
   } catch (e: unknown) {
     const msg = (e as Error).message;
     if (msg.includes("UNIQUE")) return { error: "Email already exists" };
@@ -150,7 +148,6 @@ export async function updateUser(id: number, formData: FormData) {
 
   const name = formData.get("name") as string;
   const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
   const role = formData.get("role") as string;
   const pin = (formData.get("pin") as string) || null;
   const active = formData.get("active") === "1" ? 1 : 0;
@@ -158,12 +155,7 @@ export async function updateUser(id: number, formData: FormData) {
   if (!name || !email) return { error: "Name and email are required" };
 
   try {
-    if (password) {
-      const hash = bcrypt.hashSync(password, 10);
-      await db.prepare("UPDATE users SET name=?, email=?, password_hash=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, hash, role, pin, active, id);
-    } else {
-      await db.prepare("UPDATE users SET name=?, email=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, role, pin, active, id);
-    }
+    await db.prepare("UPDATE users SET name=?, email=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, role, pin, active, id);
   } catch (e: unknown) {
     return { error: (e as Error).message };
   }

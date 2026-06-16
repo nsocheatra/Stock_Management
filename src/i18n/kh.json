@@ -770,14 +770,12 @@
     "fields": {
       "name": "ឈ្មោះ",
       "email": "អ៊ីមែល",
-      "password": "ពាក្យសម្ងាត់",
       "role": "តួនាទី",
       "pin": "PIN (សម្រាប់ចូលប្រើរហ័ស)"
     },
     "placeholders": {
       "name": "ឈ្មោះពេញ",
       "email": "email@example.com",
-      "password": "យ៉ាងតិច ៦ តួអក្សរ",
       "pin": "PIN ៦ ខ្ទង់"
     },
     "rolesDropdown": {
