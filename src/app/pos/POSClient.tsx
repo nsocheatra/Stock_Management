@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "@/i18n/useTranslation";
-import { Search, ShoppingCart, Scan, Minus, Plus, Trash2, Printer, Users, Building2, Store, Image as ImageIcon, Minimize2, Maximize2 } from "lucide-react";
+import { Search, ShoppingCart, Scan, Minus, Plus, Trash2, Printer, Users, Building2, Store, Image as ImageIcon, ShoppingBag } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
 import ReceiptView from "./ReceiptView";
+import BarcodeScanner from "./BarcodeScanner";
 
 type Product = { id: number; name: string; sku: string; barcode: string | null; price: number; wholesale_price: number | null; selling_price: number | null; original_price: number | null; unit_price: number | null; price_per_case: number | null; quantity: number; image_url: string | null; category: string | null };
 type Customer = { id: number; name: string; customer_type: string };
@@ -20,7 +21,7 @@ export default function POSClient({ products, customers }: { products: Product[]
   const [settings, setSettings] = useState<Record<string, string> | null>(null);
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[] | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
-  const [minimized, setMinimized] = useState(false);
+  const [showCart, setShowCart] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
   const scanTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -85,7 +86,12 @@ export default function POSClient({ products, customers }: { products: Product[]
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [scanBuf, products, addToCart]);
+      }, [scanBuf, products, addToCart]);
+
+  const handleBarcodeDetect = useCallback((code: string) => {
+    const found = products.find((p) => p.barcode === code);
+    if (found) addToCart(found);
+  }, [products, addToCart]);
 
   const updateQty = (productId: number, delta: number) => {
     setCart((prev) =>
@@ -129,6 +135,8 @@ export default function POSClient({ products, customers }: { products: Product[]
 
   return (
     <div className="flex h-full relative">
+      <BarcodeScanner onDetect={handleBarcodeDetect} />
+
       {receiptItems && settings && (
         <ReceiptView
           items={receiptItems}
@@ -143,9 +151,9 @@ export default function POSClient({ products, customers }: { products: Product[]
       )}
 
       {/* Products panel */}
-      <div className="flex-1 p-6 border-r border-surface overflow-auto">
+      <div className="flex-1 p-3 md:p-6 md:border-r border-surface overflow-auto pb-20 md:pb-6">
         {/* Customer selector */}
-        <div className="mb-4">
+        <div className="mb-3 md:mb-4">
           <div className="relative">
             <Users className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted pointer-events-none" />
             <select
@@ -155,7 +163,7 @@ export default function POSClient({ products, customers }: { products: Product[]
                 setSelectedCustomer(id ? customers.find((c) => c.id === parseInt(id)) ?? null : null);
                 setCart([]);
               }}
-              className="input-field pl-10 appearance-none"
+              className="input-field pl-10 appearance-none text-sm"
             >
               <option value="">{t("pos.walkIn")}</option>
               {customers.map((c) => (
@@ -179,50 +187,53 @@ export default function POSClient({ products, customers }: { products: Product[]
           </div>
         </div>
 
-        <div className="relative mb-4">
+        <div className="relative mb-3 md:mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted" />
           <input
             ref={searchRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("pos.searchPlaceholder")}
-            className="input-field pl-10"
+            className="input-field pl-10 pr-10 text-sm"
             autoFocus
           />
-          {scanBuf && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-xs text-emerald-400">
-              <Scan className="size-3" />
-              {t("pos.scanning")}
-            </div>
-          )}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {scanBuf && (
+              <div className="flex items-center gap-1 text-xs text-emerald-400 mr-1">
+                <Scan className="size-3" />
+                {t("pos.scanning")}
+              </div>
+            )}
+            <BarcodeScanner onDetect={handleBarcodeDetect} />
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-3">
           {filtered.map((p) => (
             <button
               key={p.id}
               onClick={() => addToCart(p)}
               disabled={p.quantity === 0}
-              className={`text-left p-4 rounded-xl border transition-all duration-200 ${
+              className={`text-left p-3 md:p-4 rounded-xl border transition-all duration-200 ${
                 p.quantity === 0
                   ? "opacity-40 cursor-not-allowed border-surface"
                   : "border-surface hover:border-violet-500/40 hover:bg-violet-500/5 cursor-pointer"
               }`}
             >
               {p.image_url ? (
-                <div className="w-full h-24 rounded-lg overflow-hidden mb-2 border border-surface">
+                <div className="w-full h-20 md:h-24 rounded-lg overflow-hidden mb-2 border border-surface">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.image_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                 </div>
               ) : (
-                <div className="w-full h-24 rounded-lg mb-2 bg-surface flex items-center justify-center">
-                  <ImageIcon className="size-6 text-faint" />
+                <div className="w-full h-20 md:h-24 rounded-lg mb-2 bg-surface flex items-center justify-center">
+                  <ImageIcon className="size-5 md:size-6 text-faint" />
                 </div>
               )}
-              <p className="font-semibold text-default text-sm truncate">{p.name}</p>
-              <p className="text-xs text-muted font-mono mt-0.5">{p.sku}</p>
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-sm font-bold text-default">${effectivePrice(p).toFixed(2)}</span>
+              <p className="font-semibold text-default text-xs md:text-sm truncate">{p.name}</p>
+              <p className="text-[10px] md:text-xs text-muted font-mono mt-0.5">{p.sku}</p>
+              <div className="flex items-center justify-between mt-1 md:mt-2">
+                <span className="text-xs md:text-sm font-bold text-default">${effectivePrice(p).toFixed(2)}</span>
                 {isWholesale && p.wholesale_price != null && (
                   <span className="text-[10px] line-through text-faint">${p.price.toFixed(2)}</span>
                 )}
@@ -240,29 +251,49 @@ export default function POSClient({ products, customers }: { products: Product[]
         </div>
       </div>
 
-      {/* Toggle button */}
+      {/* Mobile cart button */}
       <button
-        onClick={() => setMinimized((v) => !v)}
-        className="absolute top-4 right-4 z-10 p-2 rounded-xl border border-surface text-muted hover:text-default hover:bg-surface transition-all cursor-pointer"
-        title={minimized ? t("pos.showCart") : t("pos.minimizeCart")}
+        onClick={() => setShowCart(true)}
+        className="md:hidden fixed bottom-4 right-4 z-40 p-4 rounded-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white shadow-xl shadow-violet-500/30 border border-violet-500/30 flex items-center gap-2 cursor-pointer"
       >
-        {minimized ? <Maximize2 className="size-4" /> : <Minimize2 className="size-4" />}
+        <ShoppingBag className="size-5" />
+        {itemCount > 0 && (
+          <span className="text-xs font-bold">{itemCount}</span>
+        )}
       </button>
 
+      {/* Mobile cart backdrop */}
+      {showCart && (
+        <div className="md:hidden fixed inset-0 bg-black/50 z-30" onClick={() => setShowCart(false)} />
+      )}
+
       {/* Cart panel */}
-      <div className={`w-96 flex flex-col border-l border-surface transition-all duration-300 ${minimized ? "w-0 border-l-0 overflow-hidden" : ""}`}>
-        <div className="p-4 border-b border-surface flex items-center gap-2 shrink-0">
+      <div className={`
+        fixed md:static inset-x-0 bottom-0 z-40
+        md:z-auto md:w-80 lg:w-96
+        flex flex-col border-surface
+        md:border-l
+        bg-[var(--bg-main)]
+        rounded-t-2xl md:rounded-none
+        max-h-[80vh] md:max-h-full
+        transition-transform duration-300 ease-in-out
+        ${showCart ? "translate-y-0" : "translate-y-full md:translate-y-0"}
+      `}>
+        <div className="p-3 md:p-4 border-b border-surface flex items-center gap-2 shrink-0">
           <ShoppingCart className="size-4 text-muted" />
           <span className="text-sm font-semibold text-default">{t("pos.cart")}</span>
           <span className="text-xs px-2 py-0.5 rounded-full bg-surface text-muted">{t("pos.items", { count: itemCount })}</span>
+          <button onClick={() => setShowCart(false)} className="md:hidden ml-auto p-1 text-muted hover:text-default cursor-pointer">
+            ✕
+          </button>
         </div>
 
-        <div className="flex-1 overflow-auto p-4 space-y-3">
+        <div className="flex-1 overflow-auto p-3 md:p-4 space-y-2 md:space-y-3">
           {cart.map((item) => (
-            <div key={item.product.id} className="p-3 rounded-xl border border-surface">
+            <div key={item.product.id} className="p-2 md:p-3 rounded-xl border border-surface">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold text-default truncate">{item.product.name}</p>
+                  <p className="text-xs md:text-sm font-semibold text-default truncate">{item.product.name}</p>
                   <p className="text-[10px] text-faint font-mono">{item.product.sku}</p>
                 </div>
                 <button onClick={() => removeItem(item.product.id)} className="p-1 hover:bg-rose-500/10 rounded text-muted hover:text-rose-400 transition-colors cursor-pointer">
@@ -274,25 +305,25 @@ export default function POSClient({ products, customers }: { products: Product[]
                   <button onClick={() => updateQty(item.product.id, -1)} className="p-1 rounded hover:bg-surface text-muted transition-colors cursor-pointer">
                     <Minus className="size-3" />
                   </button>
-                  <span className="text-sm font-bold text-default w-6 text-center">{item.qty}</span>
+                  <span className="text-xs md:text-sm font-bold text-default w-6 text-center">{item.qty}</span>
                   <button onClick={() => updateQty(item.product.id, 1)} className="p-1 rounded hover:bg-surface text-muted transition-colors cursor-pointer">
                     <Plus className="size-3" />
                   </button>
                 </div>
-                  <span className="text-sm font-bold text-default">${(item.price * item.qty).toFixed(2)}</span>
+                  <span className="text-xs md:text-sm font-bold text-default">${(item.price * item.qty).toFixed(2)}</span>
               </div>
             </div>
           ))}
           {cart.length === 0 && (
-            <div className="text-center py-16 text-faint">
-              <ShoppingCart className="size-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm">{t("pos.cartEmpty")}</p>
-              <p className="text-xs mt-1">{t("pos.cartEmptyHint")}</p>
+            <div className="text-center py-10 md:py-16 text-faint">
+              <ShoppingCart className="size-8 md:size-10 mx-auto mb-3 opacity-40" />
+              <p className="text-xs md:text-sm">{t("pos.cartEmpty")}</p>
+              <p className="text-[10px] md:text-xs mt-1">{t("pos.cartEmptyHint")}</p>
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t border-surface space-y-3 shrink-0">
+        <div className="p-3 md:p-4 border-t border-surface space-y-2 md:space-y-3 shrink-0">
           {cart.length > 0 && (
             <button
               onClick={() => setReceiptItems(cart.map((item) => ({ name: item.product.name, sku: item.product.sku, price: item.price, qty: item.qty })))}
@@ -303,8 +334,8 @@ export default function POSClient({ products, customers }: { products: Product[]
             </button>
           )}
           <div className="flex items-center justify-between">
-            <span className="text-sm text-muted">{t("pos.subtotal", { count: itemCount })}</span>
-            <span className="text-lg font-bold text-default">${total.toFixed(2)}</span>
+            <span className="text-xs md:text-sm text-muted">{t("pos.subtotal", { count: itemCount })}</span>
+            <span className="text-sm md:text-lg font-bold text-default">${total.toFixed(2)}</span>
           </div>
           {message && (
             <div className={`text-xs text-center py-2 rounded-lg ${message.ok ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"}`}>
@@ -312,9 +343,9 @@ export default function POSClient({ products, customers }: { products: Product[]
             </div>
           )}
           <button
-            onClick={checkout}
+            onClick={() => { setShowCart(false); checkout(); }}
             disabled={cart.length === 0}
-            className="w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer"
+            className="w-full py-2.5 md:py-3 rounded-xl font-semibold text-xs md:text-sm transition-all duration-200 bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-violet-500/15 border border-violet-500/20 cursor-pointer"
           >
             {t("pos.completeSale", { total: total.toFixed(2) })}
           </button>
