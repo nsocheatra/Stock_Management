@@ -57,12 +57,18 @@ export async function loginWithPin(pin: string) {
   return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
 }
 
+const FIREBASE_API_KEY = "AIzaSyCzQBix5PPRalq1EN9auK3eNr7H-NPOR3U";
+
 export async function loginWithGoogle(idToken: string) {
   try {
-    const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?idToken=${idToken}`);
+    const res = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ idToken }),
+    });
     if (!res.ok) return { error: "Google sign-in failed" };
-    const payload = await res.json() as { email?: string; email_verified?: string };
-    const email = payload.email;
+    const data = await res.json() as { users?: { email?: string; emailVerified?: boolean }[] };
+    const email = data.users?.[0]?.email;
     if (!email) return { error: "Google account has no email" };
 
     const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
