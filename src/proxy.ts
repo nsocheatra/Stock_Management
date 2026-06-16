@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const publicPaths = ["/login", "/api/fb-webhook", "/api/telegram-webhook", "/api/messenger-webhook", "/api/auth/facebook"];
+const publicPaths = ["/login", "/api/fb-webhook", "/api/telegram-webhook", "/api/messenger-webhook", "/api/auth/facebook", "/api/upload"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
