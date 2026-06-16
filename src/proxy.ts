@@ -5,7 +5,7 @@ const publicPaths = ["/login", "/api/fb-webhook", "/api/telegram-webhook", "/api
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (publicPaths.some((p) => pathname.startsWith(p))) return NextResponse.next();
-  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon")) return NextResponse.next();
+  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon") || pathname === "/sw.js") return NextResponse.next();
 
   const session = request.cookies.get("session")?.value;
   if (!session) {
