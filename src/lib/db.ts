@@ -1,4 +1,5 @@
 import { createClient } from "@libsql/client";
+import bcrypt from "bcryptjs";
 
 const globalForDb = globalThis as unknown as { db: DbWrapper | undefined };
 
@@ -483,6 +484,15 @@ class DbWrapper {
     await alterTable("ALTER TABLE messenger_broadcasts ADD COLUMN scheduled_at TEXT;");
     await alterTable("ALTER TABLE customers ADD COLUMN customer_type TEXT NOT NULL CHECK(customer_type IN ('wholesale', 'retail')) DEFAULT 'retail';");
     await alterTable("ALTER TABLE customers ADD COLUMN credit REAL DEFAULT 0;");
+
+    const userCount = (await this.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number }).count;
+    if (userCount === 0) {
+      const defaultPassword = process.env.ADMIN_PASSWORD || "admin123";
+      const hash = bcrypt.hashSync(defaultPassword, 10);
+      await this.prepare(
+        "INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)"
+      ).run("Administrator", "admin@system.local", hash, "admin", "1234");
+    }
   }
 }
 
