@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/lib/db";
 import { Plus, Edit, Package, Image as ImageIcon } from "lucide-react";
 import DeleteProductButton from "./DeleteButton";
+import ProductImage from "./ProductImage";
 import { T } from "@/components/T";
 
 interface ProductRow {
@@ -87,13 +88,7 @@ export default async function ProductsPage() {
                       <td className="p-4">
                         {p.image_url ? (
                           <div className="size-10 rounded-lg overflow-hidden border border-surface">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={p.image_url}
-                              alt=""
-                              className="w-full h-full object-cover"
-                              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                            />
+                            <ProductImage src={p.image_url} />
                           </div>
                         ) : (
                           <div className="size-10 rounded-lg bg-surface flex items-center justify-center">
