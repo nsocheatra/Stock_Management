@@ -2,6 +2,7 @@
 
 import { useActionState, useState, useCallback, useEffect, useRef } from "react";
 import Link from "next/link";
+import { Upload } from "lucide-react";
 import { createProduct, updateProduct } from "@/lib/actions";
 import { useTranslation } from "@/i18n/useTranslation";
 
@@ -206,14 +207,36 @@ export default function ProductForm({
         </div>
         <div>
             <label className="input-label">{t("products.fields.imageUrl")}</label>
-          <input
-            name="image_url"
-            type="url"
-            value={imageUrl}
-            onChange={(e) => { setImageUrl(e.target.value); setImageError(false); }}
-            placeholder={t("products.placeholders.imageUrl")}
-            className="input-field"
-          />
+          <div className="flex gap-2">
+            <input
+              name="image_url"
+              type="url"
+              value={imageUrl}
+              onChange={(e) => { setImageUrl(e.target.value); setImageError(false); }}
+              placeholder={t("products.placeholders.imageUrl")}
+              className="input-field flex-1"
+            />
+            <label className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-zinc-700/50 bg-zinc-800/50 text-xs text-muted hover:bg-zinc-700/50 cursor-pointer transition-colors shrink-0">
+              <Upload className="size-4" />
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const fd = new FormData();
+                  fd.append("file", file);
+                  const res = await fetch("/api/upload", { method: "POST", body: fd });
+                  if (res.ok) {
+                    const { url } = await res.json();
+                    setImageUrl(url);
+                    setImageError(false);
+                  }
+                }}
+              />
+            </label>
+          </div>
           {imageUrl && !imageError && (
             <div className="mt-2 rounded-lg overflow-hidden border border-surface w-24 h-24">
               {/* eslint-disable-next-line @next/next/no-img-element */}
