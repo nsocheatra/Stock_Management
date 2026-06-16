@@ -485,18 +485,15 @@ class DbWrapper {
     await alterTable("ALTER TABLE customers ADD COLUMN customer_type TEXT NOT NULL CHECK(customer_type IN ('wholesale', 'retail')) DEFAULT 'retail';");
     await alterTable("ALTER TABLE customers ADD COLUMN credit REAL DEFAULT 0;");
 
-    const adminPassword = process.env.ADMIN_PASSWORD || "Bestone123$";
-    const adminHash = bcrypt.hashSync(adminPassword, 10);
-
     const userCount = (await this.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number }).count;
     if (userCount === 0) {
       await this.prepare(
         "INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, ?, ?, ?)"
-      ).run("Administrator", "nongsocheatra@gmail.com", adminHash, "admin", "1234");
+      ).run("Administrator", "nongsocheatra@gmail.com", "", "admin", "1234");
     } else {
       await this.prepare(
-        "UPDATE users SET password_hash = ?, email = 'nongsocheatra@gmail.com' WHERE email IN (?, ?)"
-      ).run(adminHash, "admin@system.local", "nongsocheatra@gmail.com");
+        "UPDATE users SET password_hash = '', email = 'nongsocheatra@gmail.com' WHERE email IN (?, ?)"
+      ).run("admin@system.local", "nongsocheatra@gmail.com");
     }
   }
 }
