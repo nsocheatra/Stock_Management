@@ -2,9 +2,8 @@
 
 import { cookies } from "next/headers";
 import { db } from "./db";
-import bcrypt from "bcryptjs";
 
-const SESSION_DURATION = 24 * 60 * 60 * 1000; // 24h
+const SESSION_DURATION = 24 * 60 * 60 * 1000;
 
 function generateToken() {
   const bytes = new Uint8Array(32);
@@ -12,32 +11,9 @@ function generateToken() {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function login(email: string, password: string) {
-  const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
-    id: number; name: string; email: string; password_hash: string; role: string; pin: string | null;
-  } | undefined;
-  if (!user) return { error: "Invalid credentials" };
-  if (!bcrypt.compareSync(password, user.password_hash)) return { error: "Invalid credentials" };
-
-  const token = generateToken();
-  const expires = new Date(Date.now() + SESSION_DURATION).toISOString();
-  await db.prepare("INSERT INTO sessions (user_id, token, expires_at) VALUES (?, ?, ?)").run(user.id, token, expires);
-
-  const cookieStore = await cookies();
-  cookieStore.set("session", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    expires: new Date(Date.now() + SESSION_DURATION),
-    path: "/",
-  });
-
-  return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
-}
-
 export async function loginWithPin(pin: string) {
   const user = await db.prepare("SELECT * FROM users WHERE pin = ? AND active = 1 AND role = 'cashier'").get(pin) as {
-    id: number; name: string; email: string; password_hash: string; role: string; pin: string | null;
+    id: number; name: string; email: string; role: string; pin: string | null;
   } | undefined;
   if (!user) return { error: "Invalid PIN" };
 
@@ -72,7 +48,7 @@ export async function loginWithGoogle(idToken: string) {
     if (!email) return { error: "Google account has no email" };
 
     const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
-      id: number; name: string; email: string; password_hash: string; role: string; pin: string | null;
+      id: number; name: string; email: string; role: string; pin: string | null;
     } | undefined;
     if (!user || user.email !== "nongsocheatra@gmail.com") return { error: "Google sign-in not allowed for this account" };
 

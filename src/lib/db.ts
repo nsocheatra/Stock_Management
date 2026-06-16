@@ -1,5 +1,4 @@
 import { createClient } from "@libsql/client";
-import bcrypt from "bcryptjs";
 
 const globalForDb = globalThis as unknown as { db: DbWrapper | undefined };
 
@@ -492,8 +491,8 @@ class DbWrapper {
       ).run("Administrator", "nongsocheatra@gmail.com", "", "admin", "1234");
     } else {
       await this.prepare(
-        "UPDATE users SET password_hash = '', email = 'nongsocheatra@gmail.com' WHERE email IN (?, ?)"
-      ).run("admin@system.local", "nongsocheatra@gmail.com");
+        "UPDATE users SET password_hash = '' WHERE email = ?"
+      ).run("nongsocheatra@gmail.com");
     }
   }
 }
