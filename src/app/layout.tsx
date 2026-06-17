@@ -47,7 +47,6 @@ export const metadata: Metadata = {
 const navItems = [
   { href: "/pos", label: "POS", icon: "pos" },
   { href: "/", label: "Dashboard", icon: "dashboard" },
-  { href: "/fb-live", label: "FB Live", icon: "fblive" },
   { href: "/customers", label: "Customers", icon: "customers" },
   { href: "/products", label: "Products", icon: "products" },
   { href: "/stock", label: "Inventory", icon: "stock" },

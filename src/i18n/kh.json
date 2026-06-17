@@ -10,7 +10,6 @@
     "customers": "អតិថិជន",
     "products": "ផលិតផល",
     "inventory": "ស្តុក",
-    "fbLive": "FB ផ្សាយផ្ទាល់",
     "stock": "ស្តុក",
     "audit": "ត្រួតពិនិត្យសារពើភ័ណ្ឌ",
     "orders": "ការបញ្ជាទិញ",
@@ -19,7 +18,6 @@
     "cashflow": "លំហូរសាច់ប្រាក់",
     "promotions": "ការផ្សព្វផ្សាយ",
     "membership": "សមាជិកភាព",
-    "fblive": "FB ផ្សាយផ្ទាល់",
     "suppliers": "អ្នកផ្គត់ផ្គង់",
     "reports": "របាយការណ៍",
     "settings": "ការកំណត់",
@@ -236,7 +234,11 @@
     "newSubtitle": "ផលិតផលទាំងអស់នឹងត្រូវបានផ្ទុកជាមុនជាមួយបរិមាណបច្ចុប្បន្ន",
     "name": "ឈ្មោះ",
     "start": "ចាប់ផ្តើម",
-    "statuses": { "in_progress": "កំពុងធ្វើ", "completed": "រួចរាល់", "cancelled": "បោះបង់" },
+    "statuses": {
+      "in_progress": "កំពុងធ្វើ",
+      "completed": "រួចរាល់",
+      "cancelled": "បោះបង់"
+    },
     "counted": "រាប់ហើយ",
     "discrepancies": "ភាពខុសគ្នា",
     "items": "មុខទំនិញ",
@@ -370,8 +372,6 @@
   "settings": {
     "title": "ការកំណត់",
     "subtitle": "កំណត់រចនាសម្ព័ន្ធម៉ាស៊ីនព្រីន និងការជូនដំណឹង Telegram ។",
-    "messengerMoved": "ការកំណត់ Messenger បានផ្លាស់ប្តូរទៅ",
-    "fbLiveSettings": "FB Live → ការកំណត់",
     "printer": {
       "title": "ការកំណត់ម៉ាស៊ីនព្រីនបង្កាន់ដៃ",
       "type": "ប្រភេទម៉ាស៊ីនព្រីន",
@@ -383,8 +383,8 @@
       "paperWidth": "ទទឹងក្រដាស (ម.ម)",
       "paperOptions": {
         "58": "៥៨ម.ម (thermal mini)",
-        "80": "៨០ម.ម (ស្តង់ដារ)",
-        "76": "៧៦ម.ម (dot matrix)"
+        "76": "៧៦ម.ម (dot matrix)",
+        "80": "៨០ម.ម (ស្តង់ដារ)"
       },
       "storeName": "ឈ្មោះហាង",
       "storePhone": "ទូរស័ព្ទហាង",
@@ -419,340 +419,6 @@
     },
     "saveSuccess": "ការកំណត់ត្រូវបានរក្សាទុក!",
     "saveSettings": "រក្សាទុកការកំណត់"
-  },
-  "fbLive": {
-    "main": {
-      "title": "ការបញ្ជាទិញដោយស្វ័យប្រវត្តិតាម Facebook Live",
-      "subtitle": "ភ្ជាប់ពាក្យគន្លឹះទៅផលិតផល និងដំណើរការការបញ្ជាទិញដោយស្វ័យប្រវត្តិពីមតិយោបល់ផ្សាយផ្ទាល់។",
-      "live": "ផ្សាយផ្ទាល់",
-      "pending": "{count} កំពុងរង់ចាំ",
-      "linkKeyword": "ភ្ជាប់ពាក្យគន្លឹះទៅផលិតផល",
-      "simulate": "ក្លែងធ្វើមតិយោបល់",
-      "simulateHint": "សាកល្បងការកំណត់ពាក្យគន្លឹះរបស់អ្នកដោយក្លែងធ្វើមតិយោបល់ Facebook ។",
-      "orderFeed": "បញ្ជីបញ្ជាទិញ",
-      "orders": "{count} ការបញ្ជាទិញ",
-      "processed": "ដំណើរការរួច",
-      "cancelled": "បានបោះបង់",
-      "pendingStatus": "កំពុងរង់ចាំ",
-      "noOrders": "មិនទាន់មានការបញ្ជាទិញនៅឡើយទេ",
-      "noOrdersHint": "ភ្ជាប់ពាក្យគន្លឹះ និងក្លែងធ្វើមតិយោបល់ដើម្បីសាកល្បង",
-      "fields": {
-        "keyword": "ពាក្យគន្លឹះ",
-        "product": "ផលិតផល",
-        "qtyPerOrder": "បរិមាណក្នុងមួយការបញ្ជាទិញ"
-      },
-      "keywordPlaceholder": "ឧ. #product1",
-      "productPlaceholder": "ជ្រើសរើសផលិតផល...",
-      "productOption": "{name} ({sku}) — {qty} នៅក្នុងស្តុក",
-      "addKeyword": "បន្ថែមពាក្យគន្លឹះ",
-      "activeKeywords": "ពាក្យគន្លឹះសកម្ម",
-      "inStock": "នៅក្នុងស្តុក",
-      "untitled": "គ្មានចំណងជើង",
-      "processing": "កំពុងដំណើរការ",
-      "draft": "ពង្រាង",
-      "clear": "សម្អាត",
-      "table": {
-        "no": "លេខ",
-        "name": "ឈ្មោះ",
-        "comment": "មតិយោបល់",
-        "time": "ម៉ោង",
-        "action": "សកម្មភាព",
-        "status": "ស្ថានភាព"
-      },
-      "statuses": {
-        "deleted": "បានលុប",
-        "new": "ថ្មី",
-        "old": "ចាស់"
-      },
-      "simulate": {
-        "customerName": "ឈ្មោះអតិថិជន",
-        "commentText": "អត្ថបទមតិយោបល់",
-        "customerPlaceholder": "អ្នកប្រើប្រាស់សាកល្បង",
-        "commentPlaceholder": "ឧ. ខ្ញុំចង់បាន #product1 សូម!",
-        "simulateBtn": "ក្លែងធ្វើមតិយោបល់",
-        "matched": "✅ {product} x{qty} តាម #{matched} — ឆ្លើយតបដោយស្វ័យប្រវត្តិ: '{reply}'",
-        "noMatch": "រកមិនឃើញពាក្យគន្លឹះក្នុងមតិយោបល់ទេ",
-        "failed": "បរាជ័យ",
-        "activeKeywords": "ពាក្យគន្លឹះសកម្ម: #{keyword} ..."
-      }
-    },
-    "settings": {
-      "title": "កំណត់រចនាសម្ព័ន្ធ Facebook Live Auto-Ordering",
-      "subtitle": "ការកំណត់ Facebook Live auto-ordering និង Messenger chatbot ។",
-      "liveTab": "ការបញ្ជាទិញតាមផ្សាយផ្ទាល់",
-      "chatbotTab": "Messenger Chatbot",
-      "live": {
-        "signIn": "ចូលប្រើជាមួយគណនី Facebook របស់អ្នក",
-        "description": "Instagram គឺជាផ្នែកមួយនៃប្រព័ន្ធ Meta (អតីត Facebook) ចូលប្រើជាមួយគណនី Facebook របស់អ្នកដើម្បីបង្កើតស្វ័យប្រវត្តិកម្ម។ ដោយបន្ត Rika System នឹងទទួលបានសិទ្ធិចូលប្រើព័ត៌មានដែលអ្នកចែករំលែក ហើយ Meta នឹងកត់ត្រាពេល Rika System ចូលប្រើវា។",
-        "learnMore": "ស្វែងយល់បន្ថែមអំពីការចែករំលែកនេះ និងការកំណត់ដែលអ្នកមាន",
-        "liveListening": "ការស្តាប់បន្តផ្ទាល់",
-        "pageName": "ឈ្មោះទំព័រ Facebook",
-        "pageNamePlaceholder": "ឧ. ហាងរបស់ខ្ញុំ",
-        "pageId": "លេខសម្គាល់ទំព័រ Facebook",
-        "pageIdPlaceholder": "ឧ. 123456789",
-        "pageToken": "Page Access Token",
-        "pageTokenPlaceholder": "EAAxxx...",
-        "keywordMatchMode": "របៀបផ្គូផ្គងពាក្យគន្លឹះ",
-        "matchModes": {
-          "contains": "មាន (ឧ. #product ផ្គូផ្គងមតិយោបល់ណាដែលមាន #product)",
-          "exact": "ផ្គូផ្គងពិតប្រាកដ (មតិយោបល់ត្រូវតែជាពាក្យគន្លឹះដូចគ្នា)",
-          "startsWith": "ចាប់ផ្តើមដោយ (មតិយោបល់ចាប់ផ្តើមដោយពាក្យគន្លឹះ)"
-        },
-        "webhookUrl": "URL Webhook",
-        "verifyToken": "Verify Token",
-        "verifyTokenHint": "បញ្ចូល token នេះជា Verify Token ក្នុងការកំណត់ webhook របស់កម្មវិធី Facebook របស់អ្នក។",
-        "autoReplySuccess": "គំរូឆ្លើយតបដោយស្វ័យប្រវត្តិ (ពេលជោគជ័យ)",
-        "autoReplySuccessHint": "ប្រើ {{name}}, {{product}}, {{qty}} ជាសញ្ញាដាក់",
-        "autoReplyNoMatch": "គំរូឆ្លើយតបដោយស្វ័យប្រវត្តិ (គ្មានការផ្គូផ្គង)",
-        "save": "រក្សាទុកការកំណត់ផ្សាយផ្ទាល់"
-      },
-      "chatbot": {
-        "title": "Facebook Messenger Chatbot",
-        "steps": [
-          "1. ចូលទៅកាន់ developers.facebook.com ហើយបង្កើតកម្មវិធី",
-          "2. បន្ថែមផលិតផល Messenger",
-          "3. បង្កើត Page Access Token សម្រាប់ទំព័រ Facebook របស់អ្នក",
-          "4. កំណត់ URL webhook ទៅ: {url}/api/messenger-webhook",
-          "5. ប្រើ Verify Token ដែលបង្ហាញខាងក្រោមពេលកំណត់ webhook",
-          "6. ជាវសារ និងព្រឹត្តិការណ៍ messaging_postbacks",
-          "7. បើកដំណើរការ bot ខាងក្រោម ហើយរក្សាទុក"
-        ],
-        "pageToken": "Page Access Token",
-        "pageTokenPlaceholder": "EAAxxx...",
-        "verifyToken": "Webhook Verify Token",
-        "greeting": "សារស្វាគមន៍",
-        "greetingHint": "ផ្ញើនៅពេលអ្នកប្រើចាប់ផ្តើមការសន្ទនា ឬវាយ 'menu'។",
-        "notFoundMessage": "សាររកមិនឃើញផលិតផល",
-        "enable": "បើកដំណើរការ Messenger Chatbot",
-        "save": "រក្សាទុកការកំណត់ Chatbot"
-      },
-      "status": {
-        "saved": "ការកំណត់ត្រូវបានរក្សាទុក!",
-        "connected": "គណនី Facebook ត្រូវបានភ្ជាប់ដោយជោគជ័យ! ទំព័រដំបូងរបស់អ្នកត្រូវបានជ្រើសរើសដោយស្វ័យប្រវត្តិ។",
-        "idSecretRequired": "សូមរក្សាទុក App ID និង App Secret របស់ Facebook មុនពេលចូលប្រើជាមួយ Facebook ។",
-        "codeExchangeFailed": "បរាជ័យក្នុងការផ្លាស់ប្តូរលេខកូដអនុញ្ញាត។ ពិនិត្យ App ID និង App Secret របស់អ្នក។",
-        "denied": "អ្នកបានបដិសេធសំណើចូលប្រើ Facebook ។ សូមព្យាយាមម្តងទៀត និងអនុញ្ញាតសិទ្ធិដែលបានស្នើសុំ។",
-        "unexpectedError": "មានកំហុសដែលមិនបានរំពឹងទុកក្នុងពេលចូលប្រើ Facebook ។ សូមព្យាយាមម្តងទៀត។"
-      },
-      "facebookLogin": {
-        "connected": "គណនី Facebook",
-        "connectedBadge": "បានភ្ជាប់",
-        "pagesAvailable": "{count} ទំព័រអាចប្រើបាន",
-        "active": "សកម្ម",
-        "businesses": "{count} អាជីវកម្ម",
-        "switchAccount": "ចូលប្រើជាមួយគណនី Facebook ផ្សេង",
-        "noPages": "រកមិនឃើញទំព័រ។ ត្រូវប្រាកដថាកម្មវិធី Facebook របស់អ្នកមានផលិតផល Pages API ហើយអ្នកមានសិទ្ធិគ្រប់គ្រង ឬកែសម្រួលយ៉ាងហោចណាស់មួយទំព័រ Facebook ។",
-        "notConnected": "ចូលប្រើដើម្បីផ្តល់សិទ្ធិចូលប្រើទំព័រ Facebook និងអាជីវកម្មរបស់អ្នក បន្ទាប់មកជ្រើសរើសទំព័រដើម្បីប្រើសម្រាប់ការបញ្ជាទិញដោយស្វ័យប្រវត្តិ។",
-        "appId": "App ID",
-        "appIdPlaceholder": "Facebook App ID",
-        "appSecret": "App Secret",
-        "appSecretPlaceholder": "Facebook App Secret",
-        "signIn": "ចូលប្រើជាមួយ Facebook",
-        "saving": "កំពុងរក្សាទុក...",
-        "validationError": "សូមបញ្ចូលទាំង App ID និង App Secret ។",
-        "saveError": "បរាជ័យក្នុងការរក្សាទុកការកំណត់។",
-        "note": "ការចុចខាងលើនឹងរក្សាទុក App ID & App Secret របស់អ្នកជាមុន បន្ទាប់មកបញ្ជូនបន្តទៅ Facebook សម្រាប់ការអនុញ្ញាត។"
-      }
-    },
-    "inbox": {
-      "title": "ប្រអប់សារ",
-      "unread": "{count} មិនទាន់អាន",
-      "conversations": "{count} ការសន្ទនា",
-      "searchPlaceholder": "ស្វែងរក...",
-      "noConversations": "គ្មានការសន្ទនា",
-      "noConversationsHint": "សារពី Facebook Messenger នឹងបង្ហាញនៅទីនេះ",
-      "selectConversation": "ជ្រើសរើសការសន្ទនា",
-      "selectConversationHint": "ជ្រើសរើសការសន្ទនាពីខាងឆ្វេងដើម្បីមើល និងឆ្លើយតប",
-      "id": "លេខសម្គាល់: {id}",
-      "tag": "ស្លាក",
-      "assign": "ផ្តល់ភារកិច្ច",
-      "tagPlaceholder": "ឧ. support, vip, complaint",
-      "assignPlaceholder": "ឈ្មោះអ្នកទទួលខុសត្រូវ",
-      "replyPlaceholder": "វាយចម្លើយរបស់អ្នក...",
-      "justNow": "ទើបតែប៉ុន្មានវិនាទី",
-      "minutesAgo": "{n}ន មុន",
-      "hoursAgo": "{n}ម មុន",
-      "daysAgo": "{n}ថ មុន"
-    },
-    "broadcasts": {
-      "title": "ការផ្សាយ",
-      "subtitle": "បង្កើត និងផ្ញើសារផ្សាយទៅកាន់ការសន្ទនា Messenger របស់អ្នក។",
-      "sent": "សារដែលបានផ្ញើ",
-      "reached": "បានទៅដល់",
-      "newCampaign": "យុទ្ធនាការថ្មី",
-      "campaignName": "ឈ្មោះយុទ្ធនាការ",
-      "campaignNamePlaceholder": "ឧ. ការប្រកាសលក់បញ្ចុះតម្លៃរដូវក្តៅ",
-      "message": "សារ",
-      "templates": "គំរូ",
-      "messagePlaceholder": "វាយសារផ្សាយរបស់អ្នក...",
-      "schedule": "កំណត់ពេល (ស្រេចចិត្ត)",
-      "recipients": "នឹងត្រូវផ្ញើទៅ {count} ការសន្ទនា",
-      "scheduleBroadcast": "កំណត់ពេលផ្សាយ",
-      "saveDraft": "រក្សាទុកជាពង្រាង",
-      "saveAsTemplate": "រក្សាទុកជាគំរូ",
-      "templateNamePlaceholder": "ឈ្មោះគំរូ",
-      "templateMessagePlaceholder": "សារគំរូ...",
-      "saveTemplate": "រក្សាទុកគំរូ",
-      "campaigns": "យុទ្ធនាការ ({count})",
-      "templatesCount": "{count} គំរូ",
-      "statuses": {
-        "draft": "ពង្រាង",
-        "sending": "កំពុងផ្ញើ",
-        "sent": "បានផ្ញើ",
-        "failed": "បរាជ័យ"
-      },
-      "delivery": "{sent}/{total} បានផ្ញើ",
-      "send": "ផ្ញើ",
-      "sending_": "កំពុងផ្ញើ...",
-      "noCampaigns": "មិនទាន់មានយុទ្ធនាការនៅឡើយទេ",
-      "noCampaignsHint": "បង្កើតយុទ្ធនាការផ្សាយដំបូងរបស់អ្នក",
-      "useTemplate": "ប្រើ"
-    },
-    "automation": {
-      "title": "ស្វ័យប្រវត្តិកម្ម",
-      "subtitle": "ច្បាប់ឆ្លើយតបដោយស្វ័យប្រវត្តិ ការឆ្លើយតបរហ័ស និងពាក្យបញ្ជាដែលភ្ជាប់មកជាមួយសម្រាប់ Messenger chatbot របស់អ្នក។",
-      "rulesActive": "ច្បាប់សកម្ម",
-      "triggered": "បានកេះ",
-      "categories": {
-        "general": "ទូទៅ",
-        "greeting": "ស្វាគមន៍",
-        "support": "ជំនួយ",
-        "sales": "លក់"
-      },
-      "active": "{count} សកម្ម",
-      "builtInCommands": "ពាក្យបញ្ជាដែលភ្ជាប់មកជាមួយ",
-      "alwaysActive": "សកម្មជានិច្ច",
-      "commands": {
-        "menu": "menu, start, help — ម៉ឺនុយមេជាមួយការឆ្លើយតបរហ័ស",
-        "products": "products, list — បញ្ជីផលិតផលទាំងអស់",
-        "lowStock": "low stock, lowstock — ការជូនដំណឹងស្តុកតិច",
-        "search": "<ឈ្មោះផលិតផល> — ស្វែងរកផលិតផលតាមឈ្មោះ"
-      },
-      "newRule": "ច្បាប់ឆ្លើយតបដោយស្វ័យប្រវត្តិថ្មី",
-      "triggerKeyword": "ពាក្យគន្លឹះកេះ",
-      "keywordPlaceholder": "ឧ. ជំរាបសួរ",
-      "category": "ប្រភេទ",
-      "botResponse": "ការឆ្លើយតបរបស់ Bot",
-      "responsePlaceholder": "សួស្តី! សូមស្វាគមន៍មកកាន់ហាងរបស់យើង។",
-      "matchMode": "របៀបផ្គូផ្គង",
-      "matchModes": {
-        "contains": "មាន — ផ្គូផ្គងប្រសិនបើពាក្យគន្លឹះលេចឡើងគ្រប់ទីកន្លែង",
-        "exact": "ផ្គូផ្គងពិតប្រាកដ — ត្រូវតែជាពាក្យគន្លឹះដូចគ្នា",
-        "startsWith": "ចាប់ផ្តើមដោយ — សារចាប់ផ្តើមដោយពាក្យគន្លឹះ"
-      },
-      "addRule": "បន្ថែមច្បាប់",
-      "customRules": "ច្បាប់ផ្ទាល់ខ្លួន ({count})",
-      "noRules": "មិនទាន់មានច្បាប់ផ្ទាល់ខ្លួននៅឡើយទេ",
-      "noRulesHint": "បន្ថែមច្បាប់ដើម្បីឆ្លើយតបដោយស្វ័យប្រវត្តិក្នុង Messenger",
-      "timesTriggered": "{count}x បានកេះ",
-      "testRules": "សាកល្បងច្បាប់",
-      "testPlaceholder": "វាយសារសាកល្បង...",
-      "simulateMessage": "ក្លែងធ្វើសារ",
-      "testMatched": "✅ បានផ្គូផ្គង: #{matched}",
-      "testNoMatch": "គ្មានច្បាប់ណាផ្គូផ្គងទេ។ AI fallback ឬពាក្យបញ្ជាដែលភ្ជាប់មកជាមួយនឹងដោះស្រាយវា។",
-      "quickReplies": "ការឆ្លើយតបរហ័ស",
-      "add": "+ បន្ថែម",
-      "buttonLabelPlaceholder": "ឈ្មោះប៊ូតុង (ឧ. ម៉ោងបើក)",
-      "replyTextPlaceholder": "អត្ថបទឆ្លើយតប...",
-      "saveQuickReply": "រក្សាទុកការឆ្លើយតបរហ័ស",
-      "noQuickReplies": "មិនទាន់មានការឆ្លើយតបរហ័សនៅឡើយទេ"
-    },
-    "ai": {
-      "title": "ជំនួយការ AI",
-      "subtitle": "កំណត់រចនាសម្ព័ន្ធការឆ្លើយតបដោយ AI និងគ្រប់គ្រងមូលដ្ឋានចំណេះដឹងរបស់អ្នក។ នៅពេលដែលគ្មានច្បាប់ពាក្យគន្លឹះផ្គូផ្គង AI នឹងបង្កើតការឆ្លើយតបឆ្លាតវៃពីទិន្នន័យហាង និងសំណួរគេសួរញឹកញាប់របស់អ្នក។",
-      "howItWorks": "របៀបដែល AI ដំណើរការ",
-      "steps": [
-        "អ្នកប្រើប្រាស់ផ្ញើសារទៅកាន់ទំព័ររបស់អ្នក",
-        "ពិនិត្យច្បាប់ឆ្លើយតបដោយស្វ័យប្រវត្តិសម្រាប់ការផ្គូផ្គង",
-        "ប្រសិនបើគ្មានច្បាប់ណាផ្គូផ្គង ស្វែងរកមូលដ្ឋានចំណេះដឹង FAQ",
-        "ប្រសិនបើរកមិនឃើញ FAQ ប្រើ AI ដើម្បីបង្កើតការឆ្លើយតប",
-        "ផ្ញើការឆ្លើយតបត្រឡប់ទៅអ្នកប្រើប្រាស់"
-      ],
-      "knowledgeBase": "មូលដ្ឋានចំណេះដឹង ({count})",
-      "categories": "{count} ប្រភេទ",
-      "kbDescription": "សំណួរគេសួរញឹកញាប់ត្រូវបានប្រើដោយ AI ដើម្បីឆ្លើយសំណួរទូទៅ។ បន្ថែមសំណួរដែលអតិថិជនរបស់អ្នកតែងតែសួរ។",
-      "noFaqs": "មិនទាន់មានសំណួរគេសួរញឹកញាប់នៅឡើយទេ",
-      "noFaqsHint": "បន្ថែមសំណួរគេសួរញឹកញាប់ដើម្បីបង្កើតមូលដ្ឋានចំណេះដឹងរបស់អ្នក",
-      "settings": {
-        "enable": "ការឆ្លើយតបដោយ AI",
-        "provider": "អ្នកផ្តល់សេវា",
-        "providerHint": "បញ្ចូល API key សម្រាប់អ្នកផ្តល់សេវាដែលបានជ្រើសរើសខាងក្រោម។",
-        "model": "ម៉ូដែល",
-        "models": {
-          "gpt4o": "GPT-4o",
-          "gpt4oMini": "GPT-4o Mini",
-          "gpt35": "GPT-3.5 Turbo"
-        },
-        "apiKey": {
-          "openai": "OpenAI API Key",
-          "openaiPlaceholder": "sk-...",
-          "gemini": "Google Gemini API Key",
-          "geminiPlaceholder": "AIza...",
-          "claude": "Anthropic Claude API Key",
-          "claudePlaceholder": "sk-ant-..."
-        },
-        "temperature": "សីតុណ្ហភាព ({value})",
-        "precise": "ច្បាស់លាស់",
-        "creative": "ច្នៃប្រឌិត",
-        "maxLength": "ប្រវែងអតិបរមា",
-        "lengths": {
-          "short": "ខ្លី (២០០)",
-          "medium": "មធ្យម (៥០០)",
-          "long": "វែង (១០០០)",
-          "veryLong": "វែងណាស់ (២០០០)"
-        },
-        "persona": "សម្លេងបុគ្គលិកលក្ខណៈ",
-        "personas": {
-          "friendly": "រួសរាយ & កក់ក្តៅ",
-          "professional": "អាជីព & ផ្លូវការ",
-          "casual": "ធម្មតា & សម្រាក",
-          "playful": "កំប្លែង & សប្បាយ"
-        },
-        "context": "បរិបទការសន្ទនា",
-        "contexts": {
-          "3": "សារ ៣ ចុងក្រោយ",
-          "5": "សារ ៥ ចុងក្រោយ",
-          "10": "សារ ១០ ចុងក្រោយ",
-          "20": "សារ ២០ ចុងក្រោយ"
-        },
-        "contextHint": "ចំនួនសារអតីតកាលដែលត្រូវរាប់បញ្ចូលសម្រាប់បរិបទ",
-        "systemPrompt": "ពាក្យបញ្ជាប្រព័ន្ធ",
-        "systemPromptHint": "ណែនាំឥរិយាបថរបស់ AI នៅពេលឆ្លើយតបទៅអតិថិជន។",
-        "disabled": "មុខងារ AI ត្រូវបានបិទ",
-        "disabledHint": "បើក AI ដើម្បីឱ្យ chatbot បង្កើតការឆ្លើយតបឆ្លាតវៃ",
-        "save": "រក្សាទុកការកំណត់ AI",
-        "saved": "ការកំណត់ AI ត្រូវបានរក្សាទុក!"
-      },
-      "test": {
-        "title": "សាកល្បងការឆ្លើយតប AI",
-        "kbResponse": "📚 ពីមូលដ្ឋានចំណេះដឹង:\n{answer}",
-        "aiResponse": "🤖 ការឆ្លើយតប AI (ក្លែងធ្វើ)\n\nសូមអរគុណសម្រាប់សាររបស់អ្នក! ដោយផ្អែកលើការបណ្តុះបណ្តាលរបស់ខ្ញុំ ខ្ញុំអាចជួយអ្នកជាមួយ '{input}'។\n\nដើម្បីទទួលបានការឆ្លើយតប AI ពិតប្រាកដ សូមកំណត់រចនាសម្ព័ន្ធ API key នៅក្នុងការកំណត់ AI ខាងលើ។",
-        "empty": "វាយសារដើម្បីសាកល្បង AI",
-        "placeholder": "វាយសារអតិថិជន..."
-      },
-      "manageFaqs": {
-        "title": "គ្រប់គ្រងសំណួរគេសួរញឹកញាប់",
-        "add": "+ បន្ថែម FAQ",
-        "questionPlaceholder": "សំណួរ",
-        "categories": {
-          "general": "ទូទៅ",
-          "shipping": "ការដឹកជញ្ជូន",
-          "returns": "ការត្រឡប់",
-          "pricing": "តម្លៃ"
-        },
-        "answerPlaceholder": "ចម្លើយ...",
-        "addFaq": "បន្ថែម FAQ",
-        "noFaqs": "មិនទាន់មានសំណួរគេសួរញឹកញាប់នៅឡើយទេ"
-      }
-    },
-    "tabs": {
-      "live": "ផ្សាយផ្ទាល់",
-      "automation": "ស្វ័យប្រវត្តិកម្ម",
-      "ai": "AI",
-      "inbox": "ប្រអប់សារ",
-      "broadcasts": "ការផ្សាយ",
-      "settings": "ការកំណត់"
-    }
   },
   "users": {
     "title": "ការគ្រប់គ្រងអ្នកប្រើប្រាស់",
@@ -802,11 +468,16 @@
     "paid": "បង់រួច",
     "balance": "នៅសល់",
     "status": "ស្ថានភាព",
-    "types": { "customer": "បំណុលអតិថិជន", "supplier": "បំណុលអ្នកផ្គត់ផ្គង់" },
-    "statuses": { "pending": "រង់ចាំ", "partial": "មួយផ្នែក", "paid": "បង់ហើយ", "cancelled": "បោះបង់" },
-    "addPayment": "បន្ថែមការទូទាត់",
-    "paymentAmount": "ចំនួនទូទាត់",
-    "recordPayment": "កត់ត្រាការទូទាត់",
+    "types": {
+      "customer": "បំណុលអតិថិជន",
+      "supplier": "បំណុលអ្នកផ្គត់ផ្គង់"
+    },
+    "statuses": {
+      "pending": "រង់ចាំ",
+      "partial": "មួយផ្នែក",
+      "paid": "បង់ហើយ",
+      "cancelled": "បោះបង់"
+    },
     "addPayment": "បន្ថែមការទូទាត់",
     "paymentAmount": "ចំនួនទូទាត់",
     "recordPayment": "កត់ត្រាការទូទាត់",
@@ -825,7 +496,6 @@
     "amount": "ទឹកប្រាក់",
     "empty": "មិនទាន់មានច្រកចូល"
   },
-
   "orders": {
     "title": "ការបញ្ជាទិញ",
     "subtitle": "គ្រប់គ្រងការបញ្ជាទិញពីអតិថិជន",
@@ -836,7 +506,14 @@
     "status": "ស្ថានភាព",
     "deliveryAddress": "អាសយដ្ឋានដឹកជញ្ជូន",
     "deliveryFee": "ថ្លៃដឹកជញ្ជូន",
-    "statuses": { "pending": "រង់ចាំ", "confirmed": "បញ្ជាក់", "processing": "កំពុងរៀបចំ", "shipped": "បានដឹក", "delivered": "បានដល់", "cancelled": "បោះបង់" },
+    "statuses": {
+      "pending": "រង់ចាំ",
+      "confirmed": "បញ្ជាក់",
+      "processing": "កំពុងរៀបចំ",
+      "shipped": "បានដឹក",
+      "delivered": "បានដល់",
+      "cancelled": "បោះបង់"
+    },
     "empty": "មិនទាន់មាន"
   },
   "delivery": {
@@ -852,7 +529,13 @@
     "commissionValue": "តម្លៃកម្រៃជើងសា",
     "partner": "ដៃគូដឹកជញ្ជូន",
     "deliveryFee": "ថ្លៃដឹកជញ្ជូន",
-    "statuses": { "pending": "រង់ចាំ", "picked_up": "ប្រមូលហើយ", "in_transit": "កំពុងដឹក", "delivered": "បានដល់", "failed": "បរាជ័យ" },
+    "statuses": {
+      "pending": "រង់ចាំ",
+      "picked_up": "ប្រមូលហើយ",
+      "in_transit": "កំពុងដឹក",
+      "delivered": "បានដល់",
+      "failed": "បរាជ័យ"
+    },
     "empty": "មិនទាន់មាន"
   },
   "promotions": {

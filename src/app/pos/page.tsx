@@ -25,8 +25,8 @@ interface CustomerRow {
 }
 
 export default async function POSPage() {
-  const products = await db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category FROM products ORDER BY name ASC").all() as ProductRow[];
-  const customers = await db.prepare("SELECT id, name, customer_type FROM customers ORDER BY name ASC").all() as CustomerRow[];
+  const products: ProductRow[] = JSON.parse(JSON.stringify(await db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category FROM products ORDER BY name ASC").all()));
+  const customers: CustomerRow[] = JSON.parse(JSON.stringify(await db.prepare("SELECT id, name, customer_type FROM customers ORDER BY name ASC").all()));
 
   return (
     <div className="h-full flex flex-col animate-in fade-in duration-500">

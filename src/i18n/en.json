@@ -10,7 +10,6 @@
     "customers": "Customers",
     "products": "Products",
     "inventory": "Inventory",
-    "fbLive": "FB Live",
     "stock": "Inventory",
     "audit": "Stock Audit",
     "orders": "Orders",
@@ -19,7 +18,6 @@
     "cashflow": "Cash Flow",
     "promotions": "Promotions",
     "membership": "Membership",
-    "fblive": "FB Live",
     "suppliers": "Suppliers",
     "reports": "Reports",
     "settings": "Settings",
@@ -236,7 +234,11 @@
     "newSubtitle": "All products will be pre-loaded with their current quantities",
     "name": "Audit Name",
     "start": "Start Audit",
-    "statuses": { "in_progress": "In Progress", "completed": "Completed", "cancelled": "Cancelled" },
+    "statuses": {
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
     "counted": "Counted",
     "discrepancies": "Discrepancies",
     "items": "Items",
@@ -370,8 +372,6 @@
   "settings": {
     "title": "Settings",
     "subtitle": "Configure printer and Telegram bot notifications.",
-    "messengerMoved": "Facebook Messenger chatbot settings have moved to",
-    "fbLiveSettings": "FB Live → Settings",
     "printer": {
       "title": "Receipt Printer Settings",
       "type": "Printer Type",
@@ -383,8 +383,8 @@
       "paperWidth": "Paper Width (mm)",
       "paperOptions": {
         "58": "58mm (thermal mini)",
-        "80": "80mm (standard)",
-        "76": "76mm (dot matrix)"
+        "76": "76mm (dot matrix)",
+        "80": "80mm (standard)"
       },
       "storeName": "Store Name",
       "storePhone": "Store Phone",
@@ -419,340 +419,6 @@
     },
     "saveSuccess": "Settings saved successfully!",
     "saveSettings": "Save Settings"
-  },
-  "fbLive": {
-    "main": {
-      "title": "Facebook Live Auto-Ordering",
-      "subtitle": "Link keywords to products and auto-process orders from live comments.",
-      "live": "Live",
-      "pending": "{count} pending",
-      "linkKeyword": "Link Keyword to Product",
-      "simulate": "Simulate Comment",
-      "simulateHint": "Test your keyword setup by simulating a Facebook comment.",
-      "orderFeed": "Order Feed",
-      "orders": "{count} orders",
-      "processed": "processed",
-      "cancelled": "cancelled",
-      "pendingStatus": "pending",
-      "noOrders": "No orders yet",
-      "noOrdersHint": "Link keywords and simulate comments to test",
-      "fields": {
-        "keyword": "Keyword",
-        "product": "Product",
-        "qtyPerOrder": "Qty per order"
-      },
-      "keywordPlaceholder": "e.g. #product1",
-      "productPlaceholder": "Select product...",
-      "productOption": "{name} ({sku}) — {qty} in stock",
-      "addKeyword": "Add Keyword",
-      "activeKeywords": "Active Keywords",
-      "inStock": "in stock",
-      "untitled": "Untitled",
-      "processing": "Processing",
-      "draft": "Draft",
-      "clear": "Clear",
-      "table": {
-        "no": "No",
-        "name": "Name",
-        "comment": "Comment",
-        "time": "Time",
-        "action": "Action",
-        "status": "Status"
-      },
-      "statuses": {
-        "deleted": "Deleted",
-        "new": "New",
-        "old": "Old"
-      },
-      "simulate": {
-        "customerName": "Customer Name",
-        "commentText": "Comment Text",
-        "customerPlaceholder": "Test User",
-        "commentPlaceholder": "e.g. I want #product1 please!",
-        "simulateBtn": "Simulate Comment",
-        "matched": "✅ {product} x{qty} via #{matched} — Auto-reply: '{reply}'",
-        "noMatch": "No keyword found in comment",
-        "failed": "Failed",
-        "activeKeywords": "Active keywords: #{keyword} ..."
-      }
-    },
-    "settings": {
-      "title": "Configure Facebook Live Auto-Ordering",
-      "subtitle": "Facebook Live auto-ordering and Messenger chatbot settings.",
-      "liveTab": "Live Auto-Ordering",
-      "chatbotTab": "Messenger Chatbot",
-      "live": {
-        "signIn": "Sign in with your Facebook Account",
-        "description": "As Instagram is a part of Meta (ex. Facebook) ecosystem, sign in with your Facebook account to create automation. By continuing, Rika System will receive ongoing access to the information you share and Meta will record when Rika System accesses it.",
-        "learnMore": "Learn more about this sharing and the settings you have",
-        "liveListening": "Live Listening",
-        "pageName": "Facebook Page Name",
-        "pageNamePlaceholder": "e.g. My Store",
-        "pageId": "Facebook Page ID",
-        "pageIdPlaceholder": "e.g. 123456789",
-        "pageToken": "Page Access Token",
-        "pageTokenPlaceholder": "EAAxxx...",
-        "keywordMatchMode": "Keyword Match Mode",
-        "matchModes": {
-          "contains": "Contains (e.g. #product matches any comment with #product)",
-          "exact": "Exact match (comment must be exactly the keyword)",
-          "startsWith": "Starts with (comment starts with keyword)"
-        },
-        "webhookUrl": "Webhook Callback URL",
-        "verifyToken": "Verify Token",
-        "verifyTokenHint": "Enter this token as the Verify Token in your Facebook App webhook settings.",
-        "autoReplySuccess": "Auto-Reply Template (on success)",
-        "autoReplySuccessHint": "Use {{name}}, {{product}}, {{qty}} as placeholders",
-        "autoReplyNoMatch": "Auto-Reply Template (no match)",
-        "save": "Save Live Settings"
-      },
-      "chatbot": {
-        "title": "Facebook Messenger Chatbot",
-        "steps": [
-          "1. Go to developers.facebook.com and create an app",
-          "2. Add the Messenger product",
-          "3. Generate a Page Access Token for your Facebook Page",
-          "4. Set the webhook callback URL to: {url}/api/messenger-webhook",
-          "5. Use the Verify Token shown below when setting up webhooks",
-          "6. Subscribe to messages and messaging_postbacks events",
-          "7. Enable the bot below and save"
-        ],
-        "pageToken": "Page Access Token",
-        "pageTokenPlaceholder": "EAAxxx...",
-        "verifyToken": "Webhook Verify Token",
-        "greeting": "Greeting Message",
-        "greetingHint": "Sent when a user starts a conversation or types 'menu'.",
-        "notFoundMessage": "Product Not Found Message",
-        "enable": "Enable Messenger Chatbot",
-        "save": "Save Chatbot Settings"
-      },
-      "status": {
-        "saved": "Settings saved successfully!",
-        "connected": "Facebook account connected successfully! Your first Page has been auto-selected.",
-        "idSecretRequired": "Please save your Facebook App ID and App Secret before signing in with Facebook.",
-        "codeExchangeFailed": "Failed to exchange authorization code. Check your App ID and App Secret.",
-        "denied": "You denied the Facebook login request. Please try again and grant the requested permissions.",
-        "unexpectedError": "An unexpected error occurred during Facebook login. Please try again."
-      },
-      "facebookLogin": {
-        "connected": "Facebook Account",
-        "connectedBadge": "Connected",
-        "pagesAvailable": "{count} Pages available",
-        "active": "Active",
-        "businesses": "{count} Businesses",
-        "switchAccount": "Sign in with a different Facebook account",
-        "noPages": "No Pages found. Make sure your Facebook App has the Pages API product added and you have admin/editor access to at least one Facebook Page.",
-        "notConnected": "Sign in to grant access to your Facebook Pages and Businesses, then select the Page to use for auto-ordering.",
-        "appId": "App ID",
-        "appIdPlaceholder": "Facebook App ID",
-        "appSecret": "App Secret",
-        "appSecretPlaceholder": "Facebook App Secret",
-        "signIn": "Sign in with Facebook",
-        "saving": "Saving...",
-        "validationError": "Please enter both App ID and App Secret.",
-        "saveError": "Failed to save settings.",
-        "note": "Clicking above will save your App ID & App Secret first, then redirect to Facebook for authorization."
-      }
-    },
-    "inbox": {
-      "title": "Inbox",
-      "unread": "{count} unread",
-      "conversations": "{count} conversations",
-      "searchPlaceholder": "Search...",
-      "noConversations": "No conversations",
-      "noConversationsHint": "Messages from Facebook Messenger will appear here",
-      "selectConversation": "Select a conversation",
-      "selectConversationHint": "Choose a conversation from the left to view and reply",
-      "id": "ID: {id}",
-      "tag": "Tag",
-      "assign": "Assign",
-      "tagPlaceholder": "e.g. support, vip, complaint",
-      "assignPlaceholder": "Assignee name",
-      "replyPlaceholder": "Type your reply...",
-      "justNow": "just now",
-      "minutesAgo": "{n}m ago",
-      "hoursAgo": "{n}h ago",
-      "daysAgo": "{n}d ago"
-    },
-    "broadcasts": {
-      "title": "Broadcasts",
-      "subtitle": "Create and send broadcast messages to your Messenger conversations.",
-      "sent": "Messages Sent",
-      "reached": "Reached",
-      "newCampaign": "New Campaign",
-      "campaignName": "Campaign Name",
-      "campaignNamePlaceholder": "e.g. Summer Sale Announcement",
-      "message": "Message",
-      "templates": "Templates",
-      "messagePlaceholder": "Type your broadcast message...",
-      "schedule": "Schedule (optional)",
-      "recipients": "Will be sent to {count} conversations",
-      "scheduleBroadcast": "Schedule Broadcast",
-      "saveDraft": "Save as Draft",
-      "saveAsTemplate": "Save as template",
-      "templateNamePlaceholder": "Template name",
-      "templateMessagePlaceholder": "Template message...",
-      "saveTemplate": "Save Template",
-      "campaigns": "Campaigns ({count})",
-      "templatesCount": "{count} templates",
-      "statuses": {
-        "draft": "draft",
-        "sending": "sending",
-        "sent": "sent",
-        "failed": "failed"
-      },
-      "delivery": "{sent}/{total} delivered",
-      "send": "Send",
-      "sending_": "Sending...",
-      "noCampaigns": "No campaigns yet",
-      "noCampaignsHint": "Create your first broadcast campaign",
-      "useTemplate": "Use"
-    },
-    "automation": {
-      "title": "Automation",
-      "subtitle": "Auto-reply rules, quick replies, and built-in commands for your Messenger chatbot.",
-      "rulesActive": "Rules Active",
-      "triggered": "Triggered",
-      "categories": {
-        "general": "General",
-        "greeting": "Greeting",
-        "support": "Support",
-        "sales": "Sales"
-      },
-      "active": "{count} active",
-      "builtInCommands": "Built-in Commands",
-      "alwaysActive": "Always active",
-      "commands": {
-        "menu": "menu, start, help — Main menu with quick replies",
-        "products": "products, list — List all products",
-        "lowStock": "low stock, lowstock — Low stock alerts",
-        "search": "<product name> — Search products by name"
-      },
-      "newRule": "New Auto-Reply Rule",
-      "triggerKeyword": "Trigger Keyword",
-      "keywordPlaceholder": "e.g. hello",
-      "category": "Category",
-      "botResponse": "Bot Response",
-      "responsePlaceholder": "Hi! Welcome to our store.",
-      "matchMode": "Match Mode",
-      "matchModes": {
-        "contains": "Contains — matches if keyword appears anywhere",
-        "exact": "Exact Match — must be exactly the keyword",
-        "startsWith": "Starts With — message starts with keyword"
-      },
-      "addRule": "Add Rule",
-      "customRules": "Custom Rules ({count})",
-      "noRules": "No custom rules yet",
-      "noRulesHint": "Add rules to automate responses in Messenger",
-      "timesTriggered": "{count}x triggered",
-      "testRules": "Test Rules",
-      "testPlaceholder": "Type a test message...",
-      "simulateMessage": "Simulate Message",
-      "testMatched": "✅ Matched: #{matched}",
-      "testNoMatch": "No rule matched. The AI fallback or built-in commands will handle this.",
-      "quickReplies": "Quick Replies",
-      "add": "+ Add",
-      "buttonLabelPlaceholder": "Button label (e.g. Hours)",
-      "replyTextPlaceholder": "Reply text...",
-      "saveQuickReply": "Save Quick Reply",
-      "noQuickReplies": "No quick replies saved"
-    },
-    "ai": {
-      "title": "AI Assistant",
-      "subtitle": "Configure AI-powered responses and manage your knowledge base. When no keyword rule matches, the AI generates smart replies from your store data and FAQs.",
-      "howItWorks": "How AI Responses Work",
-      "steps": [
-        "User sends a message to your Page",
-        "Check custom auto-reply rules for a match",
-        "If no rule matches, search FAQ knowledge base",
-        "If no FAQ found, use AI to generate a response",
-        "Send the reply back to the user"
-      ],
-      "knowledgeBase": "Knowledge Base ({count})",
-      "categories": "{count} categories",
-      "kbDescription": "FAQs are used by the AI to answer common questions. Add questions your customers frequently ask.",
-      "noFaqs": "No FAQs yet",
-      "noFaqsHint": "Add FAQs to build your knowledge base",
-      "settings": {
-        "enable": "AI-Powered Responses",
-        "provider": "Provider",
-        "providerHint": "Enter the API key for the selected provider below.",
-        "model": "Model",
-        "models": {
-          "gpt4o": "GPT-4o",
-          "gpt4oMini": "GPT-4o Mini",
-          "gpt35": "GPT-3.5 Turbo"
-        },
-        "apiKey": {
-          "openai": "OpenAI API Key",
-          "openaiPlaceholder": "sk-...",
-          "gemini": "Google Gemini API Key",
-          "geminiPlaceholder": "AIza...",
-          "claude": "Anthropic Claude API Key",
-          "claudePlaceholder": "sk-ant-..."
-        },
-        "temperature": "Temperature ({value})",
-        "precise": "Precise",
-        "creative": "Creative",
-        "maxLength": "Max Length",
-        "lengths": {
-          "short": "Short (200)",
-          "medium": "Medium (500)",
-          "long": "Long (1000)",
-          "veryLong": "Very Long (2000)"
-        },
-        "persona": "Persona Tone",
-        "personas": {
-          "friendly": "Friendly & Warm",
-          "professional": "Professional & Formal",
-          "casual": "Casual & Relaxed",
-          "playful": "Playful & Fun"
-        },
-        "context": "Conversation Context",
-        "contexts": {
-          "3": "Last 3 messages",
-          "5": "Last 5 messages",
-          "10": "Last 10 messages",
-          "20": "Last 20 messages"
-        },
-        "contextHint": "How many past messages to include for context",
-        "systemPrompt": "System Prompt",
-        "systemPromptHint": "Guides the AI's behavior when responding to customers.",
-        "disabled": "AI features are disabled",
-        "disabledHint": "Enable AI to let the chatbot generate intelligent responses",
-        "save": "Save AI Settings",
-        "saved": "AI settings saved!"
-      },
-      "test": {
-        "title": "Test AI Responses",
-        "kbResponse": "📚 From knowledge base:\n{answer}",
-        "aiResponse": "🤖 AI Response (simulated)\n\nThanks for your message! Based on my training, I'd help you with '{input}'.\n\nTo get actual AI responses, configure your API key in the AI settings above.",
-        "empty": "Type a message to test the AI",
-        "placeholder": "Type a customer message..."
-      },
-      "manageFaqs": {
-        "title": "Manage FAQs",
-        "add": "+ Add FAQ",
-        "questionPlaceholder": "Question",
-        "categories": {
-          "general": "General",
-          "shipping": "Shipping",
-          "returns": "Returns",
-          "pricing": "Pricing"
-        },
-        "answerPlaceholder": "Answer...",
-        "addFaq": "Add FAQ",
-        "noFaqs": "No FAQs added yet"
-      }
-    },
-    "tabs": {
-      "live": "Live",
-      "automation": "Automation",
-      "ai": "AI",
-      "inbox": "Inbox",
-      "broadcasts": "Broadcasts",
-      "settings": "Settings"
-    }
   },
   "users": {
     "title": "User Management",
@@ -802,8 +468,16 @@
     "paid": "Paid",
     "balance": "Balance",
     "status": "Status",
-    "types": { "customer": "Customer Debt", "supplier": "Supplier Payable" },
-    "statuses": { "pending": "Pending", "partial": "Partial", "paid": "Paid", "cancelled": "Cancelled" },
+    "types": {
+      "customer": "Customer Debt",
+      "supplier": "Supplier Payable"
+    },
+    "statuses": {
+      "pending": "Pending",
+      "partial": "Partial",
+      "paid": "Paid",
+      "cancelled": "Cancelled"
+    },
     "addPayment": "Add Payment",
     "paymentAmount": "Payment Amount",
     "recordPayment": "Record Payment",
@@ -822,7 +496,6 @@
     "amount": "Amount",
     "empty": "No entries yet"
   },
-
   "orders": {
     "title": "Customer Orders",
     "subtitle": "Manage orders from customers",
@@ -831,7 +504,14 @@
     "items": "Items",
     "total": "Total",
     "status": "Status",
-    "statuses": { "pending": "Pending", "confirmed": "Confirmed", "processing": "Processing", "shipped": "Shipped", "delivered": "Delivered", "cancelled": "Cancelled" },
+    "statuses": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "processing": "Processing",
+      "shipped": "Shipped",
+      "delivered": "Delivered",
+      "cancelled": "Cancelled"
+    },
     "deliveryAddress": "Delivery Address",
     "deliveryFee": "Delivery Fee",
     "empty": "No orders yet"
@@ -844,7 +524,13 @@
     "managePartners": "Manage Partners",
     "recentDeliveries": "Recent Deliveries",
     "noPartners": "No delivery partners yet",
-    "statuses": { "pending": "Pending", "picked_up": "Picked Up", "in_transit": "In Transit", "delivered": "Delivered", "failed": "Failed" },
+    "statuses": {
+      "pending": "Pending",
+      "picked_up": "Picked Up",
+      "in_transit": "In Transit",
+      "delivered": "Delivered",
+      "failed": "Failed"
+    },
     "addPartner": "Add Partner",
     "commissionType": "Commission Type",
     "commissionValue": "Commission Value",

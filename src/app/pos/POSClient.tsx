@@ -5,7 +5,6 @@ import { useTranslation } from "@/i18n/useTranslation";
 import { Search, ShoppingCart, Scan, Minus, Plus, Trash2, Printer, Users, Building2, Store, Image as ImageIcon, ShoppingBag } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
 import ReceiptView from "./ReceiptView";
-import BarcodeScanner from "./BarcodeScanner";
 
 type Product = { id: number; name: string; sku: string; barcode: string | null; price: number; wholesale_price: number | null; selling_price: number | null; original_price: number | null; unit_price: number | null; price_per_case: number | null; quantity: number; image_url: string | null; category: string | null };
 type Customer = { id: number; name: string; customer_type: string };
@@ -135,8 +134,6 @@ export default function POSClient({ products, customers }: { products: Product[]
 
   return (
     <div className="flex h-full relative">
-      <BarcodeScanner onDetect={handleBarcodeDetect} />
-
       {receiptItems && settings && (
         <ReceiptView
           items={receiptItems}
@@ -204,7 +201,6 @@ export default function POSClient({ products, customers }: { products: Product[]
                 {t("pos.scanning")}
               </div>
             )}
-            <BarcodeScanner onDetect={handleBarcodeDetect} />
           </div>
         </div>
 

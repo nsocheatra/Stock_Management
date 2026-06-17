@@ -16,10 +16,6 @@ export default async function SettingsPage() {
           <T k="settings.title" />
         </h1>
         <p className="text-sm text-faint mt-1"><T k="settings.subtitle" /></p>
-        <p className="text-xs text-faint mt-1">
-          <T k="settings.messengerMoved" />{" "}
-          <a href="/fb-live/settings" className="text-violet-400 hover:text-violet-300 underline"><T k="settings.fbLiveSettings" /></a>.
-        </p>
       </div>
       <SettingsTabs settings={settings} />
     </div>
