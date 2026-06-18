@@ -187,6 +187,9 @@ class DbWrapper {
     await alterTable("ALTER TABLE sale_items ADD COLUMN discount REAL DEFAULT 0;");
     await alterTable("ALTER TABLE sale_items ADD COLUMN discount_type TEXT;");
     await alterTable("ALTER TABLE sale_items ADD COLUMN promotion_id INTEGER REFERENCES promotions(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE sale_items ADD COLUMN variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE sale_items ADD COLUMN batch_id INTEGER REFERENCES batches(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE sale_items ADD COLUMN location_id INTEGER REFERENCES locations(id) ON DELETE SET NULL;");
 
     await this.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`);
     const upsertSetting2 = this.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)");

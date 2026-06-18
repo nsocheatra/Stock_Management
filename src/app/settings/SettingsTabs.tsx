@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
-import { Printer, Bot, AlertTriangle, Save } from "lucide-react";
+import { Printer, Bot, AlertTriangle, Save, Package, Warehouse, ShoppingCart, Users, Truck, HandCoins, Wallet, Percent, Gem, ClipboardList, Bell } from "lucide-react";
 import { saveSettings, sendTelegramNotification, clearAllData } from "@/lib/actions";
 
 export default function SettingsTabs({ settings, isAdmin }: { settings: Record<string, string>; isAdmin: boolean }) {
@@ -14,6 +14,27 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
   const [tgStatus, setTgStatus] = useState("");
   const [clearing, setClearing] = useState(false);
   const [confirmText, setConfirmText] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState<Record<string, boolean>>({});
+
+  const dataCategoryMeta: { key: string; label: string; icon: typeof Package }[] = [
+    { key: "products", label: "Products", icon: Package },
+    { key: "stock", label: "Stock & Batches", icon: Warehouse },
+    { key: "sales", label: "Sales & Orders", icon: ShoppingCart },
+    { key: "customers_suppliers", label: "Customers & Suppliers", icon: Users },
+    { key: "deliveries", label: "Deliveries", icon: Truck },
+    { key: "debts", label: "Debts", icon: HandCoins },
+    { key: "cashflow", label: "Cash Flow", icon: Wallet },
+    { key: "promotions", label: "Promotions", icon: Percent },
+    { key: "members", label: "Members", icon: Gem },
+    { key: "audits", label: "Audits", icon: ClipboardList },
+    { key: "notifications", label: "Notifications", icon: Bell },
+  ];
+
+  function toggleCategory(key: string) {
+    setSelectedCategories((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  const hasSelection = Object.values(selectedCategories).some(Boolean);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -220,6 +241,35 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
           <p className="text-sm text-rose-300/80">
             {t("settings.dangerZone.description")}
           </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {dataCategoryMeta.map((cat) => {
+              const CatIcon = cat.icon;
+              const checked = selectedCategories[cat.key] ?? false;
+              return (
+                <label
+                  key={cat.key}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl border cursor-pointer transition-all ${
+                    checked
+                      ? "border-rose-500/50 bg-rose-500/10"
+                      : "border-transparent bg-black/20 hover:bg-black/30"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleCategory(cat.key)}
+                    className="sr-only peer"
+                  />
+                  <div className={`p-1.5 rounded-lg ${checked ? "bg-rose-500/20 text-rose-400" : "bg-zinc-800 text-zinc-500"}`}>
+                    <CatIcon className="size-4" />
+                  </div>
+                  <span className={`text-sm font-medium ${checked ? "text-rose-300" : "text-zinc-400"}`}>{cat.label}</span>
+                </label>
+              );
+            })}
+          </div>
+
           <p className="text-xs text-rose-400/60">
             Type <strong className="text-rose-300">DELETE</strong> to confirm:
           </p>
@@ -231,13 +281,17 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
           />
           <button
             type="button"
-            disabled={confirmText !== "DELETE" || clearing}
+            disabled={confirmText !== "DELETE" || clearing || !hasSelection}
             onClick={async () => {
               setClearing(true);
               try {
-                await clearAllData();
+                const cats = Object.entries(selectedCategories)
+                  .filter(([_, v]) => v)
+                  .map(([k]) => k);
+                await clearAllData(cats);
                 router.refresh();
                 setConfirmText("");
+                setSelectedCategories({});
               } catch { }
               setClearing(false);
             }}

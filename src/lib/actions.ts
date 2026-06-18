@@ -113,7 +113,7 @@ export async function createStockMovement(formData: FormData) {
 export async function processPOS(formData: FormData) {
   const itemsJson = formData.get("items") as string;
   if (!itemsJson) return { error: "No items provided" };
-  let items: Array<{ productId: number; quantity: number; price: number; discount?: number; discountType?: string; promotionId?: number }>;
+  let items: Array<{ productId: number; quantity: number; price: number; discount?: number; discountType?: string; promotionId?: number; variantId?: number; batchId?: number; locationId?: number }>;
   try {
     items = JSON.parse(itemsJson);
   } catch {
@@ -126,8 +126,10 @@ export async function processPOS(formData: FormData) {
   const discountTotal = parseFloat(formData.get("discount_total") as string) || 0;
   const discountType = formData.get("discount_type") as string || null;
 
-  const getProduct = db.prepare("SELECT id, name, sku, quantity, price FROM products WHERE id = ?");
-  const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)");
+  const getProduct = db.prepare("SELECT id, name, sku, quantity, price, has_variants, track_batches FROM products WHERE id = ?");
+  const getVariant = db.prepare("SELECT id, product_id, quantity FROM product_variants WHERE id = ?");
+  const getBatch = db.prepare("SELECT id, product_id, quantity FROM batches WHERE id = ?");
+  const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note, variant_id, batch_id, location_id) VALUES (?, 'OUT', ?, ?, ?, ?, ?)");
   const updateStock = db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?");
 
   const sale = db.transaction(async () => {
@@ -137,13 +139,34 @@ export async function processPOS(formData: FormData) {
       product_id: number; product_name: string; sku: string;
       price: number; quantity: number;
       discount?: number; discount_type?: string; promotion_id?: number;
+      variant_id?: number; batch_id?: number; location_id?: number;
     }> = [];
 
     for (const item of items) {
-      const product = await getProduct.get(item.productId) as { id: number; name: string; sku: string; quantity: number; price: number } | undefined;
+      const product = await getProduct.get(item.productId) as { id: number; name: string; sku: string; quantity: number; price: number; has_variants: number; track_batches: number } | undefined;
       if (!product) throw new Error(`Product ${item.productId} not found`);
-      if (product.quantity < item.quantity) throw new Error(`Insufficient stock for product ${item.productId}`);
-      await insertMovement.run(item.productId, item.quantity, "POS sale");
+
+      // Check and deduct from variant stock if specified
+      if (item.variantId) {
+        const variant = await getVariant.get(item.variantId) as { id: number; product_id: number; quantity: number } | undefined;
+        if (!variant) throw new Error(`Variant ${item.variantId} not found`);
+        if (variant.quantity < item.quantity) throw new Error(`Insufficient stock for variant ${item.variantId}`);
+        await db.prepare("UPDATE product_variants SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?").run(item.quantity, item.variantId);
+      } else {
+        if (product.quantity < item.quantity) throw new Error(`Insufficient stock for product ${item.productId}`);
+      }
+
+      // Check and deduct from batch stock if specified
+      if (item.batchId) {
+        const batch = await getBatch.get(item.batchId) as { id: number; product_id: number; quantity: number } | undefined;
+        if (!batch) throw new Error(`Batch ${item.batchId} not found`);
+        if (batch.quantity < item.quantity) throw new Error(`Insufficient stock for batch ${item.batchId}`);
+        await db.prepare("UPDATE batches SET quantity = MAX(0, quantity - ?), updated_at = datetime('now') WHERE id = ?").run(item.quantity, item.batchId);
+      } else if (product.quantity < item.quantity) {
+        throw new Error(`Insufficient stock for product ${item.productId}`);
+      }
+
+      await insertMovement.run(item.productId, item.quantity, "POS sale", item.variantId || null, item.batchId || null, item.locationId || null);
       await updateStock.run(item.quantity, item.productId);
       subtotal += item.price * item.quantity;
       itemCount += item.quantity;
@@ -151,6 +174,7 @@ export async function processPOS(formData: FormData) {
         product_id: item.productId, product_name: product.name, sku: product.sku,
         price: item.price, quantity: item.quantity,
         discount: item.discount, discount_type: item.discountType, promotion_id: item.promotionId,
+        variant_id: item.variantId, batch_id: item.batchId, location_id: item.locationId,
       });
     }
 
@@ -162,11 +186,12 @@ export async function processPOS(formData: FormData) {
     const saleId = saleResult.lastInsertRowid as number;
 
     const insertItem = db.prepare(
-      "INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity, discount, discount_type, promotion_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+      "INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity, discount, discount_type, promotion_id, variant_id, batch_id, location_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
     );
     for (const si of saleItems) {
       await insertItem.run(saleId, si.product_id, si.product_name, si.sku, si.price, si.quantity,
-        si.discount || null, si.discount_type || null, si.promotion_id || null);
+        si.discount || null, si.discount_type || null, si.promotion_id || null,
+        si.variant_id || null, si.batch_id || null, si.location_id || null);
     }
 
     // Save receipt data
@@ -742,144 +767,68 @@ export async function deleteBatch(id: number) {
 }
 
 // === NOTIFICATIONS ===
+import {
+  generateStockNotificationsData,
+  getNotifications as getNotificationsData,
+  getUnreadNotificationCount as getUnreadNotificationCountData,
+  markNotificationRead as markNotificationReadData,
+  markAllNotificationsRead as markAllNotificationsReadData,
+  clearAllNotifications as clearAllNotificationsData,
+} from "./notifications-data";
+
 export async function generateStockNotifications() {
-  const today = new Date().toISOString().slice(0, 10);
-  const thirtyDaysFromNow = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
-
-  const hasUnread = db.prepare(
-    "SELECT id FROM notifications WHERE type = ? AND reference_type = ? AND reference_id = ? AND is_read = 0"
-  );
-  const insert = db.prepare(
-    "INSERT INTO notifications (type, title, message, reference_type, reference_id) VALUES (?, ?, ?, ?, ?)"
-  );
-  const deleteResolved = db.prepare(
-    "DELETE FROM notifications WHERE type = ? AND reference_type = ? AND reference_id = ? AND is_read = 0"
-  );
-
-  // Remove low-stock notifications for products that are now OK
-  const okProducts = await db.prepare(
-    "SELECT id FROM products WHERE quantity > min_stock"
-  ).all() as { id: number }[];
-  for (const p of okProducts) {
-    await deleteResolved.run("low_stock", "product", p.id);
-  }
-
-  // Create low-stock notifications
-  const lowStockProducts = await db.prepare(
-    "SELECT id, name, quantity, min_stock FROM products WHERE quantity <= min_stock"
-  ).all() as { id: number; name: string; quantity: number; min_stock: number }[];
-
-  for (const p of lowStockProducts) {
-    const existing = await hasUnread.get("low_stock", "product", p.id) as { id: number } | undefined;
-    if (!existing) {
-      await insert.run(
-        "low_stock", `Low Stock: ${p.name}`,
-        `Only ${p.quantity} left (min: ${p.min_stock})`,
-        "product", p.id
-      );
-    }
-  }
-
-  // Remove expiry notifications for batches that are now resolved
-  const resolvedBatches = await db.prepare(
-    "SELECT id FROM batches WHERE expiry_date IS NULL OR quantity = 0"
-  ).all() as { id: number }[];
-  for (const b of resolvedBatches) {
-    await deleteResolved.run("expiring_batch", "batch", b.id);
-    await deleteResolved.run("expired_batch", "batch", b.id);
-  }
-
-  // Near-expiry batch notifications
-  const expiringBatches = await db.prepare(
-    `SELECT b.id, b.batch_no, b.expiry_date, b.quantity, p.name as product_name
-     FROM batches b JOIN products p ON p.id = b.product_id
-     WHERE b.expiry_date IS NOT NULL AND b.expiry_date <= ? AND b.expiry_date >= ? AND b.quantity > 0`
-  ).all(thirtyDaysFromNow, today) as { id: number; batch_no: string; expiry_date: string; quantity: number; product_name: string }[];
-
-  for (const b of expiringBatches) {
-    const existing = await hasUnread.get("expiring_batch", "batch", b.id) as { id: number } | undefined;
-    if (!existing) {
-      await insert.run(
-        "expiring_batch", `Expiring Soon: ${b.product_name}`,
-        `Batch ${b.batch_no} expires ${b.expiry_date} (${b.quantity} units)`,
-        "batch", b.id
-      );
-    }
-  }
-
-  // Expired batch notifications
-  const expiredBatches = await db.prepare(
-    `SELECT b.id, b.batch_no, b.expiry_date, b.quantity, p.name as product_name
-     FROM batches b JOIN products p ON p.id = b.product_id
-     WHERE b.expiry_date IS NOT NULL AND b.expiry_date < ? AND b.quantity > 0`
-  ).all(today) as { id: number; batch_no: string; expiry_date: string; quantity: number; product_name: string }[];
-
-  for (const b of expiredBatches) {
-    const existing = await hasUnread.get("expired_batch", "batch", b.id) as { id: number } | undefined;
-    if (!existing) {
-      await insert.run(
-        "expired_batch", `Expired: ${b.product_name}`,
-        `Batch ${b.batch_no} expired ${b.expiry_date} (${b.quantity} units remaining)`,
-        "batch", b.id
-      );
-    }
-  }
-
+  await generateStockNotificationsData();
   revalidatePath("/notifications");
 }
 
 export async function getNotifications() {
-  return await db.prepare(
-    "SELECT * FROM notifications ORDER BY created_at DESC LIMIT 200"
-  ).all() as Array<{
-    id: number; type: string; title: string; message: string;
-    reference_type: string | null; reference_id: number | null;
-    is_read: number; created_at: string;
-  }>;
+  return getNotificationsData();
 }
 
 export async function getUnreadNotificationCount() {
-  const row = await db.prepare(
-    "SELECT COUNT(*) as count FROM notifications WHERE is_read = 0"
-  ).get() as { count: number };
-  return row.count;
+  return getUnreadNotificationCountData();
 }
 
 export async function markNotificationRead(id: number) {
-  await db.prepare("UPDATE notifications SET is_read = 1 WHERE id = ?").run(id);
+  await markNotificationReadData(id);
   revalidatePath("/notifications");
 }
 
 export async function markAllNotificationsRead() {
-  await db.prepare("UPDATE notifications SET is_read = 1 WHERE is_read = 0").run();
+  await markAllNotificationsReadData();
   revalidatePath("/notifications");
 }
 
 export async function clearAllNotifications() {
-  await db.prepare("DELETE FROM notifications").run();
+  await clearAllNotificationsData();
   revalidatePath("/notifications");
 }
 
 // === ADMIN: CLEAR ALL DATA ===
-export async function clearAllData() {
+const dataCategories: Record<string, string[]> = {
+  products: ["products", "product_variants", "customer_group_prices", "customer_groups"],
+  stock: ["stock_movements", "batches", "locations"],
+  sales: ["sale_items", "sales", "receipts", "customer_order_items", "customer_orders"],
+  customers_suppliers: ["customers", "suppliers"],
+  deliveries: ["deliveries", "delivery_partners"],
+  debts: ["debt_payments", "debts"],
+  cashflow: ["cash_flow"],
+  promotions: ["promotions"],
+  members: ["membership_tiers", "members"],
+  audits: ["physical_audit_items", "physical_audits"],
+  notifications: ["notifications"],
+};
+
+export async function clearAllData(categories?: string[]) {
   const { getCurrentUser } = await import("@/lib/auth");
   const user = await getCurrentUser();
   if (!user || user.role !== "admin") throw new Error("Unauthorized");
 
-  const tables = [
-    "physical_audit_items", "physical_audits",
-    "sale_items", "sales", "receipts",
-    "stock_movements", "batches", "product_variants", "locations",
-    "customer_order_items", "customer_orders",
-    "deliveries", "delivery_partners",
-    "debt_payments", "debts",
-    "cash_flow",
-    "promotions",
-    "membership_tiers", "members",
-    "notifications",
-    "customer_group_prices", "customer_groups",
-    "products", "suppliers", "customers",
-  ];
+  const tables = categories
+    ? categories.flatMap((c) => dataCategories[c] || [])
+    : Object.values(dataCategories).flat();
+
+  if (tables.length === 0) return;
 
   for (const table of tables) {
     try {

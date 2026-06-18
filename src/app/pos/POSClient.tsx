@@ -6,21 +6,27 @@ import { useTranslation } from "@/i18n/useTranslation";
 import {
   Search, ShoppingCart, Scan, Minus, Plus, Trash2,
   Image as ImageIcon, Barcode, Maximize2, Minimize2, User,
-  Printer, Percent, BadgePercent
+  Printer, Percent, BadgePercent, Package, Layers
 } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
 import ReceiptView from "./ReceiptView";
 
-type Product = { id: number; name: string; sku: string; barcode: string | null; price: number; wholesale_price: number | null; selling_price: number | null; original_price: number | null; unit_price: number | null; price_per_case: number | null; quantity: number; image_url: string | null; category: string | null };
+type Product = { id: number; name: string; sku: string; barcode: string | null; price: number; wholesale_price: number | null; selling_price: number | null; original_price: number | null; unit_price: number | null; price_per_case: number | null; quantity: number; image_url: string | null; category: string | null; has_variants: number; track_batches: number };
 type Customer = { id: number; name: string; customer_type: string };
 type Promotion = { id: number; name: string; type: string; value: number; min_purchase: number; buy_qty: number; get_qty: number; product_id: number | null; start_date: string | null; end_date: string | null; active: number };
 type Member = { customer_id: number; tier_id: number; tier_name: string; discount_percent: number };
-type CartItem = { product: Product; qty: number; price: number; discount?: number; discountType?: string; promotionId?: number };
+type VariantInfo = { id: number; product_id: number; name: string; sku: string | null; barcode: string | null; price: number | null; quantity: number };
+type BatchInfo = { id: number; product_id: number; variant_id: number | null; batch_no: string; quantity: number; expiry_date: string | null; location_id: number | null };
+type LocationInfo = { id: number; name: string; address: string | null };
+type CartItem = { product: Product; qty: number; price: number; discount?: number; discountType?: string; promotionId?: number; variantId?: number; variantName?: string; batchId?: number; batchNo?: string; locationId?: number; locationName?: string };
 type ReceiptItem = { name: string; sku: string; price: number; qty: number; discount?: number };
 
 const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "credit"];
 
-export default function POSClient({ products, customers, promotions, members }: { products: Product[]; customers: Customer[]; promotions: Promotion[]; members: Member[] }) {
+export default function POSClient({ products, customers, promotions, members, variants, batches, locations }: {
+  products: Product[]; customers: Customer[]; promotions: Promotion[]; members: Member[];
+  variants: VariantInfo[]; batches: BatchInfo[]; locations: LocationInfo[];
+}) {
   const { t } = useTranslation();
   const router = useRouter();
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -34,14 +40,56 @@ export default function POSClient({ products, customers, promotions, members }: 
   const [saleTotal, setSaleTotal] = useState(0);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const [editingQty, setEditingQty] = useState<number | null>(null);
+  const [editingQty, setEditingQty] = useState<string | null>(null);
   const [qtyInput, setQtyInput] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [continuousScan, setContinuousScan] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState("cash");
+
+  // Variant/Batch picker state
+  const [pickerProduct, setPickerProduct] = useState<Product | null>(null);
+  const [pickerStep, setPickerStep] = useState<"variant" | "batch" | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
+  const [selectedBatch, setSelectedBatch] = useState<BatchInfo | null>(null);
+
   const searchRef = useRef<HTMLInputElement>(null);
   const qtyInputRef = useRef<HTMLInputElement>(null);
   const scanTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  const variantsByProduct = useMemo(() => {
+    const map: Record<number, VariantInfo[]> = {};
+    for (const v of variants) {
+      if (!map[v.product_id]) map[v.product_id] = [];
+      map[v.product_id].push(v);
+    }
+    return map;
+  }, [variants]);
+
+  const batchesByProduct = useMemo(() => {
+    const map: Record<number, BatchInfo[]> = {};
+    for (const b of batches) {
+      if (!map[b.product_id]) map[b.product_id] = [];
+      map[b.product_id].push(b);
+    }
+    return map;
+  }, [batches]);
+
+  const batchesByVariant = useMemo(() => {
+    const map: Record<number, BatchInfo[]> = {};
+    for (const b of batches) {
+      if (b.variant_id != null) {
+        if (!map[b.variant_id]) map[b.variant_id] = [];
+        map[b.variant_id].push(b);
+      }
+    }
+    return map;
+  }, [batches]);
+
+  const locationMap = useMemo(() => {
+    const map: Record<number, LocationInfo> = {};
+    for (const l of locations) map[l.id] = l;
+    return map;
+  }, [locations]);
 
   useEffect(() => {
     getSettings().then(setSettings);
@@ -52,7 +100,8 @@ export default function POSClient({ products, customers, promotions, members }: 
 
   const isWholesale = selectedCustomer?.customer_type === "wholesale";
 
-  const effectivePrice = useCallback((product: Product) => {
+  const effectivePrice = useCallback((product: Product, variantPrice?: number | null) => {
+    if (variantPrice != null) return variantPrice;
     if (isWholesale && product.price_per_case != null) return product.price_per_case;
     if (product.selling_price != null) return product.selling_price;
     return product.price;
@@ -101,7 +150,6 @@ export default function POSClient({ products, customers, promotions, members }: 
       }
     }
 
-    // Membership discount (applied on top)
     if (memberTier && memberTier.discount_percent > 0) {
       const memberDiscount = (unitPrice * qty - maxDiscount) * (memberTier.discount_percent / 100);
       if (memberDiscount > 0) {
@@ -113,27 +161,92 @@ export default function POSClient({ products, customers, promotions, members }: 
     return { discount: maxDiscount, discountType, promotionId };
   }, [getProductPromotions, memberTier]);
 
-  // ─── Cart Operations ───────────────────────────────────────
-  const addToCart = useCallback((product: Product) => {
-    setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
-      const price = effectivePrice(product);
+  // ─── Variant/Batch Picker Flow ─────────────────────────────
+  const handleProductClick = useCallback((product: Product) => {
+    const prodVariants = variantsByProduct[product.id];
+    if (prodVariants && prodVariants.length > 0) {
+      setPickerProduct(product);
+      setPickerStep("variant");
+      setSelectedVariant(null);
+      setSelectedBatch(null);
+      return;
+    }
+    if (product.track_batches) {
+      const prodBatches = batchesByProduct[product.id];
+      if (prodBatches && prodBatches.length > 0) {
+        setPickerProduct(product);
+        setPickerStep("batch");
+        setSelectedVariant(null);
+        setSelectedBatch(null);
+        return;
+      }
+    }
+    addToCartDirect(product, undefined, undefined);
+  }, [variantsByProduct, batchesByProduct, effectivePrice, getItemDiscount]);
+
+  const handleVariantSelect = useCallback((variant: VariantInfo) => {
+    setSelectedVariant(variant);
+    const prodBatches = batchesByVariant[variant.id];
+    const product = pickerProduct!;
+    if (product.track_batches && prodBatches && prodBatches.length > 0) {
+      setPickerStep("batch");
+    } else {
+      addToCartDirect(product, variant, undefined);
+      closePicker();
+    }
+  }, [batchesByVariant, pickerProduct, effectivePrice, getItemDiscount]);
+
+  const handleBatchSelect = useCallback((batch: BatchInfo) => {
+    setSelectedBatch(batch);
+    addToCartDirect(pickerProduct!, selectedVariant ?? undefined, batch);
+    closePicker();
+  }, [pickerProduct, selectedVariant, effectivePrice, getItemDiscount]);
+
+  const closePicker = useCallback(() => {
+    setPickerProduct(null);
+    setPickerStep(null);
+    setSelectedVariant(null);
+    setSelectedBatch(null);
+  }, []);
+
+  const addToCartDirect = useCallback((product: Product, variant?: VariantInfo, batch?: BatchInfo) => {
+    const price = effectivePrice(product, variant?.price);
+    const variantId = variant?.id;
+    const batchId = batch?.id;
+    const locationId = batch?.location_id ?? null;
+    const cartKey = `${product.id}-${variantId ?? ""}-${batchId ?? ""}`;
+
+    setCart((prev): CartItem[] => {
+      const existing = prev.find((item) => {
+        const key = `${item.product.id}-${item.variantId ?? ""}-${item.batchId ?? ""}`;
+        return key === cartKey;
+      });
       if (existing) {
-        const newQty = Math.min(existing.qty + 1, product.quantity);
+        const maxQty = batch ? batch.quantity : (variant ? variant.quantity : product.quantity);
+        const newQty = Math.min(existing.qty + 1, maxQty);
         const disc = getItemDiscount(product, newQty, price);
-        return prev.map((item) =>
-          item.product.id === product.id
+        return prev.map((item): CartItem =>
+          (item.product.id === product.id && item.variantId === variantId && item.batchId === batchId)
             ? { ...item, qty: newQty, ...disc, price }
             : item
         );
       }
       const disc = getItemDiscount(product, 1, price);
-      return [...prev, { product, qty: 1, price, ...disc }];
+      return [...prev, {
+        product, qty: 1, price, ...disc,
+        variantId,
+        variantName: variant?.name,
+        batchId,
+        batchNo: batch?.batch_no,
+        locationId,
+        locationName: locationId && locationMap[locationId] ? locationMap[locationId].name : undefined,
+      } as CartItem];
     });
     setSearch("");
     searchRef.current?.focus();
-  }, [effectivePrice, getItemDiscount]);
+  }, [effectivePrice, getItemDiscount, locationMap]);
 
+  // ─── Barcode Scanner ───────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Enter" && continuousScan) {
@@ -141,9 +254,22 @@ export default function POSClient({ products, customers, promotions, members }: 
         if (code.length >= 4) {
           const found = products.find((p) => p.barcode === code);
           if (found) {
-            addToCart(found);
-            setSearch("");
+            handleProductClick(found);
+          } else {
+            // Check variant barcodes
+            const foundVar = variants.find((v) => v.barcode === code);
+            if (foundVar) {
+              const prod = products.find((p) => p.id === foundVar.product_id);
+              if (prod) {
+                if (variantsByProduct[prod.id]?.length === 1) {
+                  addToCartDirect(prod, foundVar, undefined);
+                } else {
+                  handleVariantSelect(foundVar);
+                }
+              }
+            }
           }
+          setSearch("");
           scanTimer.current = undefined;
         }
         setScanBuf("");
@@ -158,7 +284,7 @@ export default function POSClient({ products, customers, promotions, members }: 
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [scanBuf, products, addToCart, continuousScan]);
+  }, [scanBuf, products, variants, variantsByProduct, addToCartDirect, handleProductClick, handleVariantSelect, continuousScan]);
 
   useEffect(() => {
     const handler = () => setIsFullscreen(!!document.fullscreenElement);
@@ -173,7 +299,6 @@ export default function POSClient({ products, customers, promotions, members }: 
     }
   }, [editingQty]);
 
-  // Refresh discounts when cart changes (e.g., customer change affects membership)
   useEffect(() => {
     setCart((prev) => prev.map((item) => {
       const disc = getItemDiscount(item.product, item.qty, item.price);
@@ -195,53 +320,72 @@ export default function POSClient({ products, customers, promotions, members }: 
   const total = Math.max(0, subtotal - discountAmount + tax);
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
-  const updateQty = (productId: number, delta: number) => {
+  const updateQty = (productId: number, variantId?: number, batchId?: number, delta?: number) => {
     setCart((prev) =>
       prev.map((item) => {
-        if (item.product.id !== productId) return item;
-        const newQty = Math.max(1, Math.min(item.qty + delta, item.product.quantity));
+        if (item.product.id !== productId || item.variantId !== variantId || item.batchId !== batchId) return item;
+        const maxQty = batchId
+          ? (batches.find((b) => b.id === batchId)?.quantity ?? item.product.quantity)
+          : (variantId
+            ? (variants.find((v) => v.id === variantId)?.quantity ?? item.product.quantity)
+            : item.product.quantity);
+        const newQty = Math.max(1, Math.min((item.qty + (delta ?? 0)), maxQty));
         const disc = getItemDiscount(item.product, newQty, item.price);
         return { ...item, qty: newQty, ...disc };
       }).filter((item) => item.qty > 0)
     );
   };
 
-  const setItemQty = (productId: number, qty: number) => {
-    const clamped = Math.max(1, Math.min(qty, products.find((p) => p.id === productId)?.quantity ?? 99));
+  const setItemQty = (productId: number, variantId?: number, batchId?: number, qty?: number) => {
+    if (qty == null) return;
+    const product = products.find((p) => p.id === productId);
+    if (!product) return;
+    const maxQty = batchId
+      ? (batches.find((b) => b.id === batchId)?.quantity ?? product.quantity)
+      : (variantId
+        ? (variants.find((v) => v.id === variantId)?.quantity ?? product.quantity)
+        : product.quantity);
+    const clamped = Math.max(1, Math.min(qty, maxQty));
     setCart((prev) =>
       prev.map((item) => {
-        if (item.product.id !== productId) return item;
+        if (item.product.id !== productId || item.variantId !== variantId || item.batchId !== batchId) return item;
         const disc = getItemDiscount(item.product, clamped, item.price);
         return { ...item, qty: clamped, ...disc };
       }).filter((item) => item.qty > 0)
     );
   };
 
-  const startEditQty = (productId: number, currentQty: number) => {
-    setEditingQty(productId);
+  const startEditQty = (cartKey: string, currentQty: number) => {
+    setEditingQty(cartKey);
     setQtyInput(String(currentQty));
   };
 
-  const commitEditQty = (productId: number) => {
+  const commitEditQty = (cartKey: string) => {
     const val = parseInt(qtyInput, 10);
     if (!isNaN(val) && val > 0) {
-      setItemQty(productId, val);
+      const [pid, vid, bid] = cartKey.split("-");
+      setItemQty(parseInt(pid), vid ? parseInt(vid) : undefined, bid ? parseInt(bid) : undefined, val);
     }
     setEditingQty(null);
     setQtyInput("");
   };
 
-  const removeItem = (productId: number) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
+  const removeItem = (productId: number, variantId?: number, batchId?: number) => {
+    setCart((prev) => prev.filter((item) =>
+      !(item.product.id === productId && item.variantId === variantId && item.batchId === batchId)
+    ));
   };
 
   const clearCart = () => {
     setCart([]);
   };
 
+  const cartItemKey = (item: CartItem) => `${item.product.id}-${item.variantId ?? ""}-${item.batchId ?? ""}`;
+
   const previewReceipt = () => {
     const items = cart.map((item) => ({
-      name: item.product.name, sku: item.product.sku,
+      name: item.product.name + (item.variantName ? ` (${item.variantName})` : ""),
+      sku: item.product.sku,
       price: item.price, qty: item.qty,
       discount: item.discount,
     }));
@@ -257,6 +401,7 @@ export default function POSClient({ products, customers, promotions, members }: 
     formData.set("items", JSON.stringify(cart.map((item) => ({
       productId: item.product.id, quantity: item.qty, price: item.price,
       discount: item.discount, discountType: item.discountType, promotionId: item.promotionId,
+      variantId: item.variantId, batchId: item.batchId, locationId: item.locationId,
     }))));
     formData.set("payment_method", paymentMethod);
     formData.set("discount_total", String(discountAmount));
@@ -273,7 +418,8 @@ export default function POSClient({ products, customers, promotions, members }: 
     }
     if (result.success) {
       const items = cart.map((item) => ({
-        name: item.product.name, sku: item.product.sku,
+        name: item.product.name + (item.variantName ? ` (${item.variantName})` : ""),
+        sku: item.product.sku,
         price: item.price, qty: item.qty, discount: item.discount,
       }));
       setCart([]);
@@ -298,6 +444,20 @@ export default function POSClient({ products, customers, promotions, members }: 
 
   const showScanIndicator = scanBuf.length > 0;
 
+  const getStockLabel = (product: Product) => {
+    const prodVariants = variantsByProduct[product.id];
+    const prodBatches = batchesByProduct[product.id];
+    if (prodVariants && prodVariants.length > 0) {
+      const totalStock = prodVariants.reduce((s, v) => s + v.quantity, 0);
+      return { qty: totalStock, label: `${totalStock} (${prodVariants.length}v)` };
+    }
+    if (prodBatches && prodBatches.length > 0) {
+      const totalBatchStock = prodBatches.reduce((s, b) => s + b.quantity, 0);
+      return { qty: totalBatchStock, label: `${totalBatchStock} (${prodBatches.length}b)` };
+    }
+    return { qty: product.quantity, label: String(product.quantity) };
+  };
+
   return (
     <div className="h-screen bg-[var(--bg-main)] p-4 flex flex-col overflow-hidden">
       {receiptItems && settings && (
@@ -314,6 +474,82 @@ export default function POSClient({ products, customers, promotions, members }: 
           footer={settings.receipt_footer}
           onClose={() => setReceiptItems(null)}
         />
+      )}
+
+      {/* Variant/Batch Picker Modal */}
+      {pickerProduct && pickerStep && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40" onClick={closePicker}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-2xl mx-4 max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-base font-bold text-[#111827]">
+                {pickerProduct.name}
+                {pickerStep === "variant" ? " — Select Variant" : " — Select Batch"}
+              </h3>
+              <button onClick={closePicker} className="text-[#6B7280] hover:text-[#111827] cursor-pointer text-lg leading-none">&times;</button>
+            </div>
+
+            {pickerStep === "variant" && (variantsByProduct[pickerProduct.id] || []).map((v) => {
+              const vBatches = batchesByVariant[v.id] || [];
+              const batchStock = vBatches.reduce((s, b) => s + b.quantity, 0);
+              const displayStock = vBatches.length > 0 ? batchStock : v.quantity;
+              return (
+                <button key={v.id} onClick={() => handleVariantSelect(v)}
+                  disabled={displayStock === 0}
+                  className={`w-full text-left p-4 rounded-xl mb-2 border transition-all duration-150 flex items-center justify-between ${
+                    displayStock === 0
+                      ? "opacity-40 cursor-not-allowed border-[#E5E7EB]"
+                      : "border-[#E5E7EB] bg-white hover:border-[#9CA3AF] hover:bg-[var(--bg-main)] cursor-pointer"
+                  }`}>
+                  <div>
+                    <p className="font-semibold text-sm text-[#111827]">{v.name}</p>
+                    {v.sku && <p className="text-xs text-[#6B7280] font-mono mt-0.5">{v.sku}</p>}
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-[#111827]">${effectivePrice(pickerProduct, v.price).toFixed(2)}</p>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                      displayStock <= 5 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-600"
+                    }`}>
+                      {displayStock} left
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+
+            {pickerStep === "batch" && (selectedVariant ? batchesByVariant[selectedVariant.id] : batchesByProduct[pickerProduct.id] || []).map((b) => (
+              <button key={b.id} onClick={() => handleBatchSelect(b)}
+                disabled={b.quantity === 0}
+                className={`w-full text-left p-4 rounded-xl mb-2 border transition-all duration-150 flex items-center justify-between ${
+                  b.quantity === 0
+                    ? "opacity-40 cursor-not-allowed border-[#E5E7EB]"
+                    : "border-[#E5E7EB] bg-white hover:border-[#9CA3AF] hover:bg-[var(--bg-main)] cursor-pointer"
+                }`}>
+                <div className="flex items-center gap-3">
+                  <Layers className="size-5 text-[#6B7280]" />
+                  <div>
+                    <p className="font-semibold text-sm text-[#111827]">{b.batch_no}</p>
+                    <p className="text-xs text-[#6B7280]">
+                      {b.expiry_date ? `Exp: ${b.expiry_date}` : "No expiry"}
+                      {b.location_id && locationMap[b.location_id] ? ` • ${locationMap[b.location_id].name}` : ""}
+                    </p>
+                  </div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded font-medium ${
+                  b.quantity <= 5 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-600"
+                }`}>
+                  {b.quantity} left
+                </span>
+              </button>
+            ))}
+
+            {pickerStep === "variant" && (!variantsByProduct[pickerProduct.id] || variantsByProduct[pickerProduct.id].length === 0) && (
+              <p className="text-sm text-[#6B7280] text-center py-4">No variants available</p>
+            )}
+            {pickerStep === "batch" && (!batchesByProduct[pickerProduct.id] || batchesByProduct[pickerProduct.id].length === 0) && (
+              <p className="text-sm text-[#6B7280] text-center py-4">No batches available</p>
+            )}
+          </div>
+        </div>
       )}
 
       {/* Top Control Bar */}
@@ -433,13 +669,16 @@ export default function POSClient({ products, customers, promotions, members }: 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
               {filtered.map((p) => {
                 const promos = getProductPromotions(p.id);
+                const stock = getStockLabel(p);
+                const prodVariants = variantsByProduct[p.id];
+                const prodBatches = batchesByProduct[p.id];
                 return (
                   <button
                     key={p.id}
-                    onClick={() => addToCart(p)}
-                    disabled={p.quantity === 0}
+                    onClick={() => handleProductClick(p)}
+                    disabled={stock.qty === 0}
                     className={`text-left p-3 rounded-xl border transition-all duration-150 relative ${
-                      p.quantity === 0
+                      stock.qty === 0
                         ? "opacity-40 cursor-not-allowed border-[#E5E7EB]"
                         : "border-[#E5E7EB] bg-white hover:border-[#9CA3AF] cursor-pointer"
                     }`}
@@ -465,10 +704,24 @@ export default function POSClient({ products, customers, promotions, members }: 
                     <div className="flex items-center justify-between mt-1.5">
                       <span className="text-sm font-bold text-[#111827]">${effectivePrice(p).toFixed(2)}</span>
                       <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
-                        p.quantity <= 5 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-600"
+                        stock.qty <= 5 ? "bg-red-50 text-red-500" : "bg-emerald-50 text-emerald-600"
                       }`}>
-                        {t("pos.itemsLeft", { qty: p.quantity })}
+                        {stock.label}
                       </span>
+                    </div>
+                    <div className="flex items-center gap-1 mt-1">
+                      {prodVariants && prodVariants.length > 0 && (
+                        <span className="text-[9px] font-medium text-violet-500 bg-violet-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <Package className="size-2.5" />
+                          {prodVariants.length}v
+                        </span>
+                      )}
+                      {p.track_batches && prodBatches && prodBatches.length > 0 && (
+                        <span className="text-[9px] font-medium text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                          <Layers className="size-2.5" />
+                          B
+                        </span>
+                      )}
                     </div>
                     {promos.length > 0 && (
                       <p className="text-[9px] text-violet-500 mt-1 truncate font-medium">
@@ -516,56 +769,69 @@ export default function POSClient({ products, customers, promotions, members }: 
                 <p className="text-xs text-[#9CA3AF] mt-1">{t("pos.cartEmptyHint")}</p>
               </div>
             ) : (
-              cart.map((item) => (
-                <div key={item.product.id} className="p-3 rounded-xl border border-[#E5E7EB]">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-semibold text-[#111827] truncate">{item.product.name}</p>
-                        {item.discount && item.discount > 0 ? (
-                          <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded shrink-0">%</span>
-                        ) : null}
+              cart.map((item) => {
+                const key = cartItemKey(item);
+                return (
+                  <div key={key} className="p-3 rounded-xl border border-[#E5E7EB]">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-semibold text-[#111827] truncate">
+                            {item.product.name}
+                            {item.variantName ? <span className="text-[#6B7280] font-normal"> ({item.variantName})</span> : ""}
+                          </p>
+                          {item.discount && item.discount > 0 ? (
+                            <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1 rounded shrink-0">%</span>
+                          ) : null}
+                        </div>
+                        <p className="text-xs text-[#6B7280] font-mono">{item.product.sku}</p>
+                        {item.batchNo && (
+                          <p className="text-[10px] text-amber-600 font-medium mt-0.5 flex items-center gap-1">
+                            <Layers className="size-3" />
+                            {item.batchNo}
+                            {item.locationName ? ` • ${item.locationName}` : ""}
+                          </p>
+                        )}
                       </div>
-                      <p className="text-xs text-[#6B7280] font-mono">{item.product.sku}</p>
-                    </div>
-                    <button onClick={() => removeItem(item.product.id)}
-                      className="p-1 rounded text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 transition-colors duration-150 cursor-pointer">
-                      <Trash2 className="size-3.5" />
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between mt-2.5">
-                    <div className="flex items-center gap-1.5">
-                      <button onClick={() => updateQty(item.product.id, -1)}
-                        className="flex items-center justify-center size-7 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all duration-150 cursor-pointer">
-                        <Minus className="size-3.5" />
+                      <button onClick={() => removeItem(item.product.id, item.variantId, item.batchId)}
+                        className="p-1 rounded text-[#9CA3AF] hover:text-red-500 hover:bg-red-50 transition-colors duration-150 cursor-pointer">
+                        <Trash2 className="size-3.5" />
                       </button>
-                      {editingQty === item.product.id ? (
-                        <input ref={qtyInputRef} type="number" min={1} max={item.product.quantity}
-                          value={qtyInput} onChange={(e) => setQtyInput(e.target.value)}
-                          onBlur={() => commitEditQty(item.product.id)}
-                          onKeyDown={(e) => { if (e.key === "Enter") commitEditQty(item.product.id); if (e.key === "Escape") setEditingQty(null); }}
-                          className="w-14 h-7 text-center text-sm font-bold text-[#111827] border border-[#9CA3AF] rounded-lg outline-none bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      ) : (
-                        <button onClick={() => startEditQty(item.product.id, item.qty)}
-                          className="text-sm font-bold text-[#111827] w-8 text-center cursor-text hover:bg-[var(--bg-main)] rounded transition-colors duration-150 py-1">
-                          {item.qty}
+                    </div>
+                    <div className="flex items-center justify-between mt-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <button onClick={() => updateQty(item.product.id, item.variantId, item.batchId, -1)}
+                          className="flex items-center justify-center size-7 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all duration-150 cursor-pointer">
+                          <Minus className="size-3.5" />
                         </button>
-                      )}
-                      <button onClick={() => updateQty(item.product.id, 1)}
-                        className="flex items-center justify-center size-7 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all duration-150 cursor-pointer">
-                        <Plus className="size-3.5" />
-                      </button>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-sm font-bold text-[#111827]">${(item.price * item.qty).toFixed(2)}</span>
-                      {item.discount && item.discount > 0 && (
-                        <p className="text-[10px] text-emerald-600 font-medium">-${item.discount.toFixed(2)}</p>
-                      )}
+                        {String(editingQty) === key ? (
+                          <input ref={qtyInputRef} type="number" min={1}
+                            value={qtyInput} onChange={(e) => setQtyInput(e.target.value)}
+                            onBlur={() => commitEditQty(key)}
+                            onKeyDown={(e) => { if (e.key === "Enter") commitEditQty(key); if (e.key === "Escape") setEditingQty(null); }}
+                            className="w-14 h-7 text-center text-sm font-bold text-[#111827] border border-[#9CA3AF] rounded-lg outline-none bg-white [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        ) : (
+                          <button onClick={() => startEditQty(key, item.qty)}
+                            className="text-sm font-bold text-[#111827] w-8 text-center cursor-text hover:bg-[var(--bg-main)] rounded transition-colors duration-150 py-1">
+                            {item.qty}
+                          </button>
+                        )}
+                        <button onClick={() => updateQty(item.product.id, item.variantId, item.batchId, 1)}
+                          className="flex items-center justify-center size-7 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all duration-150 cursor-pointer">
+                          <Plus className="size-3.5" />
+                        </button>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-bold text-[#111827]">${(item.price * item.qty).toFixed(2)}</span>
+                        {item.discount && item.discount > 0 && (
+                          <p className="text-[10px] text-emerald-600 font-medium">-${item.discount.toFixed(2)}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
 

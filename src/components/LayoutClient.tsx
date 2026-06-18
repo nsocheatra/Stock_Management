@@ -25,11 +25,10 @@ export default function LayoutClient({
   initialLocale?: "en" | "kh";
 }) {
   const pathname = usePathname();
-  if (pathname === "/login" || pathname === "/pos") return <I18nProvider initialLocale={initialLocale}>{children}</I18nProvider>;
-
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const visibleNavItems = useMemo(() => {
+    if (pathname === "/login" || pathname === "/pos") return navItems;
     if (!user || user.role === "admin") return navItems;
     let userPerms: string[] = [];
     try { userPerms = JSON.parse(user.permissions || "[]"); } catch {}
@@ -38,7 +37,9 @@ export default function LayoutClient({
       if (user.role === "admin") return true;
       return userPerms.includes(item.permission);
     });
-  }, [user, navItems]);
+  }, [user, navItems, pathname]);
+
+  if (pathname === "/login" || pathname === "/pos") return <I18nProvider initialLocale={initialLocale}>{children}</I18nProvider>;
 
   return (
     <I18nProvider initialLocale={initialLocale}>

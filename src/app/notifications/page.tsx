@@ -1,10 +1,10 @@
 import { requirePermission } from "@/lib/auth";
-import { getNotifications, getUnreadNotificationCount, generateStockNotifications } from "@/lib/actions";
+import { generateStockNotificationsData, getNotifications, getUnreadNotificationCount } from "@/lib/notifications-data";
 import NotificationsClient from "./NotificationsClient";
 
 export default async function NotificationsPage() {
   await requirePermission("notifications.view");
-  await generateStockNotifications();
+  await generateStockNotificationsData();
   const notifications = await getNotifications();
   const unreadCount = await getUnreadNotificationCount();
 
