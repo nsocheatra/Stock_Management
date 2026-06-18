@@ -3,11 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "./db";
+import { requirePermission } from "@/lib/auth";
 
 export async function createProduct(formData: FormData) {
+  const track_batches = formData.get("track_batches") === "1" ? 1 : 0;
   const stmt = db.prepare(`
-    INSERT INTO products (name, sku, price, cost_price, selling_price, original_price, unit_price, price_per_case, quantity, description, category, min_stock, supplier_id, barcode, image_url)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO products (name, sku, price, cost_price, selling_price, original_price, unit_price, price_per_case, quantity, description, category, min_stock, supplier_id, barcode, image_url, track_batches)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
   await stmt.run(
     formData.get("name"),
@@ -25,14 +27,16 @@ export async function createProduct(formData: FormData) {
     formData.get("supplierId") ? parseInt(formData.get("supplierId") as string) : null,
     formData.get("barcode") || null,
     formData.get("image_url") || null,
+    track_batches,
   );
   revalidatePath("/products");
   redirect("/products");
 }
 
 export async function updateProduct(id: number, formData: FormData) {
+  const track_batches = formData.get("track_batches") === "1" ? 1 : 0;
   const stmt = db.prepare(`
-    UPDATE products SET name=?, sku=?, price=?, cost_price=?, selling_price=?, original_price=?, unit_price=?, price_per_case=?, quantity=?, description=?, category=?, min_stock=?, supplier_id=?, barcode=?, image_url=?, updated_at=datetime('now')
+    UPDATE products SET name=?, sku=?, price=?, cost_price=?, selling_price=?, original_price=?, unit_price=?, price_per_case=?, quantity=?, description=?, category=?, min_stock=?, supplier_id=?, barcode=?, image_url=?, track_batches=?, updated_at=datetime('now')
     WHERE id=?
   `);
   await stmt.run(
@@ -51,6 +55,7 @@ export async function updateProduct(id: number, formData: FormData) {
     formData.get("supplierId") ? parseInt(formData.get("supplierId") as string) : null,
     formData.get("barcode") || null,
     formData.get("image_url") || null,
+    track_batches,
     id,
   );
   revalidatePath("/products");
@@ -73,6 +78,9 @@ export async function createStockMovement(formData: FormData) {
   const unitCost = type === "IN" ? parseFloat(formData.get("unit_cost") as string) || null : null;
   const caseCost = type === "IN" ? parseFloat(formData.get("case_cost") as string) || null : null;
   const caseQuantity = type === "IN" ? parseInt(formData.get("case_quantity") as string) || null : null;
+  const locationId = formData.get("location_id") ? parseInt(formData.get("location_id") as string) : null;
+  const batchId = formData.get("batch_id") ? parseInt(formData.get("batch_id") as string) : null;
+  const variantId = formData.get("variant_id") ? parseInt(formData.get("variant_id") as string) : null;
 
   const product = await db.prepare("SELECT * FROM products WHERE id = ?").get(productId) as { quantity: number } | undefined;
   if (!product) throw new Error("Product not found");
@@ -80,13 +88,21 @@ export async function createStockMovement(formData: FormData) {
   const newQty = type === "IN" ? product.quantity + quantity : product.quantity - quantity;
   if (newQty < 0) throw new Error("Insufficient stock");
 
-  const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, unit_cost, case_cost, case_quantity, note, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+  const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, unit_cost, case_cost, case_quantity, note, created_at, location_id, batch_id, variant_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
   const updateProduct = db.prepare("UPDATE products SET quantity = ?, updated_at = datetime('now') WHERE id = ?");
 
   await db.transaction(async () => {
     const ts = date ? `${date} ${new Date().toTimeString().slice(0, 8)}` : undefined;
-    await insertMovement.run(productId, type, quantity, unitCost, caseCost, caseQuantity, note, ts || null);
+    await insertMovement.run(productId, type, quantity, unitCost, caseCost, caseQuantity, note, ts || null, locationId, batchId, variantId);
     await updateProduct.run(newQty, productId);
+
+    // If IN with batch+location, also update batch quantity
+    if (type === "IN" && batchId) {
+      await db.prepare("UPDATE batches SET quantity = quantity + ?, updated_at = datetime('now') WHERE id = ?").run(quantity, batchId);
+    }
+    if (type === "OUT" && batchId) {
+      await db.prepare("UPDATE batches SET quantity = MAX(0, quantity - ?), updated_at = datetime('now') WHERE id = ?").run(quantity, batchId);
+    }
   })();
 
   revalidatePath("/stock");
@@ -97,7 +113,7 @@ export async function createStockMovement(formData: FormData) {
 export async function processPOS(formData: FormData) {
   const itemsJson = formData.get("items") as string;
   if (!itemsJson) return { error: "No items provided" };
-  let items: Array<{ productId: number; quantity: number; price: number }>;
+  let items: Array<{ productId: number; quantity: number; price: number; discount?: number; discountType?: string; promotionId?: number }>;
   try {
     items = JSON.parse(itemsJson);
   } catch {
@@ -106,15 +122,22 @@ export async function processPOS(formData: FormData) {
   if (items.length === 0) return { error: "Cart is empty" };
   const customerId = formData.get("customer_id") ? parseInt(formData.get("customer_id") as string) : null;
   const customerType = formData.get("customer_type") as string || null;
+  const paymentMethod = formData.get("payment_method") as string || "cash";
+  const discountTotal = parseFloat(formData.get("discount_total") as string) || 0;
+  const discountType = formData.get("discount_type") as string || null;
 
   const getProduct = db.prepare("SELECT id, name, sku, quantity, price FROM products WHERE id = ?");
   const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, 'OUT', ?, ?)");
   const updateStock = db.prepare("UPDATE products SET quantity = quantity - ?, updated_at = datetime('now') WHERE id = ?");
 
   const sale = db.transaction(async () => {
-    let total = 0;
+    let subtotal = 0;
     let itemCount = 0;
-    const saleItems: Array<{ product_id: number; product_name: string; sku: string; price: number; quantity: number }> = [];
+    const saleItems: Array<{
+      product_id: number; product_name: string; sku: string;
+      price: number; quantity: number;
+      discount?: number; discount_type?: string; promotion_id?: number;
+    }> = [];
 
     for (const item of items) {
       const product = await getProduct.get(item.productId) as { id: number; name: string; sku: string; quantity: number; price: number } | undefined;
@@ -122,22 +145,40 @@ export async function processPOS(formData: FormData) {
       if (product.quantity < item.quantity) throw new Error(`Insufficient stock for product ${item.productId}`);
       await insertMovement.run(item.productId, item.quantity, "POS sale");
       await updateStock.run(item.quantity, item.productId);
-      const itemTotal = item.price * item.quantity;
-      total += itemTotal;
+      subtotal += item.price * item.quantity;
       itemCount += item.quantity;
-      saleItems.push({ product_id: item.productId, product_name: product.name, sku: product.sku, price: item.price, quantity: item.quantity });
+      saleItems.push({
+        product_id: item.productId, product_name: product.name, sku: product.sku,
+        price: item.price, quantity: item.quantity,
+        discount: item.discount, discount_type: item.discountType, promotion_id: item.promotionId,
+      });
     }
 
-    const saleResult = await db.prepare("INSERT INTO sales (customer_id, total, item_count, customer_type) VALUES (?, ?, ?, ?)")
-      .run(customerId, total, itemCount, customerType);
+    const total = subtotal - discountTotal;
+
+    const saleResult = await db.prepare(
+      "INSERT INTO sales (customer_id, total, item_count, customer_type, payment_method, discount, discount_type) VALUES (?, ?, ?, ?, ?, ?, ?)"
+    ).run(customerId, total, itemCount, customerType, paymentMethod, discountTotal, discountType);
     const saleId = saleResult.lastInsertRowid as number;
 
-    const insertItem = db.prepare("INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity) VALUES (?, ?, ?, ?, ?, ?)");
+    const insertItem = db.prepare(
+      "INSERT INTO sale_items (sale_id, product_id, product_name, sku, price, quantity, discount, discount_type, promotion_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    );
     for (const si of saleItems) {
-      await insertItem.run(saleId, si.product_id, si.product_name, si.sku, si.price, si.quantity);
+      await insertItem.run(saleId, si.product_id, si.product_name, si.sku, si.price, si.quantity,
+        si.discount || null, si.discount_type || null, si.promotion_id || null);
     }
 
-    return { saleId, total, itemCount };
+    // Save receipt data
+    const receiptData = JSON.stringify({
+      items: saleItems.map(si => ({ name: si.product_name, sku: si.sku, price: si.price, qty: si.quantity })),
+      subtotal, discount: discountTotal, discountType, total, paymentMethod,
+      customerId, customerType,
+    });
+    await db.prepare("INSERT INTO receipts (receipt_data, total, item_count) VALUES (?, ?, ?)")
+      .run(receiptData, total, itemCount);
+
+    return { saleId, total, itemCount, subtotal, discount: discountTotal };
   });
 
   let saleResult;
@@ -349,6 +390,7 @@ export async function createCashFlowEntry(formData: FormData) {
 
 // === PHYSICAL AUDITS ===
 export async function clearAllAudits() {
+  await requirePermission("audit.manage");
   const audits = await db.prepare("SELECT id FROM physical_audits").all() as any[];
   const deleteItems = db.prepare("DELETE FROM physical_audit_items WHERE audit_id = ?");
   const deleteAudit = db.prepare("DELETE FROM physical_audits WHERE id = ?");
@@ -360,51 +402,106 @@ export async function clearAllAudits() {
 }
 
 export async function createAudit(formData: FormData) {
+  await requirePermission("audit.manage");
   const name = formData.get("name") as string;
   if (!name) throw new Error("Name required");
+
   const result = await db.prepare("INSERT INTO physical_audits (name) VALUES (?)").run(name);
   const auditId = result.lastInsertRowid as number;
-  const products = await db.prepare("SELECT id, name, quantity FROM products ORDER BY name ASC").all() as any[];
-  const insert = db.prepare("INSERT INTO physical_audit_items (audit_id, product_id, expected_qty) VALUES (?, ?, ?)");
-  for (const p of products) await insert.run(auditId, p.id, p.quantity);
+
+  const products = await db.prepare("SELECT id, name, has_variants FROM products ORDER BY name ASC").all() as { id: number; name: string; has_variants: number }[];
+  const insertItem = db.prepare("INSERT INTO physical_audit_items (audit_id, product_id, variant_id, expected_qty) VALUES (?, ?, ?, ?)");
+  const getVariants = db.prepare("SELECT id FROM product_variants WHERE product_id = ?");
+
+  for (const product of products) {
+    if (product.has_variants) {
+      const variants = await getVariants.all(product.id) as { id: number }[];
+      if (variants.length > 0) {
+        for (const v of variants) {
+          await insertItem.run(auditId, product.id, v.id, 0);
+        }
+        continue;
+      }
+    }
+    const qty = await db.prepare("SELECT quantity FROM products WHERE id = ?").get(product.id) as { quantity: number } | undefined;
+    await insertItem.run(auditId, product.id, null, qty?.quantity || 0);
+  }
+
   revalidatePath("/audit");
   redirect(`/audit/${auditId}`);
 }
 
 export async function updateAuditItem(formData: FormData) {
+  await requirePermission("audit.manage");
   const itemId = parseInt(formData.get("item_id") as string);
-  const actualQty = parseFloat(formData.get("actual_qty") as string);
-  const note = formData.get("note") as string || null;
-  if (!itemId || isNaN(actualQty)) throw new Error("Invalid data");
-  const item = await db.prepare("SELECT aai.*, p.quantity FROM physical_audit_items aai JOIN products p ON p.id = aai.product_id WHERE aai.id = ?").get(itemId) as any;
+  const actualQty = parseInt(formData.get("actual_qty") as string);
+  if (isNaN(itemId) || isNaN(actualQty) || actualQty < 0) throw new Error("Invalid values");
+
+  const item = await db.prepare("SELECT expected_qty FROM physical_audit_items WHERE id = ?").get(itemId) as { expected_qty: number } | undefined;
+  if (!item) throw new Error("Item not found");
+
   const difference = actualQty - item.expected_qty;
-  await db.prepare("UPDATE physical_audit_items SET actual_qty = ?, difference = ?, note = ? WHERE id = ?").run(actualQty, difference, note, itemId);
-  revalidatePath(`/audit/${item.audit_id}`);
+  const note = formData.get("note") as string || null;
+  await db.prepare("UPDATE physical_audit_items SET actual_qty = ?, difference = ?, note = ? WHERE id = ?")
+    .run(actualQty, difference, note, itemId);
+  revalidatePath("/audit");
 }
 
 export async function completeAudit(formData: FormData) {
+  await requirePermission("audit.manage");
   const auditId = parseInt(formData.get("audit_id") as string);
-  if (!auditId) throw new Error("Missing audit ID");
+  if (isNaN(auditId)) throw new Error("Invalid audit ID");
+
+  const uncounted = await db.prepare("SELECT COUNT(*) as c FROM physical_audit_items WHERE audit_id = ? AND actual_qty IS NULL").get(auditId) as { c: number };
+  if (uncounted.c > 0) throw new Error("All items must be counted before completing");
+
   await db.prepare("UPDATE physical_audits SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(auditId);
   revalidatePath("/audit");
   redirect("/audit");
 }
 
 export async function applyAuditCorrections(formData: FormData) {
+  await requirePermission("audit.manage");
   const auditId = parseInt(formData.get("audit_id") as string);
-  if (!auditId) throw new Error("Missing audit ID");
+  if (isNaN(auditId)) throw new Error("Invalid audit ID");
+
   const items = await db.prepare(`
-    SELECT aai.product_id, aai.actual_qty, p.quantity as current_qty
-    FROM physical_audit_items aai
-    JOIN products p ON p.id = aai.product_id
-    WHERE aai.audit_id = ? AND aai.actual_qty IS NOT NULL AND aai.difference != 0
+    SELECT ai.id, ai.product_id, ai.variant_id, ai.expected_qty, ai.actual_qty, ai.difference,
+      p.name as product_name
+    FROM physical_audit_items ai
+    JOIN products p ON p.id = ai.product_id
+    WHERE ai.audit_id = ? AND ai.actual_qty IS NOT NULL AND ai.difference != 0
   `).all(auditId) as any[];
-  const update = db.prepare("UPDATE products SET quantity = ? WHERE id = ?");
+
+  const updateProduct = db.prepare("UPDATE products SET quantity = ?, updated_at = datetime('now') WHERE id = ?");
+  const updateVariant = db.prepare("UPDATE product_variants SET quantity = ?, updated_at = datetime('now') WHERE id = ?");
+  const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, ?, ?, ?)");
+
   for (const item of items) {
-    await update.run(item.actual_qty, item.product_id);
+    const diff = item.actual_qty - item.expected_qty;
+    const type = diff > 0 ? "IN" : "OUT";
+    await updateProduct.run(item.actual_qty, item.product_id);
+    await insertMovement.run(item.product_id, type, Math.abs(diff), `Stock count correction (audit #${auditId})`);
+    if (item.variant_id) {
+      const v = await db.prepare("SELECT quantity FROM product_variants WHERE id = ?").get(item.variant_id) as { quantity: number } | undefined;
+      if (v) {
+        const newVariantQty = Math.max(0, v.quantity + diff);
+        await updateVariant.run(newVariantQty, item.variant_id);
+      }
+    }
   }
+
   revalidatePath("/audit");
   redirect(`/audit/${auditId}`);
+}
+
+export async function cancelAudit(formData: FormData) {
+  await requirePermission("audit.manage");
+  const auditId = parseInt(formData.get("audit_id") as string);
+  if (isNaN(auditId)) throw new Error("Invalid audit ID");
+  await db.prepare("UPDATE physical_audits SET status = 'cancelled' WHERE id = ?").run(auditId);
+  revalidatePath("/audit");
+  redirect("/audit");
 }
 
 // === CUSTOMER ORDERS ===
@@ -549,4 +646,246 @@ export async function enrollMember(formData: FormData) {
   if (!customer_id) return { error: "Customer required" };
   await db.prepare("INSERT OR IGNORE INTO members (customer_id, tier_id) VALUES (?, ?)").run(customer_id, tier_id);
   revalidatePath("/membership");
+}
+
+// === LOCATIONS ===
+export async function createLocation(formData: FormData) {
+  const name = formData.get("name") as string;
+  const address = formData.get("address") as string || null;
+  if (!name) throw new Error("Name required");
+  if (formData.get("is_default")) {
+    await db.prepare("UPDATE locations SET is_default = 0").run();
+  }
+  await db.prepare("INSERT INTO locations (name, address, is_default) VALUES (?, ?, ?)")
+    .run(name, address, formData.get("is_default") ? 1 : 0);
+  revalidatePath("/stock");
+  redirect("/stock");
+}
+
+export async function updateLocation(id: number, formData: FormData) {
+  const name = formData.get("name") as string;
+  const address = formData.get("address") as string || null;
+  if (!name) throw new Error("Name required");
+  if (formData.get("is_default")) {
+    await db.prepare("UPDATE locations SET is_default = 0").run();
+  }
+  await db.prepare("UPDATE locations SET name=?, address=?, is_default=?, updated_at=datetime('now') WHERE id=?")
+    .run(name, address, formData.get("is_default") ? 1 : 0, id);
+  revalidatePath("/stock");
+}
+
+export async function deleteLocation(id: number) {
+  await db.prepare("DELETE FROM locations WHERE id = ?").run(id);
+  revalidatePath("/stock");
+}
+
+// === PRODUCT VARIANTS ===
+export async function createVariant(formData: FormData) {
+  const product_id = parseInt(formData.get("product_id") as string);
+  const name = formData.get("name") as string;
+  const sku = formData.get("sku") as string || null;
+  const barcode = formData.get("barcode") as string || null;
+  const price = formData.get("price") ? parseFloat(formData.get("price") as string) : null;
+  if (!product_id || !name) throw new Error("Missing fields");
+  await db.prepare("INSERT INTO product_variants (product_id, name, sku, barcode, price) VALUES (?, ?, ?, ?, ?)")
+    .run(product_id, name, sku, barcode, price);
+  await db.prepare("UPDATE products SET has_variants = 1, updated_at = datetime('now') WHERE id = ?").run(product_id);
+  revalidatePath("/products");
+  revalidatePath("/stock");
+}
+
+export async function updateVariant(id: number, formData: FormData) {
+  const name = formData.get("name") as string;
+  const sku = formData.get("sku") as string || null;
+  const barcode = formData.get("barcode") as string || null;
+  const price = formData.get("price") ? parseFloat(formData.get("price") as string) : null;
+  if (!name) throw new Error("Name required");
+  await db.prepare("UPDATE product_variants SET name=?, sku=?, barcode=?, price=?, updated_at=datetime('now') WHERE id=?")
+    .run(name, sku, barcode, price, id);
+  revalidatePath("/products");
+  revalidatePath("/stock");
+}
+
+export async function deleteVariant(id: number) {
+  const v = await db.prepare("SELECT product_id FROM product_variants WHERE id = ?").get(id) as { product_id: number } | undefined;
+  await db.prepare("DELETE FROM product_variants WHERE id = ?").run(id);
+  if (v) {
+    const remaining = await db.prepare("SELECT COUNT(*) as c FROM product_variants WHERE product_id = ?").get(v.product_id) as { c: number };
+    if (remaining.c === 0) {
+      await db.prepare("UPDATE products SET has_variants = 0, updated_at = datetime('now') WHERE id = ?").run(v.product_id);
+    }
+  }
+  revalidatePath("/products");
+  revalidatePath("/stock");
+}
+
+// === BATCHES ===
+export async function createBatch(formData: FormData) {
+  const product_id = parseInt(formData.get("product_id") as string);
+  const variant_id = formData.get("variant_id") ? parseInt(formData.get("variant_id") as string) : null;
+  const batch_no = formData.get("batch_no") as string;
+  const location_id = formData.get("location_id") ? parseInt(formData.get("location_id") as string) : null;
+  const quantity = parseInt(formData.get("quantity") as string) || 0;
+  const expiry_date = formData.get("expiry_date") as string || null;
+  const cost_price = formData.get("cost_price") ? parseFloat(formData.get("cost_price") as string) : null;
+  if (!product_id || !batch_no) throw new Error("Missing fields");
+  await db.prepare("INSERT INTO batches (product_id, variant_id, batch_no, location_id, quantity, expiry_date, cost_price) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .run(product_id, variant_id, batch_no, location_id, quantity, expiry_date, cost_price);
+  await db.prepare("UPDATE products SET track_batches = 1, updated_at = datetime('now') WHERE id = ?").run(product_id);
+  revalidatePath("/stock");
+  redirect("/stock");
+}
+
+export async function deleteBatch(id: number) {
+  await db.prepare("DELETE FROM batches WHERE id = ?").run(id);
+  revalidatePath("/stock");
+}
+
+// === NOTIFICATIONS ===
+export async function generateStockNotifications() {
+  const today = new Date().toISOString().slice(0, 10);
+  const thirtyDaysFromNow = new Date(Date.now() + 30 * 86400000).toISOString().slice(0, 10);
+
+  const hasUnread = db.prepare(
+    "SELECT id FROM notifications WHERE type = ? AND reference_type = ? AND reference_id = ? AND is_read = 0"
+  );
+  const insert = db.prepare(
+    "INSERT INTO notifications (type, title, message, reference_type, reference_id) VALUES (?, ?, ?, ?, ?)"
+  );
+  const deleteResolved = db.prepare(
+    "DELETE FROM notifications WHERE type = ? AND reference_type = ? AND reference_id = ? AND is_read = 0"
+  );
+
+  // Remove low-stock notifications for products that are now OK
+  const okProducts = await db.prepare(
+    "SELECT id FROM products WHERE quantity > min_stock"
+  ).all() as { id: number }[];
+  for (const p of okProducts) {
+    await deleteResolved.run("low_stock", "product", p.id);
+  }
+
+  // Create low-stock notifications
+  const lowStockProducts = await db.prepare(
+    "SELECT id, name, quantity, min_stock FROM products WHERE quantity <= min_stock"
+  ).all() as { id: number; name: string; quantity: number; min_stock: number }[];
+
+  for (const p of lowStockProducts) {
+    const existing = await hasUnread.get("low_stock", "product", p.id) as { id: number } | undefined;
+    if (!existing) {
+      await insert.run(
+        "low_stock", `Low Stock: ${p.name}`,
+        `Only ${p.quantity} left (min: ${p.min_stock})`,
+        "product", p.id
+      );
+    }
+  }
+
+  // Remove expiry notifications for batches that are now resolved
+  const resolvedBatches = await db.prepare(
+    "SELECT id FROM batches WHERE expiry_date IS NULL OR quantity = 0"
+  ).all() as { id: number }[];
+  for (const b of resolvedBatches) {
+    await deleteResolved.run("expiring_batch", "batch", b.id);
+    await deleteResolved.run("expired_batch", "batch", b.id);
+  }
+
+  // Near-expiry batch notifications
+  const expiringBatches = await db.prepare(
+    `SELECT b.id, b.batch_no, b.expiry_date, b.quantity, p.name as product_name
+     FROM batches b JOIN products p ON p.id = b.product_id
+     WHERE b.expiry_date IS NOT NULL AND b.expiry_date <= ? AND b.expiry_date >= ? AND b.quantity > 0`
+  ).all(thirtyDaysFromNow, today) as { id: number; batch_no: string; expiry_date: string; quantity: number; product_name: string }[];
+
+  for (const b of expiringBatches) {
+    const existing = await hasUnread.get("expiring_batch", "batch", b.id) as { id: number } | undefined;
+    if (!existing) {
+      await insert.run(
+        "expiring_batch", `Expiring Soon: ${b.product_name}`,
+        `Batch ${b.batch_no} expires ${b.expiry_date} (${b.quantity} units)`,
+        "batch", b.id
+      );
+    }
+  }
+
+  // Expired batch notifications
+  const expiredBatches = await db.prepare(
+    `SELECT b.id, b.batch_no, b.expiry_date, b.quantity, p.name as product_name
+     FROM batches b JOIN products p ON p.id = b.product_id
+     WHERE b.expiry_date IS NOT NULL AND b.expiry_date < ? AND b.quantity > 0`
+  ).all(today) as { id: number; batch_no: string; expiry_date: string; quantity: number; product_name: string }[];
+
+  for (const b of expiredBatches) {
+    const existing = await hasUnread.get("expired_batch", "batch", b.id) as { id: number } | undefined;
+    if (!existing) {
+      await insert.run(
+        "expired_batch", `Expired: ${b.product_name}`,
+        `Batch ${b.batch_no} expired ${b.expiry_date} (${b.quantity} units remaining)`,
+        "batch", b.id
+      );
+    }
+  }
+
+  revalidatePath("/notifications");
+}
+
+export async function getNotifications() {
+  return await db.prepare(
+    "SELECT * FROM notifications ORDER BY created_at DESC LIMIT 200"
+  ).all() as Array<{
+    id: number; type: string; title: string; message: string;
+    reference_type: string | null; reference_id: number | null;
+    is_read: number; created_at: string;
+  }>;
+}
+
+export async function getUnreadNotificationCount() {
+  const row = await db.prepare(
+    "SELECT COUNT(*) as count FROM notifications WHERE is_read = 0"
+  ).get() as { count: number };
+  return row.count;
+}
+
+export async function markNotificationRead(id: number) {
+  await db.prepare("UPDATE notifications SET is_read = 1 WHERE id = ?").run(id);
+  revalidatePath("/notifications");
+}
+
+export async function markAllNotificationsRead() {
+  await db.prepare("UPDATE notifications SET is_read = 1 WHERE is_read = 0").run();
+  revalidatePath("/notifications");
+}
+
+export async function clearAllNotifications() {
+  await db.prepare("DELETE FROM notifications").run();
+  revalidatePath("/notifications");
+}
+
+// === ADMIN: CLEAR ALL DATA ===
+export async function clearAllData() {
+  const { getCurrentUser } = await import("@/lib/auth");
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") throw new Error("Unauthorized");
+
+  const tables = [
+    "physical_audit_items", "physical_audits",
+    "sale_items", "sales", "receipts",
+    "stock_movements", "batches", "product_variants", "locations",
+    "customer_order_items", "customer_orders",
+    "deliveries", "delivery_partners",
+    "debt_payments", "debts",
+    "cash_flow",
+    "promotions",
+    "membership_tiers", "members",
+    "notifications",
+    "customer_group_prices", "customer_groups",
+    "products", "suppliers", "customers",
+  ];
+
+  for (const table of tables) {
+    try {
+      await db.prepare(`DELETE FROM ${table}`).run();
+    } catch { /* table may not exist on older schemas */ }
+  }
+
+  revalidatePath("/");
 }

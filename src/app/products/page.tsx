@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { Plus, Edit, Package, Image as ImageIcon } from "lucide-react";
 import DeleteProductButton from "./DeleteButton";
 import ProductImage from "./ProductImage";
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 
 interface ProductRow {
@@ -19,14 +20,20 @@ interface ProductRow {
   min_stock: number;
   supplier_name: string | null;
   image_url: string | null;
+  has_variants: number;
+  track_batches: number;
+  variant_count: number;
 }
 
 export default async function ProductsPage() {
+  await requirePermission("products.manage");
   const products = await db.prepare(`
-    SELECT p.id, p.name, p.sku, p.barcode, p.price, p.wholesale_price, p.unit_price, p.price_per_case, p.quantity, p.category, p.min_stock, p.image_url, s.name as supplier_name
+    SELECT p.id, p.name, p.sku, p.barcode, p.price, p.wholesale_price, p.unit_price, p.price_per_case, p.quantity, p.category, p.min_stock, p.image_url, p.has_variants, p.track_batches,
+      (SELECT COUNT(*) FROM product_variants WHERE product_id = p.id) as variant_count,
+      s.name as supplier_name
     FROM products p
     LEFT JOIN suppliers s ON s.id = p.supplier_id
-    ORDER BY p.created_at DESC
+    ORDER BY p.name ASC
   `).all() as ProductRow[];
 
   return (
@@ -96,7 +103,13 @@ export default async function ProductsPage() {
                           </div>
                         )}
                       </td>
-                      <td className="p-4 font-semibold text-default truncate max-w-[200px]">{p.name}</td>
+                      <td className="p-4 font-semibold text-default max-w-[200px]">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="truncate">{p.name}</span>
+                          {p.has_variants ? <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-violet-500/15 text-violet-400 font-bold shrink-0">{p.variant_count}v</span> : null}
+                          {p.track_batches ? <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-500/15 text-cyan-400 font-bold shrink-0">B</span> : null}
+                        </div>
+                      </td>
                       <td className="p-4">
                         <span className="font-mono text-xs text-default bg-surface px-2.5 py-1 rounded-lg border border-surface">
                           {p.sku}

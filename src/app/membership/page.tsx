@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { Gem, Settings } from "lucide-react";
 
 export default async function MembershipPage() {
+  await requirePermission("membership.manage");
   const tiers = await db.prepare("SELECT * FROM membership_tiers ORDER BY min_spend ASC").all() as any[];
   const members = await db.prepare(`
     SELECT m.*, mt.name as tier_name, c.name as customer_name, c.phone, c.email

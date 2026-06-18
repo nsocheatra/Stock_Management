@@ -2,10 +2,12 @@
 
 import { Trash2 } from "lucide-react";
 import { clearAllAudits } from "@/lib/actions";
+import { useTranslation } from "@/i18n/useTranslation";
 
 export default function ClearAuditsButton() {
+  const { t } = useTranslation();
   const handleClick = async () => {
-    if (!confirm("Clear all audit data? This cannot be undone.")) return;
+    if (!confirm("Clear all stock count data? This cannot be undone.")) return;
     await clearAllAudits();
   };
 
@@ -15,7 +17,7 @@ export default function ClearAuditsButton() {
       className="flex items-center gap-2 bg-rose-600/20 text-rose-400 px-4.5 py-2.5 rounded-xl hover:bg-rose-600/30 active:scale-95 transition-all duration-200 border border-rose-500/20 text-sm font-semibold cursor-pointer"
     >
       <Trash2 className="size-4" />
-      Clear All
+      {t("audit.clearAll")}
     </button>
   );
 }

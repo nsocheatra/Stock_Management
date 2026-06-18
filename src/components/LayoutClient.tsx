@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
 import { I18nProvider } from "@/i18n/I18nProvider";
 import SidebarNav from "@/components/SidebarNav";
@@ -10,8 +10,8 @@ import LogoutButton from "@/components/LogoutButton";
 import { T } from "@/components/T";
 import { Warehouse, Menu, X } from "lucide-react";
 
-type User = { name: string; role: string } | null;
-type NavItem = { href: string; label: string; icon: string };
+type User = { name: string; role: string; permissions?: string } | null;
+type NavItem = { href: string; label: string; icon: string; permission?: string };
 
 export default function LayoutClient({
   children,
@@ -25,9 +25,20 @@ export default function LayoutClient({
   initialLocale?: "en" | "kh";
 }) {
   const pathname = usePathname();
-  if (pathname === "/login") return <I18nProvider initialLocale={initialLocale}>{children}</I18nProvider>;
+  if (pathname === "/login" || pathname === "/pos") return <I18nProvider initialLocale={initialLocale}>{children}</I18nProvider>;
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const visibleNavItems = useMemo(() => {
+    if (!user || user.role === "admin") return navItems;
+    let userPerms: string[] = [];
+    try { userPerms = JSON.parse(user.permissions || "[]"); } catch {}
+    return navItems.filter((item) => {
+      if (!item.permission) return true;
+      if (user.role === "admin") return true;
+      return userPerms.includes(item.permission);
+    });
+  }, [user, navItems]);
 
   return (
     <I18nProvider initialLocale={initialLocale}>
@@ -71,7 +82,7 @@ export default function LayoutClient({
             </div>
           </div>
 
-          <SidebarNav items={navItems} onNavigate={() => setSidebarOpen(false)} />
+          <SidebarNav items={visibleNavItems} onNavigate={() => setSidebarOpen(false)} />
 
           <LocaleSwitcher />
 
@@ -79,7 +90,9 @@ export default function LayoutClient({
             {user ? (
               <div className="flex items-center gap-3">
                 <div className={`size-8 rounded-lg flex items-center justify-center text-xs font-bold text-white shadow-md ${
-                  user.role === "admin" ? "bg-gradient-to-tr from-violet-500 to-indigo-500" : "bg-gradient-to-tr from-emerald-500 to-teal-500"
+                  user.role === "admin" ? "bg-gradient-to-tr from-violet-500 to-indigo-500" :
+                  user.role === "stock_manager" ? "bg-gradient-to-tr from-amber-500 to-orange-500" :
+                  "bg-gradient-to-tr from-emerald-500 to-teal-500"
                 }`}>
                   {user.name.charAt(0).toUpperCase()}
                 </div>

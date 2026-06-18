@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -16,6 +17,7 @@ interface CustomerRow {
 }
 
 export default async function CustomersPage() {
+  await requirePermission("customers.manage");
   const customers = await db.prepare("SELECT * FROM customers ORDER BY name ASC").all() as CustomerRow[];
 
   return (

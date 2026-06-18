@@ -1,3 +1,4 @@
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { db } from "@/lib/db";
@@ -14,6 +15,7 @@ interface SupplierRow {
 }
 
 export default async function SuppliersPage() {
+  await requirePermission("suppliers.manage");
   const suppliers = await db.prepare(`
     SELECT s.id, s.name, s.email, s.phone, s.address, COUNT(p.id) as product_count
     FROM suppliers s

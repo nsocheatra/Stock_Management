@@ -1,8 +1,10 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
+import { getUnreadNotificationCount } from "@/lib/actions";
 import {
   LayoutDashboard,
   Package,
@@ -19,6 +21,9 @@ import {
   HandCoins,
   Wallet,
   Percent,
+  Layers,
+  MapPin,
+  Bell,
 
 } from "lucide-react";
 
@@ -39,6 +44,9 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
   cashflow: Wallet,
   promotions: Percent,
   membership: Gem,
+  batches: Layers,
+  locations: MapPin,
+  notifications: Bell,
 };
 
 interface NavItem {
@@ -50,12 +58,18 @@ interface NavItem {
 export default function SidebarNav({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => void }) {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    getUnreadNotificationCount().then(setUnreadCount).catch(() => {});
+  }, [pathname]);
 
   return (
     <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
       {items.map((item) => {
         const Icon = iconMap[item.icon];
         const isActive = pathname === item.href || (item.href !== "/" && pathname.startsWith(item.href));
+        const showBadge = item.icon === "notifications" && unreadCount > 0;
 
         return (
           <Link
@@ -75,7 +89,12 @@ export default function SidebarNav({ items, onNavigate }: { items: NavItem[]; on
                 }`}
               />
             )}
-            <span className="text-sm font-medium">{t("nav." + item.icon)}</span>
+            <span className="text-sm font-medium flex-1">{t("nav." + item.icon)}</span>
+            {showBadge && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30 leading-none">
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </span>
+            )}
           </Link>
         );
       })}

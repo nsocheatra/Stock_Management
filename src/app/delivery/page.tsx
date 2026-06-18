@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus, Truck } from "lucide-react";
 
 export default async function DeliveryPage() {
+  await requirePermission("delivery.manage");
   const partners = await db.prepare("SELECT * FROM delivery_partners ORDER BY name ASC").all() as any[];
   const deliveries = await db.prepare(`
     SELECT d.*, dp.name as partner_name, co.total as order_total,

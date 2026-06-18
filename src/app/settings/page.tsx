@@ -1,13 +1,12 @@
 import { getSettings } from "@/lib/actions";
-import { getCurrentUser } from "@/lib/auth";
-import { redirect } from "next/navigation";
+import { requirePermission, getCurrentUser } from "@/lib/auth";
 import { T } from "@/components/T";
 import SettingsTabs from "./SettingsTabs";
 
 export default async function SettingsPage() {
-  const user = await getCurrentUser();
-  if (!user || user.role !== "admin") redirect("/");
+  await requirePermission("settings.manage");
   const settings = await getSettings();
+  const user = await getCurrentUser();
 
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-in fade-in duration-500">
@@ -17,7 +16,7 @@ export default async function SettingsPage() {
         </h1>
         <p className="text-sm text-faint mt-1"><T k="settings.subtitle" /></p>
       </div>
-      <SettingsTabs settings={settings} />
+      <SettingsTabs settings={settings} isAdmin={user?.role === "admin"} />
     </div>
   );
 }

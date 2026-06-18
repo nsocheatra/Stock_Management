@@ -1,9 +1,18 @@
 "use server";
 
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { db } from "./db";
 
+import { checkPermission, type Permission } from "./permissions";
+
 const SESSION_DURATION = 24 * 60 * 60 * 1000;
+
+export async function requirePermission(permission: Permission) {
+  const user = await getCurrentUser();
+  if (!user) redirect("/login");
+  if (!checkPermission(user, permission)) redirect("/");
+}
 
 function generateToken() {
   const bytes = new Uint8Array(32);
@@ -12,8 +21,8 @@ function generateToken() {
 }
 
 export async function loginWithPin(pin: string) {
-  const user = await db.prepare("SELECT * FROM users WHERE pin = ? AND active = 1 AND role = 'cashier'").get(pin) as {
-    id: number; name: string; email: string; role: string; pin: string | null;
+  const user = await db.prepare("SELECT * FROM users WHERE pin = ? AND active = 1 AND role IN ('cashier', 'stock_manager')").get(pin) as {
+    id: number; name: string; email: string; role: string; pin: string | null; permissions: string;
   } | undefined;
   if (!user) return { error: "Invalid PIN" };
 
@@ -30,7 +39,7 @@ export async function loginWithPin(pin: string) {
     path: "/",
   });
 
-  return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+  return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions } };
 }
 
 const FIREBASE_API_KEY = "AIzaSyCzQBix5PPRalq1EN9auK3eNr7H-NPOR3U";
@@ -48,7 +57,7 @@ export async function loginWithGoogle(idToken: string) {
     if (!email) return { error: "Google account has no email" };
 
     const user = await db.prepare("SELECT * FROM users WHERE email = ? AND active = 1").get(email) as {
-      id: number; name: string; email: string; role: string; pin: string | null;
+      id: number; name: string; email: string; role: string; pin: string | null; permissions: string;
     } | undefined;
     if (!user || user.email !== "nongsocheatra@gmail.com") return { error: "Google sign-in not allowed for this account" };
 
@@ -65,7 +74,7 @@ export async function loginWithGoogle(idToken: string) {
       path: "/",
     });
 
-    return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role } };
+    return { success: true, user: { id: user.id, name: user.name, email: user.email, role: user.role, permissions: user.permissions } };
   } catch {
     return { error: "Google sign-in failed" };
   }
@@ -87,13 +96,13 @@ export async function getCurrentUser() {
   if (!token) return null;
 
   const session = await db.prepare(`
-    SELECT s.user_id, s.expires_at, u.id, u.name, u.email, u.role
+    SELECT s.user_id, s.expires_at, u.id, u.name, u.email, u.role, u.permissions
     FROM sessions s JOIN users u ON u.id = s.user_id
     WHERE s.token = ? AND s.expires_at > datetime('now') AND u.active = 1
-  `).get(token) as { user_id: number; expires_at: string; id: number; name: string; email: string; role: string } | undefined;
+  `).get(token) as { user_id: number; expires_at: string; id: number; name: string; email: string; role: string; permissions: string } | undefined;
 
   if (!session) return null;
-  return { id: session.id, name: session.name, email: session.email, role: session.role };
+  return { id: session.id, name: session.name, email: session.email, role: session.role, permissions: session.permissions };
 }
 
 export async function createUser(formData: FormData) {
@@ -104,11 +113,13 @@ export async function createUser(formData: FormData) {
   const email = formData.get("email") as string;
   const role = formData.get("role") as string;
   const pin = (formData.get("pin") as string) || null;
+  const permissions = (formData.get("permissions") as string) || "[]";
 
   if (!name || !email) return { error: "Name and email are required" };
 
   try {
-    await db.prepare("INSERT INTO users (name, email, password_hash, role, pin) VALUES (?, ?, '', ?, ?)").run(name, email, role || "cashier", pin);
+    await db.prepare("INSERT INTO users (name, email, password_hash, role, pin, permissions) VALUES (?, ?, '', ?, ?, ?)")
+      .run(name, email, role || "cashier", pin, permissions);
   } catch (e: unknown) {
     const msg = (e as Error).message;
     if (msg.includes("UNIQUE")) return { error: "Email already exists" };
@@ -126,11 +137,13 @@ export async function updateUser(id: number, formData: FormData) {
   const role = formData.get("role") as string;
   const pin = (formData.get("pin") as string) || null;
   const active = formData.get("active") === "1" ? 1 : 0;
+  const permissions = (formData.get("permissions") as string) || "[]";
 
   if (!name || !email) return { error: "Name and email are required" };
 
   try {
-    await db.prepare("UPDATE users SET name=?, email=?, role=?, pin=?, active=?, updated_at=datetime('now') WHERE id=?").run(name, email, role, pin, active, id);
+    await db.prepare("UPDATE users SET name=?, email=?, role=?, pin=?, active=?, permissions=?, updated_at=datetime('now') WHERE id=?")
+      .run(name, email, role, pin, active, permissions, id);
   } catch (e: unknown) {
     return { error: (e as Error).message };
   }
@@ -150,7 +163,7 @@ export async function deleteUser(id: number) {
 export async function getUsers() {
   const currentUser = await getCurrentUser();
   if (!currentUser || currentUser.role !== "admin") return [];
-  return await db.prepare("SELECT id, name, email, role, pin, active, created_at FROM users ORDER BY created_at DESC").all();
+  return await db.prepare("SELECT id, name, email, role, pin, active, permissions, created_at FROM users ORDER BY created_at DESC").all();
 }
 
 export async function requireAuth() {

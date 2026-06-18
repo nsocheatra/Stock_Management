@@ -1,6 +1,5 @@
 import { db } from "@/lib/db";
 import POSClient from "./POSClient";
-import { T } from "@/components/T";
 
 interface ProductRow {
   id: number;
@@ -24,23 +23,45 @@ interface CustomerRow {
   customer_type: string;
 }
 
-export default async function POSPage() {
-  const products: ProductRow[] = JSON.parse(JSON.stringify(await db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category FROM products ORDER BY name ASC").all()));
-  const customers: CustomerRow[] = JSON.parse(JSON.stringify(await db.prepare("SELECT id, name, customer_type FROM customers ORDER BY name ASC").all()));
+interface PromotionRow {
+  id: number;
+  name: string;
+  type: string;
+  value: number;
+  min_purchase: number;
+  buy_qty: number;
+  get_qty: number;
+  product_id: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  active: number;
+}
 
-  return (
-    <div className="h-full flex flex-col animate-in fade-in duration-500">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-violet-600 via-indigo-500 to-indigo-400 bg-clip-text text-transparent">
-            <T k="pos.title" />
-          </h1>
-          <p className="text-sm text-faint mt-1"><T k="pos.subtitle" /></p>
-        </div>
-      </div>
-      <div className="flex-1 bg-surface-blur border-surface rounded-2xl shadow-xl overflow-hidden">
-        <POSClient products={products} customers={customers} />
-      </div>
-    </div>
-  );
+interface MemberRow {
+  customer_id: number;
+  tier_id: number;
+  tier_name: string;
+  discount_percent: number;
+}
+
+export default async function POSPage() {
+  const products: ProductRow[] = JSON.parse(JSON.stringify(
+    await db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category FROM products ORDER BY name ASC").all()
+  ));
+  const customers: CustomerRow[] = JSON.parse(JSON.stringify(
+    await db.prepare("SELECT id, name, customer_type FROM customers ORDER BY name ASC").all()
+  ));
+  const now = new Date().toISOString().slice(0, 10);
+  const promotions: PromotionRow[] = JSON.parse(JSON.stringify(
+    await db.prepare("SELECT * FROM promotions WHERE active = 1 AND (start_date IS NULL OR start_date <= ?) AND (end_date IS NULL OR end_date >= ?) ORDER BY name ASC").all(now, now)
+  ));
+  const members: MemberRow[] = JSON.parse(JSON.stringify(
+    await db.prepare(`
+      SELECT m.customer_id, m.tier_id, mt.name as tier_name, mt.discount_percent
+      FROM members m
+      JOIN membership_tiers mt ON mt.id = m.tier_id
+    `).all()
+  ));
+
+  return <POSClient products={products} customers={customers} promotions={promotions} members={members} />;
 }

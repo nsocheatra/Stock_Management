@@ -11,7 +11,7 @@
     "products": "Products",
     "inventory": "Inventory",
     "stock": "Inventory",
-    "audit": "Stock Audit",
+    "audit": "Stock Count",
     "orders": "Orders",
     "delivery": "Delivery",
     "debts": "Debts",
@@ -22,6 +22,9 @@
     "reports": "Reports",
     "settings": "Settings",
     "users": "Users",
+    "batches": "Batches",
+    "locations": "Locations",
+    "notifications": "Notifications",
     "logout": "Logout"
   },
   "common": {
@@ -47,7 +50,9 @@
     "justNow": "just now",
     "minutesAgo": "{n}m ago",
     "hoursAgo": "{n}h ago",
-    "daysAgo": "{n}d ago"
+    "daysAgo": "{n}d ago",
+    "refresh": "Refresh",
+    "markRead": "Mark as read"
   },
   "chart": {
     "stock": "Stock:",
@@ -228,12 +233,12 @@
     }
   },
   "audit": {
-    "title": "Stock Audit",
-    "subtitle": "Reconcile physical stock counts against system records",
-    "new": "New Audit",
+    "title": "Stock Count",
+    "subtitle": "Reconcile physical stock against system records",
+    "new": "New Count",
     "newSubtitle": "All products will be pre-loaded with their current quantities",
-    "name": "Audit Name",
-    "start": "Start Audit",
+    "name": "Count Name",
+    "start": "Start Count",
     "statuses": {
       "in_progress": "In Progress",
       "completed": "Completed",
@@ -242,21 +247,35 @@
     "counted": "Counted",
     "discrepancies": "Discrepancies",
     "items": "Items",
-    "empty": "No physical audits yet",
-    "emptyCta": "Start your first audit",
+    "empty": "No stock counts yet",
+    "emptyCta": "Start your first count",
     "created": "Created",
     "count": "Count",
-    "complete": "Complete Audit",
+    "complete": "Complete Count",
     "applyCorrections": "Apply Corrections",
     "noDiscrepancies": "✓ All items match — no discrepancies found",
+    "clearAll": "Clear All",
     "notePlaceholder": "Note...",
     "table": {
       "product": "Product",
       "sku": "SKU",
       "expected": "Expected",
-      "actual": "Actual Count",
+      "actual": "Count",
       "difference": "Diff",
       "note": "Note"
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "subtitle": "{count} unread",
+    "markAllRead": "Mark All Read",
+    "clearAll": "Clear All",
+    "empty": "All caught up!",
+    "emptyHint": "New alerts will appear here when stock runs low or batches expire.",
+    "types": {
+      "low_stock": "Low Stock",
+      "expiring_batch": "Expiring Soon",
+      "expired_batch": "Expired"
     }
   },
   "suppliers": {
@@ -323,6 +342,54 @@
       "safetyLimit": "{min} safety limit",
       "allSecure": "All inventory safety limits are secure",
       "noShortages": "No products are currently under safety stock thresholds."
+    },
+    "promotions": {
+      "title": "Promotions Overview",
+      "total": "Total Promotions",
+      "active": "Active",
+      "inactive": "Inactive",
+      "byType": "Promotions by Type"
+    },
+    "membership": {
+      "title": "Membership Overview",
+      "totalMembers": "Total Members",
+      "totalPoints": "Total Points",
+      "totalSpent": "Total Spent",
+      "byTier": "Members by Tier"
+    },
+    "deliveries": {
+      "title": "Delivery Overview",
+      "total": "Total Deliveries",
+      "totalFees": "Total Fees",
+      "byStatus": "Deliveries by Status",
+      "table": {
+        "partner": "Partner",
+        "status": "Status",
+        "fee": "Fee",
+        "date": "Date"
+      }
+    },
+    "expenses": {
+      "title": "Expense Report",
+      "total": "Total Expenses",
+      "byCategory": "Expenses by Category",
+      "table": {
+        "category": "Category",
+        "amount": "Amount",
+        "description": "Description",
+        "date": "Date"
+      }
+    },
+    "financial": {
+      "title": "Profit & Loss Summary",
+      "revenue": "Total Revenue",
+      "cogs": "COGS",
+      "cogsHint": "Cost of Goods Sold",
+      "grossProfit": "Gross Profit",
+      "grossMargin": "Gross Margin",
+      "opex": "Operating Expenses",
+      "netProfit": "Net Profit",
+      "netMargin": "Net Margin"
     }
   },
   "login": {
@@ -418,7 +485,14 @@
       "sent": "sent! check your Telegram"
     },
     "saveSuccess": "Settings saved successfully!",
-    "saveSettings": "Save Settings"
+    "saveSettings": "Save Settings",
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "This will permanently delete ALL data: products, stock, sales, orders, customers, suppliers, deliveries, promotions, members, cash flow records, and notifications. Users and settings will be preserved.",
+      "confirmPlaceholder": "type DELETE to confirm",
+      "clear": "Clear All Data",
+      "clearing": "Clearing..."
+    }
   },
   "users": {
     "title": "User Management",

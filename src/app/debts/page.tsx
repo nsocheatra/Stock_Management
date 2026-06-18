@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus } from "lucide-react";
@@ -19,6 +20,7 @@ interface DebtRow {
 }
 
 export default async function DebtsPage() {
+  await requirePermission("debts.manage");
   const debts = await db.prepare(`
     SELECT d.*,
       CASE WHEN d.type = 'customer' THEN c.name WHEN d.type = 'supplier' THEN s.name END as name,

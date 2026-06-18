@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { ClipboardCheck, Plus, ArrowRight, CheckCircle2, XCircle, Loader2 } from "lucide-react";
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import ClearAuditsButton from "./ClearAuditsButton";
 
@@ -16,6 +17,7 @@ interface AuditRow {
 }
 
 export default async function AuditListPage() {
+  await requirePermission("audit.manage");
   const audits = await db.prepare(`
     SELECT
       a.id, a.name, a.status, a.created_at, a.completed_at,
@@ -66,7 +68,7 @@ export default async function AuditListPage() {
           return (
             <Link
               key={a.id}
-              href={a.status === "in_progress" ? `/audit/${a.id}` : "#"}
+              href={`/audit/${a.id}`}
               className="bg-surface-blur border-surface rounded-2xl p-5 shadow-lg hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-300 group"
             >
               <div className="flex items-center justify-between gap-4">

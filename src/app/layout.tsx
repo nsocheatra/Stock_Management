@@ -45,22 +45,23 @@ export const metadata: Metadata = {
 };
 
 const navItems = [
-  { href: "/pos", label: "POS", icon: "pos" },
+  { href: "/pos", label: "POS", icon: "pos", permission: "pos.access" as const },
   { href: "/", label: "Dashboard", icon: "dashboard" },
-  { href: "/customers", label: "Customers", icon: "customers" },
-  { href: "/products", label: "Products", icon: "products" },
-  { href: "/stock", label: "Inventory", icon: "stock" },
-  { href: "/audit", label: "Audit", icon: "audit" },
-  { href: "/orders", label: "Orders", icon: "orders" },
-  { href: "/debts", label: "Debts", icon: "debts" },
-  { href: "/cash-flow", label: "Cash Flow", icon: "cashflow" },
-  { href: "/promotions", label: "Promotions", icon: "promotions" },
-  { href: "/membership", label: "Membership", icon: "membership" },
-  { href: "/suppliers", label: "Suppliers", icon: "suppliers" },
-  { href: "/delivery", label: "Delivery", icon: "delivery" },
-  { href: "/reports", label: "Reports", icon: "reports" },
-  { href: "/settings", label: "Settings", icon: "settings" },
-  { href: "/users", label: "Users", icon: "users" },
+  { href: "/customers", label: "Customers", icon: "customers", permission: "customers.manage" as const },
+  { href: "/products", label: "Products", icon: "products", permission: "products.manage" as const },
+  { href: "/stock", label: "Inventory", icon: "stock", permission: "stock.manage" as const },
+  { href: "/audit", label: "Stock Count", icon: "audit", permission: "audit.manage" as const },
+  { href: "/orders", label: "Orders", icon: "orders", permission: "orders.manage" as const },
+  { href: "/debts", label: "Debts", icon: "debts", permission: "debts.manage" as const },
+  { href: "/cash-flow", label: "Cash Flow", icon: "cashflow", permission: "cashflow.manage" as const },
+  { href: "/promotions", label: "Promotions", icon: "promotions", permission: "promotions.manage" as const },
+  { href: "/membership", label: "Membership", icon: "membership", permission: "membership.manage" as const },
+  { href: "/suppliers", label: "Suppliers", icon: "suppliers", permission: "suppliers.manage" as const },
+  { href: "/delivery", label: "Delivery", icon: "delivery", permission: "delivery.manage" as const },
+  { href: "/notifications", label: "Notifications", icon: "notifications", permission: "notifications.view" as const },
+  { href: "/reports", label: "Reports", icon: "reports", permission: "reports.view" as const },
+  { href: "/settings", label: "Settings", icon: "settings", permission: "settings.manage" as const },
+  { href: "/users", label: "Users", icon: "users", permission: "users.manage" as const },
 ];
 
 export default async function RootLayout({

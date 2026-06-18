@@ -137,6 +137,57 @@ class DbWrapper {
     await alterTable("ALTER TABLE stock_movements ADD COLUMN case_cost REAL;");
     await alterTable("ALTER TABLE stock_movements ADD COLUMN case_quantity INTEGER;");
 
+    await this.exec(`
+      CREATE TABLE IF NOT EXISTS locations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        address TEXT,
+        is_default INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS product_variants (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        name TEXT NOT NULL,
+        sku TEXT,
+        barcode TEXT,
+        price REAL,
+        quantity INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS batches (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL,
+        batch_no TEXT NOT NULL,
+        location_id INTEGER REFERENCES locations(id) ON DELETE SET NULL,
+        quantity INTEGER NOT NULL DEFAULT 0,
+        expiry_date TEXT,
+        cost_price REAL,
+        received_date TEXT DEFAULT (datetime('now')),
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+    `);
+
+    await alterTable("ALTER TABLE products ADD COLUMN has_variants INTEGER DEFAULT 0;");
+    await alterTable("ALTER TABLE products ADD COLUMN track_batches INTEGER DEFAULT 0;");
+    await alterTable("ALTER TABLE stock_movements ADD COLUMN location_id INTEGER REFERENCES locations(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE stock_movements ADD COLUMN batch_id INTEGER REFERENCES batches(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE stock_movements ADD COLUMN variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE physical_audit_items ADD COLUMN variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE physical_audit_items ADD COLUMN batch_id INTEGER REFERENCES batches(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE sales ADD COLUMN payment_method TEXT DEFAULT 'cash';");
+    await alterTable("ALTER TABLE sales ADD COLUMN discount REAL DEFAULT 0;");
+    await alterTable("ALTER TABLE sales ADD COLUMN discount_type TEXT;");
+    await alterTable("ALTER TABLE sale_items ADD COLUMN discount REAL DEFAULT 0;");
+    await alterTable("ALTER TABLE sale_items ADD COLUMN discount_type TEXT;");
+    await alterTable("ALTER TABLE sale_items ADD COLUMN promotion_id INTEGER REFERENCES promotions(id) ON DELETE SET NULL;");
+
     await this.exec(`CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT)`);
     const upsertSetting2 = this.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)");
     await upsertSetting2.run("printer_type", "browser");
@@ -159,7 +210,7 @@ class DbWrapper {
         name TEXT NOT NULL,
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
-        role TEXT NOT NULL CHECK(role IN ('admin', 'cashier')) DEFAULT 'cashier',
+        role TEXT NOT NULL CHECK(role IN ('admin', 'cashier', 'stock_manager')) DEFAULT 'cashier',
         pin TEXT,
         active INTEGER DEFAULT 1,
         created_at TEXT DEFAULT (datetime('now'))
@@ -175,6 +226,19 @@ class DbWrapper {
     `);
 
     await alterTable("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '[]';");
+
+    await this.exec(`
+      CREATE TABLE IF NOT EXISTS notifications (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL CHECK(type IN ('low_stock', 'expiring_batch', 'expired_batch', 'info')),
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        reference_type TEXT,
+        reference_id INTEGER,
+        is_read INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+    `);
 
     await this.exec(`
       CREATE TABLE IF NOT EXISTS customer_groups (
@@ -226,9 +290,11 @@ class DbWrapper {
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         audit_id INTEGER NOT NULL REFERENCES physical_audits(id) ON DELETE CASCADE,
         product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        expected_qty REAL NOT NULL,
-        actual_qty REAL,
-        difference REAL,
+        variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL,
+        batch_id INTEGER REFERENCES batches(id) ON DELETE SET NULL,
+        expected_qty INTEGER NOT NULL,
+        actual_qty INTEGER,
+        difference INTEGER,
         note TEXT
       );
 

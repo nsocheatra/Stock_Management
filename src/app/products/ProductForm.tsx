@@ -270,6 +270,13 @@ export default function ProductForm({
         </select>
       </div>
 
+      <div className="flex items-center gap-6">
+        <label className="flex items-center gap-2 cursor-pointer text-sm text-default">
+          <input name="track_batches" type="checkbox" value="1" defaultChecked={false} className="accent-cyan-500 size-4" />
+          Track Batches & Expiry
+        </label>
+      </div>
+
       <div className="flex items-center gap-3 pt-4">
         <button
           type="submit"

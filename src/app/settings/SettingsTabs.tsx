@@ -1,15 +1,19 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
-import { Printer, Bot, Save } from "lucide-react";
-import { saveSettings, sendTelegramNotification } from "@/lib/actions";
+import { Printer, Bot, AlertTriangle, Save } from "lucide-react";
+import { saveSettings, sendTelegramNotification, clearAllData } from "@/lib/actions";
 
-export default function SettingsTabs({ settings }: { settings: Record<string, string> }) {
+export default function SettingsTabs({ settings, isAdmin }: { settings: Record<string, string>; isAdmin: boolean }) {
   const { t } = useTranslation();
-  const [tab, setTab] = useState<"printer" | "telegram">("printer");
+  const router = useRouter();
+  const [tab, setTab] = useState<"printer" | "telegram" | "danger">("printer");
   const [saved, setSaved] = useState(false);
   const [tgStatus, setTgStatus] = useState("");
+  const [clearing, setClearing] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -29,6 +33,7 @@ export default function SettingsTabs({ settings }: { settings: Record<string, st
   const tabs = [
     { id: "printer" as const, label: t("settings.printer.title"), icon: Printer },
     { id: "telegram" as const, label: t("settings.telegram.title"), icon: Bot },
+    ...(isAdmin ? [{ id: "danger" as const, label: t("settings.dangerZone.title"), icon: AlertTriangle }] : []),
   ];
 
   return (
@@ -202,6 +207,45 @@ export default function SettingsTabs({ settings }: { settings: Record<string, st
             {t("settings.telegram.test")}
           </button>
           {tgStatus && <p className="text-xs text-emerald-400">{tgStatus}</p>}
+        </div>
+      )}
+
+      {/* Danger Zone */}
+      {tab === "danger" && (
+        <div className="bg-surface-blur border border-rose-500/30 rounded-2xl p-6 shadow-xl space-y-4">
+          <h2 className="text-sm font-semibold text-rose-400 flex items-center gap-2">
+            <AlertTriangle className="size-4" />
+            {t("settings.dangerZone.title")}
+          </h2>
+          <p className="text-sm text-rose-300/80">
+            {t("settings.dangerZone.description")}
+          </p>
+          <p className="text-xs text-rose-400/60">
+            Type <strong className="text-rose-300">DELETE</strong> to confirm:
+          </p>
+          <input
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder={t("settings.dangerZone.confirmPlaceholder")}
+            className="input-field border-rose-500/30 focus:border-rose-500 text-rose-300"
+          />
+          <button
+            type="button"
+            disabled={confirmText !== "DELETE" || clearing}
+            onClick={async () => {
+              setClearing(true);
+              try {
+                await clearAllData();
+                router.refresh();
+                setConfirmText("");
+              } catch { }
+              setClearing(false);
+            }}
+            className="w-full py-3 rounded-xl font-semibold text-sm bg-rose-600 text-white hover:bg-rose-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-lg shadow-rose-500/15 border border-rose-500/30 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <AlertTriangle className="size-4" />
+            {clearing ? t("settings.dangerZone.clearing") : t("settings.dangerZone.clear")}
+          </button>
         </div>
       )}
 

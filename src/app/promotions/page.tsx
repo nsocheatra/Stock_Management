@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus, Percent, Gift } from "lucide-react";
 
 export default async function PromotionsPage() {
+  await requirePermission("promotions.manage");
   const now = new Date().toISOString().slice(0, 10);
   const promotions = await db.prepare("SELECT * FROM promotions ORDER BY created_at DESC").all() as any[];
   const activeCount = promotions.filter((p: any) => p.active && (!p.end_date || p.end_date >= now)).length;

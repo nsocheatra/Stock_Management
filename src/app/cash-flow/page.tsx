@@ -1,9 +1,11 @@
 import { db } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 
 export default async function CashFlowPage() {
+  await requirePermission("cashflow.manage");
   const entries = await db.prepare("SELECT * FROM cash_flow ORDER BY created_at DESC LIMIT 200").all() as any[];
   const totalIncome = await db.prepare("SELECT COALESCE(SUM(amount),0) as total FROM cash_flow WHERE type = 'income'").get() as any;
   const totalExpense = await db.prepare("SELECT COALESCE(SUM(amount),0) as total FROM cash_flow WHERE type = 'expense'").get() as any;

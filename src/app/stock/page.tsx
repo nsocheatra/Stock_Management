@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
-import { Plus, Package, AlertTriangle, Warehouse, DollarSign, ArrowDownUp } from "lucide-react";
+import { requirePermission } from "@/lib/auth";
+import { Plus, Package, AlertTriangle, Warehouse, DollarSign } from "lucide-react";
 import { T } from "@/components/T";
+import StockTabs from "@/components/StockTabs";
 
 interface ProductRow {
   id: number;
@@ -14,28 +16,12 @@ interface ProductRow {
   category: string | null;
 }
 
-interface MovementRow {
-  id: number;
-  type: string;
-  quantity: number;
-  note: string | null;
-  created_at: string;
-  product_name: string;
-}
-
 export default async function StockPage() {
+  await requirePermission("stock.manage");
   const products = await db.prepare(`
     SELECT id, name, sku, barcode, price, quantity, min_stock, category
     FROM products ORDER BY name ASC
   `).all() as ProductRow[];
-
-  const movements = await db.prepare(`
-    SELECT m.id, m.type, m.quantity, m.note, m.created_at, p.name as product_name
-    FROM stock_movements m
-    JOIN products p ON p.id = m.product_id
-    ORDER BY m.created_at DESC
-    LIMIT 10
-  `).all() as MovementRow[];
 
   const totalProducts = products.length;
   const totalStock = products.reduce((sum, p) => sum + p.quantity, 0);
@@ -53,15 +39,17 @@ export default async function StockPage() {
         </div>
         <div className="flex gap-3">
           <Link
-            href="/stock/in"
-            className="flex items-center gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4.5 py-2.5 rounded-xl hover:from-emerald-500 hover:to-teal-500 active:scale-95 transition-all duration-200 shadow-lg shadow-emerald-500/10 border border-emerald-500/20"
+            href="/stock/purchase"
+            className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4.5 py-2.5 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-500/10 border border-violet-500/20"
           >
             <Plus className="size-4" />
-            <span className="text-sm font-semibold"><T k="stock.stockIn" /></span>
+            <span className="text-sm font-semibold">Add Purchase</span>
           </Link>
 
         </div>
       </div>
+
+      <StockTabs />
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -189,42 +177,7 @@ export default async function StockPage() {
         </div>
       </div>
 
-      {/* Recent Movements */}
-      <div className="bg-surface-blur border-surface rounded-2xl shadow-xl overflow-hidden">
-        <div className="p-4 border-b border-surface flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-default flex items-center gap-2">
-            <ArrowDownUp className="size-4 text-muted" />
-<T k="stock.recentMovements" />
-          </h2>
-          <Link href="/stock" className="text-xs text-violet-400 hover:underline"><T k="stock.viewAll" /></Link>
-        </div>
-        {movements.length > 0 ? (
-          <div className="divide-y divide-surface">
-            {movements.map((m) => (
-              <div key={m.id} className="flex items-center justify-between p-3 hover-surface transition-colors">
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm text-default truncate">{m.product_name}</p>
-                  <p className="text-xs text-faint mt-0.5">
-                    {new Date(m.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-                    {m.note ? ` — ${m.note}` : ""}
-                  </p>
-                </div>
-                <span className={`shrink-0 px-3 py-1 rounded-full text-xs font-bold border ${
-                  m.type === "IN"
-                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                    : "bg-rose-500/10 text-rose-400 border-rose-500/20"
-                }`}>
-                  {m.type === "IN" ? "+" : "-"}{m.quantity}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-10 text-faint">
-            <p className="text-sm"><T k="stock.noMovements" /></p>
-          </div>
-        )}
-      </div>
+
     </div>
   );
 }
