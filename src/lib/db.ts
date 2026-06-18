@@ -429,6 +429,28 @@ class DbWrapper {
     await alterTable("ALTER TABLE customers ADD COLUMN customer_type TEXT NOT NULL CHECK(customer_type IN ('wholesale', 'retail')) DEFAULT 'retail';");
     await alterTable("ALTER TABLE customers ADD COLUMN credit REAL DEFAULT 0;");
 
+    await this.exec(`
+      CREATE TABLE IF NOT EXISTS fb_keywords (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        keyword TEXT NOT NULL UNIQUE,
+        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS fb_orders (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        keyword TEXT NOT NULL,
+        customer_name TEXT NOT NULL DEFAULT 'Facebook User',
+        product_id INTEGER NOT NULL,
+        product_name TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        total REAL NOT NULL DEFAULT 0,
+        processed INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+    `);
+
     const userCount = (await this.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number }).count;
     if (userCount === 0) {
       await this.prepare(

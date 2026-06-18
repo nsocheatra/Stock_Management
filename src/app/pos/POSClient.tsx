@@ -6,7 +6,8 @@ import { useTranslation } from "@/i18n/useTranslation";
 import {
   Search, ShoppingCart, Scan, Minus, Plus, Trash2,
   Image as ImageIcon, Barcode, Maximize2, Minimize2, User,
-  Printer, Percent, BadgePercent, Package, Layers
+  Printer, Percent, BadgePercent, Package, Layers,
+  ClipboardPlus, ClipboardCheck, BarChart3, Truck, Gem, Radio
 } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
 import ReceiptView from "./ReceiptView";
@@ -55,6 +56,11 @@ export default function POSClient({ products, customers, promotions, members, va
   const searchRef = useRef<HTMLInputElement>(null);
   const qtyInputRef = useRef<HTMLInputElement>(null);
   const scanTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const [showScanner, setShowScanner] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const scannerCanvasRef = useRef<HTMLCanvasElement>(null);
+  const scannerStreamRef = useRef<MediaStream | null>(null);
+  const scanningRef = useRef(false);
 
   const variantsByProduct = useMemo(() => {
     const map: Record<number, VariantInfo[]> = {};
@@ -291,6 +297,96 @@ export default function POSClient({ products, customers, promotions, members, va
     document.addEventListener("fullscreenchange", handler);
     return () => document.removeEventListener("fullscreenchange", handler);
   }, []);
+
+  // ─── Camera Barcode Scanner ─────────────────────────────────
+  const handleDetectedBarcode = useCallback((code: string) => {
+    const found = products.find((p) => p.barcode === code);
+    if (found) {
+      handleProductClick(found);
+      stopScanner();
+      return true;
+    }
+    const foundVar = variants.find((v) => v.barcode === code);
+    if (foundVar) {
+      const prod = products.find((p) => p.id === foundVar.product_id);
+      if (prod) {
+        if (variantsByProduct[prod.id]?.length === 1) {
+          addToCartDirect(prod, foundVar, undefined);
+        } else {
+          handleVariantSelect(foundVar);
+        }
+        stopScanner();
+        return true;
+      }
+    }
+    return false;
+  }, [products, variants, variantsByProduct, handleProductClick, handleVariantSelect, addToCartDirect]);
+
+  const stopScanner = useCallback(() => {
+    scanningRef.current = false;
+    if (scannerStreamRef.current) {
+      scannerStreamRef.current.getTracks().forEach((t) => t.stop());
+      scannerStreamRef.current = null;
+    }
+    setShowScanner(false);
+  }, []);
+
+  const startScanner = useCallback(async () => {
+    if (!("BarcodeDetector" in window)) {
+      alert("Camera barcode scanning requires Chrome or Edge on desktop/Android. Use a USB barcode scanner instead.");
+      return;
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 640 }, height: { ideal: 480 } },
+      });
+      scannerStreamRef.current = stream;
+      setShowScanner(true);
+
+      await new Promise<void>((resolve) => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => {
+            videoRef.current?.play();
+            resolve();
+          };
+        }
+      });
+
+      const detector = new (window as any).BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128", "code_39", "codabar", "itf", "qr_code", "data_matrix", "pdf417", "aztec"] });
+      scanningRef.current = true;
+
+      const scan = async () => {
+        if (!scanningRef.current || !videoRef.current || !scannerCanvasRef.current) return;
+        if (videoRef.current.readyState < 2) { requestAnimationFrame(scan); return; }
+
+        const canvas = scannerCanvasRef.current;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { requestAnimationFrame(scan); return; }
+
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        ctx.drawImage(videoRef.current, 0, 0);
+
+        try {
+          const codes = await detector.detect(canvas);
+          if (codes.length > 0) {
+            const rawValue = codes[0].rawValue;
+            if (rawValue && scanningRef.current) {
+              handleDetectedBarcode(rawValue);
+              return;
+            }
+          }
+        } catch { /* detection frame error */ }
+
+        if (scanningRef.current) requestAnimationFrame(scan);
+      };
+
+      scan();
+    } catch {
+      alert("Could not access camera. Ensure camera permissions are granted.");
+    }
+  }, [handleDetectedBarcode]);
 
   useEffect(() => {
     if (editingQty !== null && qtyInputRef.current) {
@@ -552,6 +648,25 @@ export default function POSClient({ products, customers, promotions, members, va
         </div>
       )}
 
+      {/* Camera Scanner Modal */}
+      {showScanner && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70" onClick={stopScanner}>
+          <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl mx-4 w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <video ref={videoRef} autoPlay playsInline muted className="w-full h-auto max-h-[70vh] object-contain bg-black" />
+            <canvas ref={scannerCanvasRef} className="hidden" />
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 bg-gradient-to-b from-black/60 to-transparent">
+              <span className="text-white text-sm font-medium flex items-center gap-2">
+                <Scan className="size-4 animate-pulse" />
+                Scanning...
+              </span>
+              <button onClick={stopScanner} className="text-white/80 hover:text-white cursor-pointer text-lg leading-none bg-black/30 rounded-full size-8 flex items-center justify-center">&times;</button>
+            </div>
+            <div className="absolute inset-x-[15%] top-1/3 bottom-1/3 border-2 border-white/40 rounded-xl pointer-events-none" />
+            <p className="absolute bottom-4 left-0 right-0 text-center text-xs text-white/50">Point camera at a barcode</p>
+          </div>
+        </div>
+      )}
+
       {/* Top Control Bar */}
       <div className="bg-white rounded-xl h-16 flex items-center px-4 gap-2 shrink-0 shadow-sm">
         {/* Customer Dropdown */}
@@ -618,7 +733,9 @@ export default function POSClient({ products, customers, promotions, members, va
             <Scan className="size-4" />
             <span className="hidden sm:inline">Scan</span>
           </button>
-          <button className="flex items-center justify-center size-9 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all duration-150 cursor-pointer">
+          <button onClick={startScanner}
+            className="flex items-center justify-center size-9 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all duration-150 cursor-pointer"
+            title="Scan with Camera">
             <Barcode className="size-4" />
           </button>
           <button
@@ -904,10 +1021,47 @@ export default function POSClient({ products, customers, promotions, members, va
         </div>
       </div>
 
-      <button onClick={() => router.push("/")}
-        className="fixed bottom-4 left-4 z-50 flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all duration-150 cursor-pointer shadow-sm">
-        Dashboard
-      </button>
+      <div className="fixed bottom-4 left-4 z-50 flex flex-wrap gap-1.5">
+        <button onClick={() => router.push("/")}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          Dashboard
+        </button>
+        <button onClick={() => router.push("/stock/purchase")} title="Purchase"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          <ClipboardPlus className="size-3.5" />
+          Purchase
+        </button>
+        <button onClick={() => router.push("/stock")} title="Stock"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          <ClipboardCheck className="size-3.5" />
+          Stock
+        </button>
+        <button onClick={() => router.push("/reports")} title="Reports"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          <BarChart3 className="size-3.5" />
+          Reports
+        </button>
+        <button onClick={() => router.push("/delivery")} title="Delivery"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          <Truck className="size-3.5" />
+          Delivery
+        </button>
+        <button onClick={() => router.push("/promotions")} title="Promotions"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          <Percent className="size-3.5" />
+          Promo
+        </button>
+        <button onClick={() => router.push("/membership")} title="Membership"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          <Gem className="size-3.5" />
+          Member
+        </button>
+        <button onClick={() => router.push("/livestream")} title="Livestream"
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          <Radio className="size-3.5" />
+          Livestream
+        </button>
+      </div>
     </div>
   );
 }

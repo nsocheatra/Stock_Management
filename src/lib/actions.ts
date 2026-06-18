@@ -4,6 +4,14 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "./db";
 import { requirePermission } from "@/lib/auth";
+import {
+  generateStockNotificationsData,
+  getNotifications as getNotificationsData,
+  getUnreadNotificationCount as getUnreadNotificationCountData,
+  markNotificationRead as markNotificationReadData,
+  markAllNotificationsRead as markAllNotificationsReadData,
+  clearAllNotifications as clearAllNotificationsData,
+} from "./notifications-data";
 
 export async function createProduct(formData: FormData) {
   const track_batches = formData.get("track_batches") === "1" ? 1 : 0;
@@ -767,15 +775,6 @@ export async function deleteBatch(id: number) {
 }
 
 // === NOTIFICATIONS ===
-import {
-  generateStockNotificationsData,
-  getNotifications as getNotificationsData,
-  getUnreadNotificationCount as getUnreadNotificationCountData,
-  markNotificationRead as markNotificationReadData,
-  markAllNotificationsRead as markAllNotificationsReadData,
-  clearAllNotifications as clearAllNotificationsData,
-} from "./notifications-data";
-
 export async function generateStockNotifications() {
   await generateStockNotificationsData();
   revalidatePath("/notifications");
@@ -837,4 +836,80 @@ export async function clearAllData(categories?: string[]) {
   }
 
   revalidatePath("/");
+}
+
+// === LIVESTREAM ===
+export async function createKeyword(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const keyword = (formData.get("keyword") as string)?.trim().toLowerCase();
+  const productId = parseInt(formData.get("productId") as string);
+  const quantity = parseInt(formData.get("quantity") as string) || 1;
+  if (!keyword || !productId) return { error: "Keyword and product are required" };
+
+  const product = await db.prepare("SELECT id, name, selling_price, price FROM products WHERE id = ?").get(productId) as any;
+  if (!product) return { error: "Product not found" };
+
+  try {
+    await db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(keyword, productId, quantity);
+  } catch {
+    return { error: "Keyword already exists" };
+  }
+  revalidatePath("/livestream");
+}
+
+export async function deleteKeyword(id: number) {
+  await requirePermission("livestream.manage");
+  await db.prepare("DELETE FROM fb_keywords WHERE id = ?").run(id);
+  revalidatePath("/livestream");
+}
+
+export async function simulateOrder(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const keyword = (formData.get("keyword") as string)?.trim().toLowerCase();
+  const customerName = (formData.get("customerName") as string)?.trim() || "Facebook User";
+  if (!keyword) return { error: "Keyword is required" };
+
+  const mapping = await db.prepare(`
+    SELECT fk.*, p.name as product_name, p.selling_price, p.price
+    FROM fb_keywords fk JOIN products p ON fk.product_id = p.id
+    WHERE fk.keyword = ?
+  `).get(keyword) as any;
+  if (!mapping) return { error: `No product mapped to keyword "${keyword}"` };
+
+  const price = mapping.selling_price || mapping.price;
+  const total = price * mapping.quantity;
+
+  await db.prepare("UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?").run(mapping.quantity, mapping.product_id, mapping.quantity);
+
+  await db.prepare(`
+    INSERT INTO fb_orders (keyword, customer_name, product_id, product_name, quantity, total)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(keyword, customerName, mapping.product_id, mapping.product_name, mapping.quantity, total);
+
+  revalidatePath("/livestream");
+  return { success: true, product_name: mapping.product_name, quantity: mapping.quantity, total };
+}
+
+export async function processOrder(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const id = parseInt(formData.get("id") as string);
+  await db.prepare("UPDATE fb_orders SET processed = 1 WHERE id = ?").run(id);
+  revalidatePath("/livestream");
+}
+
+export async function clearOrders() {
+  await requirePermission("livestream.manage");
+  await db.prepare("DELETE FROM fb_orders").run();
+  revalidatePath("/livestream");
+}
+
+export async function saveStreamUrl(url: string) {
+  await requirePermission("livestream.manage");
+  const existing = await db.prepare("SELECT key FROM settings WHERE key = 'livestream_url'").get();
+  if (existing) {
+    await db.prepare("UPDATE settings SET value = ? WHERE key = 'livestream_url'").run(url);
+  } else {
+    await db.prepare("INSERT INTO settings (key, value) VALUES ('livestream_url', ?)").run(url);
+  }
+  revalidatePath("/livestream");
 }
