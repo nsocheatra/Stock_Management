@@ -12,9 +12,9 @@ function getAuthToken() {
 
 class Statement {
   private sql: string;
-  private client: ReturnType<typeof createClient>;
+  private client: any;
 
-  constructor(client: ReturnType<typeof createClient>, sql: string) {
+  constructor(client: any, sql: string) {
     this.client = client;
     this.sql = sql;
   }
@@ -41,6 +41,7 @@ class Statement {
 
 class DbWrapper {
   private client: ReturnType<typeof createClient>;
+  private txClient: any = null;
 
   constructor() {
     const url = getDbUrl();
@@ -50,23 +51,26 @@ class DbWrapper {
   }
 
   prepare(sql: string) {
-    return new Statement(this.client, sql);
+    return new Statement(this.txClient || this.client, sql);
   }
 
   async exec(sql: string) {
-    await this.client.executeMultiple(sql);
+    await (this.txClient || this.client).executeMultiple(sql);
   }
 
   transaction<T>(fn: (...args: unknown[]) => T): (...args: unknown[]) => Promise<T> {
     return async (...args: unknown[]) => {
-      await this.client.execute("SAVEPOINT sp");
+      const tx = await this.client.transaction();
+      this.txClient = tx;
       try {
         const result = await fn(...args);
-        await this.client.execute("RELEASE sp");
+        await tx.commit();
         return result;
       } catch (e) {
-        await this.client.execute("ROLLBACK TO sp");
+        await tx.rollback();
         throw e;
+      } finally {
+        this.txClient = null;
       }
     };
   }
@@ -202,11 +206,18 @@ class DbWrapper {
     await upsertSetting2.run("store_name", "My Store");
     await upsertSetting2.run("store_address", "");
     await upsertSetting2.run("store_phone", "");
+    await upsertSetting2.run("printer_ip", "");
+    await upsertSetting2.run("printer_port", "9100");
     await upsertSetting2.run("telegram_bot_token", "");
     await upsertSetting2.run("telegram_chat_ids", "");
     await upsertSetting2.run("telegram_notify_low_stock", "1");
     await upsertSetting2.run("telegram_notify_daily", "1");
     await upsertSetting2.run("telegram_enabled", "0");
+    await upsertSetting2.run("payment_default_method", "cash");
+    await upsertSetting2.run("payment_khqr_account", "");
+    await upsertSetting2.run("payment_methods_enabled", "cash,card,bank_transfer,credit,khqr");
+    await upsertSetting2.run("tax_rate", "0");
+    await upsertSetting2.run("tax_label", "Tax");
     await this.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

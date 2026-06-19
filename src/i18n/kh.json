@@ -459,7 +459,10 @@
       "receiptHeader": "បឋមកថាបង្កាន់ដៃ",
       "receiptFooter": "បាតកថាបង្កាន់ដៃ",
       "copies": "ច្បាប់ថតចម្លង",
-      "autoPrint": "ព្រីនដោយស្វ័យប្រវត្តិបន្ទាប់ពីលក់"
+      "autoPrint": "ព្រីនដោយស្វ័យប្រវត្តិបន្ទាប់ពីលក់",
+      "printerIp": "អាសយដ្ឋាន IP ម៉ាស៊ីនព្រីន",
+      "printerPort": "ច្រកម៉ាស៊ីនព្រីន",
+      "printerPortHelp": "លំនាំដើម: 9100 (ម៉ាស៊ីនព្រីនបណ្តាញ ESC/POS)"
     },
     "telegram": {
       "title": "Telegram Bot",

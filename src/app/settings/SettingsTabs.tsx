@@ -3,13 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
-import { Printer, Bot, AlertTriangle, Save, Package, Warehouse, ShoppingCart, Users, Truck, HandCoins, Wallet, Percent, Gem, ClipboardList, Bell } from "lucide-react";
+import { Printer, Bot, AlertTriangle, Save, Package, Warehouse, ShoppingCart, Users, Truck, HandCoins, Wallet, Percent, Gem, ClipboardList, Bell, CreditCard, QrCode } from "lucide-react";
 import { saveSettings, sendTelegramNotification, clearAllData } from "@/lib/actions";
 
 export default function SettingsTabs({ settings, isAdmin }: { settings: Record<string, string>; isAdmin: boolean }) {
   const { t } = useTranslation();
   const router = useRouter();
-  const [tab, setTab] = useState<"printer" | "telegram" | "danger">("printer");
+  const [tab, setTab] = useState<"printer" | "payment" | "telegram" | "danger">("printer");
   const [saved, setSaved] = useState(false);
   const [tgStatus, setTgStatus] = useState("");
   const [clearing, setClearing] = useState(false);
@@ -53,6 +53,7 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
 
   const tabs = [
     { id: "printer" as const, label: t("settings.printer.title"), icon: Printer },
+    { id: "payment" as const, label: "Payment", icon: CreditCard },
     { id: "telegram" as const, label: t("settings.telegram.title"), icon: Bot },
     ...(isAdmin ? [{ id: "danger" as const, label: t("settings.dangerZone.title"), icon: AlertTriangle }] : []),
   ];
@@ -152,6 +153,67 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
                 <div className="w-9 h-5 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600 bg-zinc-700 relative" />
                 <span className="text-sm text-default">{t("settings.printer.autoPrint")}</span>
               </label>
+            </div>
+          </div>
+
+          {(settings.printer_type === "thermal" || settings.printer_type === "network") && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-zinc-800/50 rounded-xl border border-zinc-700/50">
+              <div>
+                <label className="input-label">{t("settings.printer.printerIp")}</label>
+                <input name="printer_ip" defaultValue={settings.printer_ip} className="input-field" placeholder="192.168.1.100" />
+              </div>
+              <div>
+                <label className="input-label">{t("settings.printer.printerPort")}</label>
+                <input name="printer_port" type="number" defaultValue={settings.printer_port || "9100"} className="input-field" min="1" max="65535" />
+                <p className="text-xs text-faint mt-1">{t("settings.printer.printerPortHelp")}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Payment Tab */}
+      {tab === "payment" && (
+        <div className="bg-surface-blur border-surface rounded-2xl p-6 shadow-xl space-y-4">
+          <h2 className="text-sm font-semibold text-default flex items-center gap-2">
+            <CreditCard className="size-4 text-muted" />
+            Payment Settings
+          </h2>
+
+          <div>
+            <label className="input-label">Default Payment Method</label>
+            <select name="payment_default_method" defaultValue={settings.payment_default_method} className="input-field">
+              <option value="cash">Cash</option>
+              <option value="card">Card</option>
+              <option value="bank_transfer">Bank Transfer</option>
+              <option value="credit">Credit</option>
+              <option value="khqr">KHQR</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="input-label">KHQR Account Name / ID</label>
+            <input name="payment_khqr_account" defaultValue={settings.payment_khqr_account} className="input-field" placeholder="e.g. CAMNAKA Co." />
+          </div>
+
+          <div>
+            <label className="input-label">Enabled Payment Methods</label>
+            <p className="text-xs text-faint mb-2">Comma-separated list of active payment methods</p>
+            <input name="payment_methods_enabled" defaultValue={settings.payment_methods_enabled} className="input-field" placeholder="cash,card,bank_transfer,credit,khqr" />
+            <p className="text-xs text-faint mt-1">Options: cash, card, bank_transfer, credit, khqr</p>
+          </div>
+
+          <div className="border-t border-surface pt-4 space-y-4">
+            <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">Tax</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="input-label">Tax Rate (%)</label>
+                <input name="tax_rate" type="number" step="0.01" min="0" max="100" defaultValue={settings.tax_rate || "0"} className="input-field" placeholder="0" />
+              </div>
+              <div>
+                <label className="input-label">Tax Label</label>
+                <input name="tax_label" defaultValue={settings.tax_label || "Tax"} className="input-field" placeholder="Tax" />
+              </div>
             </div>
           </div>
         </div>

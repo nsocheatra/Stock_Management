@@ -23,7 +23,7 @@ type LocationInfo = { id: number; name: string; address: string | null };
 type CartItem = { product: Product; qty: number; price: number; discount?: number; discountType?: string; promotionId?: number; variantId?: number; variantName?: string; batchId?: number; batchNo?: string; locationId?: number; locationName?: string };
 type ReceiptItem = { name: string; sku: string; price: number; qty: number; discount?: number };
 
-const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "credit", "khqr"];
+const ALL_METHODS = ["cash", "card", "bank_transfer", "credit", "khqr"];
 
 export default function POSClient({ products, customers, promotions, members, variants, batches, locations }: {
   products: Product[]; customers: Customer[]; promotions: Promotion[]; members: Member[];
@@ -39,6 +39,7 @@ export default function POSClient({ products, customers, promotions, members, va
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[] | null>(null);
   const [receiptDiscount, setReceiptDiscount] = useState(0);
   const [receiptPayment, setReceiptPayment] = useState("");
+  const [receiptTax, setReceiptTax] = useState(0);
   const [saleTotal, setSaleTotal] = useState(0);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -411,9 +412,11 @@ export default function POSClient({ products, customers, promotions, members, va
     return true;
   }) : products);
 
+  const taxRate = parseFloat(settings?.tax_rate || "10");
+  const taxLabel = settings?.tax_label || "Tax";
   const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const discountAmount = cart.reduce((sum, item) => sum + (item.discount || 0), 0);
-  const tax = Math.max(0, (subtotal - discountAmount) * 0.1);
+  const tax = Math.max(0, (subtotal - discountAmount) * taxRate / 100);
   const total = Math.max(0, subtotal - discountAmount + tax);
   const itemCount = cart.reduce((sum, item) => sum + item.qty, 0);
 
@@ -489,6 +492,7 @@ export default function POSClient({ products, customers, promotions, members, va
     setReceiptItems(items);
     setReceiptDiscount(discountAmount);
     setReceiptPayment(paymentMethod);
+    setReceiptTax(tax);
     setSaleTotal(total);
   };
 
@@ -525,6 +529,7 @@ export default function POSClient({ products, customers, promotions, members, va
       setReceiptItems(items);
       setReceiptDiscount(discountAmount);
       setReceiptPayment(paymentMethod);
+      setReceiptTax(tax);
       setSaleTotal(total);
       setTimeout(() => setMessage(null), 4000);
     }
@@ -561,15 +566,22 @@ export default function POSClient({ products, customers, promotions, members, va
         <ReceiptView
           items={receiptItems}
           total={saleTotal}
-          discount={receiptDiscount}
-          paymentMethod={receiptPayment}
-          customerName={selectedCustomer?.name}
           storeName={settings.store_name}
           storeAddress={settings.store_address}
           storePhone={settings.store_phone}
           header={settings.receipt_header}
           footer={settings.receipt_footer}
           onClose={() => setReceiptItems(null)}
+          autoPrint={settings.auto_print === "1"}
+          discountAmount={receiptDiscount}
+          tax={receiptTax}
+          taxLabel={taxLabel}
+          paymentMethod={receiptPayment}
+          printerType={settings.printer_type}
+          printerIp={settings.printer_ip}
+          printerPort={parseInt(settings.printer_port || "9100")}
+          paperWidth={parseInt(settings.paper_width || "80")}
+          receiptCopies={parseInt(settings.receipt_copies || "1")}
         />
       )}
 
@@ -969,7 +981,7 @@ export default function POSClient({ products, customers, promotions, members, va
               <div className="flex items-center gap-2">
                 <span className="text-xs text-[#6B7280] font-medium w-20">Payment</span>
                 <div className="flex gap-1 flex-1">
-                  {PAYMENT_METHODS.map((m) => (
+                  {ALL_METHODS.filter((m) => !settings?.payment_methods_enabled || settings.payment_methods_enabled.split(",").includes(m)).map((m) => (
                     <button key={m} onClick={() => setPaymentMethod(m)}
                       className={`flex-1 py-1.5 rounded-lg text-[10px] font-semibold border transition-all duration-150 cursor-pointer ${
                         paymentMethod === m
@@ -1006,7 +1018,7 @@ export default function POSClient({ products, customers, promotions, members, va
                 </div>
               )}
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[#6B7280]">Tax (10%)</span>
+                <span className="text-[#6B7280]">{taxLabel} ({taxRate}%)</span>
                 <span className="text-[#6B7280]">${tax.toFixed(2)}</span>
               </div>
               <div className="flex items-center justify-between text-base pt-1 border-t border-[#E5E7EB]">

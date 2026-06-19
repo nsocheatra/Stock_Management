@@ -460,7 +460,10 @@
       "receiptHeader": "Receipt Header",
       "receiptFooter": "Receipt Footer",
       "copies": "Copies",
-      "autoPrint": "Auto-print after sale"
+      "autoPrint": "Auto-print after sale",
+      "printerIp": "Printer IP Address",
+      "printerPort": "Printer Port",
+      "printerPortHelp": "Default: 9100 (ESC/POS network printers)"
     },
     "telegram": {
       "title": "Telegram Bot",

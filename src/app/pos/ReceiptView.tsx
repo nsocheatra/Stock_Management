@@ -1,12 +1,16 @@
 "use client";
 
-import { Printer, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Printer, X, Loader2 } from "lucide-react";
 import { useTranslation } from "@/i18n/useTranslation";
+import { printReceipt } from "@/lib/actions";
 
 type ReceiptItem = { name: string; sku: string; price: number; qty: number; discount?: number };
 
 export default function ReceiptView({
-  items, total, storeName, storeAddress, storePhone, header, footer, onClose, discount, paymentMethod, customerName,
+  items, total, storeName, storeAddress, storePhone, header, footer, onClose, autoPrint,
+  discountAmount, tax, taxLabel, paymentMethod,
+  printerType, printerIp, printerPort, paperWidth, receiptCopies,
 }: {
   items: ReceiptItem[];
   total: number;
@@ -16,12 +20,24 @@ export default function ReceiptView({
   header: string;
   footer: string;
   onClose: () => void;
-  discount?: number;
+  autoPrint?: boolean;
+  discountAmount?: number;
+  tax?: number;
+  taxLabel?: string;
   paymentMethod?: string;
-  customerName?: string;
+  printerType?: string;
+  printerIp?: string;
+  printerPort?: number;
+  paperWidth?: number;
+  receiptCopies?: number;
 }) {
   const { t } = useTranslation();
-  const print = () => {
+  const [printing, setPrinting] = useState(false);
+  const [printError, setPrintError] = useState("");
+
+  const pmLabel = paymentMethod === "cash" ? "Cash" : paymentMethod === "card" ? "Card" : paymentMethod === "bank_transfer" ? "Bank Transfer" : paymentMethod === "khqr" ? "KHQR" : paymentMethod || "";
+
+  const browserPrint = () => {
     const printWin = window.open("", "_blank");
     if (!printWin) return;
     printWin.document.write(`
@@ -38,6 +54,7 @@ export default function ReceiptView({
         td { padding: 4px 0; font-size: 11px; }
         .right { text-align: right; }
         .total { font-size: 14px; font-weight: bold; text-align: right; margin-top: 8px; }
+        .sub { font-size: 11px; text-align: right; margin-top: 4px; }
         .footer { text-align: center; margin-top: 10px; font-size: 10px; }
         @media print { body { width: auto; } }
       </style></head><body>
@@ -54,8 +71,10 @@ export default function ReceiptView({
           <tr><th>${t("receipt.item")}</th><th class="right">${t("receipt.qty")}</th><th class="right">${t("receipt.price")}</th><th class="right">${t("receipt.total")}</th></tr>
           ${items.map(i => `<tr><td>${i.name}</td><td class="right">${i.qty}</td><td class="right">$${i.price.toFixed(2)}</td><td class="right">$${(i.price * i.qty).toFixed(2)}</td></tr>`).join("")}
         </table>
-        <hr/>
+        ${discountAmount ? `<div class="sub">Discount: -$${discountAmount.toFixed(2)}</div>` : ""}
+        ${tax != null ? `<div class="sub">${taxLabel || "Tax"}: $${tax.toFixed(2)}</div>` : ""}
         <div class="total">${t("receipt.totalLabel")}: $${total.toFixed(2)}</div>
+        ${pmLabel ? `<p style="text-align:right;font-size:11px;margin-top:4px;">Payment: ${pmLabel}</p>` : ""}
         <hr/>
         <div class="footer">${footer}</div>
         <p style="text-align:center;font-size:10px;margin-top:8px;">${t("receipt.thankYouPurchase")}</p>
@@ -64,6 +83,50 @@ export default function ReceiptView({
     `);
     printWin.document.close();
   };
+
+  const networkPrint = async () => {
+    setPrinting(true);
+    setPrintError("");
+    try {
+      const res = await printReceipt({
+        items: items.map((i) => ({ name: i.name, qty: i.qty, price: i.price })),
+        total,
+        storeName,
+        storeAddress,
+        storePhone,
+        header,
+        footer,
+        discountAmount,
+        tax,
+        taxLabel,
+        paymentMethod: pmLabel,
+        printerType: printerType || "browser",
+        printerIp,
+        printerPort,
+        paperWidth: paperWidth || 80,
+        copies: receiptCopies || 1,
+      });
+      if (!res.success) {
+        setPrintError(res.error || "Print failed");
+      }
+    } catch (err: any) {
+      setPrintError(err.message || "Print failed");
+    } finally {
+      setPrinting(false);
+    }
+  };
+
+  const print = () => {
+    if (printerType === "thermal" || printerType === "network") {
+      networkPrint();
+    } else {
+      browserPrint();
+    }
+  };
+
+  useEffect(() => {
+    if (autoPrint) print();
+  }, [autoPrint]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -93,21 +156,43 @@ export default function ReceiptView({
             </div>
           ))}
           <div className="border-t border-dashed border-zinc-700 my-2" />
+          {discountAmount ? (
+            <div className="flex justify-between text-xs text-emerald-400 mt-1">
+              <span>Discount</span>
+              <span>−${discountAmount.toFixed(2)}</span>
+            </div>
+          ) : null}
+          {tax != null && tax > 0 ? (
+            <div className="flex justify-between text-xs text-faint mt-1">
+              <span>{taxLabel || "Tax"}</span>
+              <span>$${tax.toFixed(2)}</span>
+            </div>
+          ) : null}
           <div className="flex justify-between text-sm font-bold text-default mt-1">
             <span>{t("receipt.totalLabel")}</span>
             <span>${total.toFixed(2)}</span>
           </div>
+          {paymentMethod ? (
+            <div className="flex justify-between text-xs text-faint mt-1">
+              <span>Payment</span>
+              <span>{paymentMethod === "cash" ? "Cash" : paymentMethod === "card" ? "Card" : paymentMethod === "bank_transfer" ? "Bank Transfer" : paymentMethod === "khqr" ? "KHQR" : paymentMethod}</span>
+            </div>
+          ) : null}
           <div className="border-t border-dashed border-zinc-700 my-2" />
           {footer && <p className="text-center text-faint mt-2">{footer}</p>}
           <p className="text-center text-faint mt-1">{t("receipt.thankYou")}</p>
         </div>
 
+        {printError && (
+          <p className="text-xs text-red-400 text-center mt-2">{printError}</p>
+        )}
         <button
           onClick={print}
-          className="w-full mt-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/15 flex items-center justify-center gap-2 cursor-pointer"
+          disabled={printing}
+          className="w-full mt-4 py-3 rounded-xl font-semibold text-sm bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-500 hover:to-indigo-500 transition-all shadow-lg shadow-violet-500/15 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
         >
-          <Printer className="size-4" />
-          {t("receipt.print")}
+          {printing ? <Loader2 className="size-4 animate-spin" /> : <Printer className="size-4" />}
+          {printing ? "Printing..." : t("receipt.print")}
         </button>
       </div>
     </div>
