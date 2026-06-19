@@ -12,7 +12,12 @@ export default async function LivestreamPage() {
     ORDER BY fk.created_at DESC
   `).all() as any[];
   const orders = await db.prepare("SELECT * FROM fb_orders ORDER BY created_at DESC").all() as any[];
-  const streamUrl = (await db.prepare("SELECT value FROM settings WHERE key = 'livestream_url'").get() as { value: string } | undefined)?.value || "";
+  const fbPageUrl = (await db.prepare("SELECT value FROM settings WHERE key = 'facebook_page_url'").get() as { value: string } | undefined)?.value || "";
+  const fbPageName = (await db.prepare("SELECT value FROM settings WHERE key = 'facebook_page_name'").get() as { value: string } | undefined)?.value || "";
+  const fbPageId = (await db.prepare("SELECT value FROM settings WHERE key = 'facebook_page_id'").get() as { value: string } | undefined)?.value || "";
+  const fbBusinessId = (await db.prepare("SELECT value FROM settings WHERE key = 'facebook_business_id'").get() as { value: string } | undefined)?.value || "";
+  const fbAccessToken = (await db.prepare("SELECT value FROM settings WHERE key = 'facebook_access_token'").get() as { value: string } | undefined)?.value || "";
+  const fbAppId = (await db.prepare("SELECT value FROM settings WHERE key = 'facebook_app_id'").get() as { value: string } | undefined)?.value || "";
 
-  return <LivestreamClient products={products} keywords={keywords} orders={orders} streamUrl={streamUrl} />;
+  return <LivestreamClient products={products} keywords={keywords} orders={orders} fbPageUrl={fbPageUrl} fbPageName={fbPageName} fbPageId={fbPageId} fbBusinessId={fbBusinessId} fbAccessToken={fbAccessToken} fbAppId={fbAppId} />;
 }

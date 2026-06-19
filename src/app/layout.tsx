@@ -46,8 +46,8 @@ export const metadata: Metadata = {
 
 const navItems = [
   { href: "/pos", label: "POS", icon: "pos", permission: "pos.access" as const },
-  { href: "/livestream", label: "Livestream", icon: "livestream", permission: "livestream.manage" as const },
   { href: "/", label: "Dashboard", icon: "dashboard" },
+  { href: "/livestream", label: "Livestream", icon: "livestream", permission: "livestream.manage" as const },
   { href: "/customers", label: "Customers", icon: "customers", permission: "customers.manage" as const },
   { href: "/products", label: "Products", icon: "products", permission: "products.manage" as const },
   { href: "/stock", label: "Inventory", icon: "stock", permission: "stock.manage" as const },

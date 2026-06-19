@@ -19,7 +19,7 @@ export async function createProduct(formData: FormData) {
     INSERT INTO products (name, sku, price, cost_price, selling_price, original_price, unit_price, price_per_case, quantity, description, category, min_stock, supplier_id, barcode, image_url, track_batches)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
-  await stmt.run(
+  const result = await stmt.run(
     formData.get("name"),
     formData.get("sku"),
     parseFloat(formData.get("price") as string),
@@ -37,6 +37,15 @@ export async function createProduct(formData: FormData) {
     formData.get("image_url") || null,
     track_batches,
   );
+  const streamKey = (formData.get("stream_key") as string)?.trim().toLowerCase();
+  if (streamKey) {
+    const streamQty = parseInt(formData.get("stream_qty") as string) || 1;
+    try {
+      await db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(streamKey, Number(result.lastInsertRowid), streamQty);
+    } catch {
+      // keyword already exists, skip
+    }
+  }
   revalidatePath("/products");
   redirect("/products");
 }
@@ -66,7 +75,18 @@ export async function updateProduct(id: number, formData: FormData) {
     track_batches,
     id,
   );
+  const streamKey = (formData.get("stream_key") as string)?.trim().toLowerCase();
+  await db.prepare("DELETE FROM fb_keywords WHERE product_id = ?").run(id);
+  if (streamKey) {
+    const streamQty = parseInt(formData.get("stream_qty") as string) || 1;
+    try {
+      await db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(streamKey, id, streamQty);
+    } catch {
+      // keyword already exists, skip
+    }
+  }
   revalidatePath("/products");
+  revalidatePath("/livestream");
   redirect("/products");
 }
 
@@ -879,8 +899,10 @@ export async function simulateOrder(formData: FormData) {
   const price = mapping.selling_price || mapping.price;
   const total = price * mapping.quantity;
 
-  await db.prepare("UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?").run(mapping.quantity, mapping.product_id, mapping.quantity);
+  const product = await db.prepare("SELECT quantity FROM products WHERE id = ?").get(mapping.product_id) as { quantity: number } | undefined;
+  if (!product || product.quantity < mapping.quantity) return { error: "Insufficient stock" };
 
+  await db.prepare("UPDATE products SET quantity = quantity - ? WHERE id = ?").run(mapping.quantity, mapping.product_id);
   await db.prepare(`
     INSERT INTO fb_orders (keyword, customer_name, product_id, product_name, quantity, total)
     VALUES (?, ?, ?, ?, ?, ?)
@@ -893,7 +915,8 @@ export async function simulateOrder(formData: FormData) {
 export async function processOrder(formData: FormData) {
   await requirePermission("livestream.manage");
   const id = parseInt(formData.get("id") as string);
-  await db.prepare("UPDATE fb_orders SET processed = 1 WHERE id = ?").run(id);
+  if (!id || isNaN(id)) return { error: "Invalid order ID" };
+  await db.prepare("UPDATE fb_orders SET processed = 1 WHERE id = ? AND processed = 0").run(id);
   revalidatePath("/livestream");
 }
 
@@ -911,5 +934,22 @@ export async function saveStreamUrl(url: string) {
   } else {
     await db.prepare("INSERT INTO settings (key, value) VALUES ('livestream_url', ?)").run(url);
   }
+  revalidatePath("/livestream");
+}
+
+export async function saveFacebookPage(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
+  const fields = ["facebook_page_url", "facebook_page_name", "facebook_page_id", "facebook_business_id", "facebook_access_token", "facebook_app_id", "facebook_app_secret"];
+  for (const key of fields) {
+    const val = formData.get(key) as string;
+    if (val !== null) await upsert.run(key, val.trim());
+  }
+  revalidatePath("/livestream");
+}
+
+export async function clearFacebookPage() {
+  await requirePermission("livestream.manage");
+  await db.prepare("DELETE FROM settings WHERE key LIKE 'facebook_%'").run();
   revalidatePath("/livestream");
 }

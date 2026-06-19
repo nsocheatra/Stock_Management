@@ -451,6 +451,8 @@ class DbWrapper {
       );
     `);
 
+    await alterTable("ALTER TABLE fb_orders ADD COLUMN total REAL NOT NULL DEFAULT 0;");
+
     const userCount = (await this.prepare("SELECT COUNT(*) as count FROM users").get() as { count: number }).count;
     if (userCount === 0) {
       await this.prepare(

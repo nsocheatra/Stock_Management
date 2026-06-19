@@ -1,9 +1,8 @@
 "use client";
 
-import { useActionState } from "react";
-import { createStockMovement } from "@/lib/actions";
 import Link from "next/link";
 import { useTranslation } from "@/i18n/useTranslation";
+import { createStockMovement } from "@/lib/actions";
 
 type Product = { id: number; name: string; sku: string; quantity: number };
 type Location = { id: number; name: string };
@@ -29,16 +28,10 @@ export default function StockForm({
   variants?: Variant[];
 }) {
   const { t } = useTranslation();
-  const [, formAction] = useActionState(
-    async (_prev: unknown, formData: FormData) => {
-      formData.set("type", type);
-      await createStockMovement(formData);
-    },
-    null
-  );
 
   return (
-    <form action={formAction} className="space-y-6">
+    <form action={createStockMovement} className="space-y-6">
+      <input type="hidden" name="type" value={type} />
       <div>
         <label className="input-label">{t("stock.form.selectProduct")}</label>
         <select name="productId" required className="input-field">

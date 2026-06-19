@@ -22,6 +22,8 @@ type Product = {
   supplierId: number | null;
   barcode: string | null;
   image_url: string | null;
+  stream_key?: string;
+  stream_qty?: number;
 };
 
 function generateSku(name: string): string {
@@ -45,11 +47,14 @@ export default function ProductForm({
   const [barcode, setBarcode] = useState(product?.barcode ?? "");
   const [imageUrl, setImageUrl] = useState(product?.image_url ?? "");
   const [imageError, setImageError] = useState(false);
+  const [streamKey, setStreamKey] = useState(product?.stream_key ?? "");
+  const [streamQty, setStreamQty] = useState(String(product?.stream_qty ?? 1));
   const barcodeBuf = useRef("");
   const barcodeTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if ((e.target as HTMLElement).tagName === "INPUT" || (e.target as HTMLElement).tagName === "TEXTAREA" || (e.target as HTMLElement).tagName === "SELECT") return;
       if (e.key === "Enter") {
         const code = barcodeBuf.current.trim();
         if (code.length >= 4) {
@@ -268,6 +273,35 @@ export default function ProductForm({
             </option>
           ))}
         </select>
+      </div>
+
+      <div className="border-t border-surface pt-4 mt-4">
+        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--text-primary)" }}>Livestream Keyword</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="input-label">Stream Key</label>
+            <input
+              value={streamKey}
+              onChange={(e) => setStreamKey(e.target.value)}
+              placeholder='e.g. "buy", "order", "code123"'
+              className="input-field"
+            />
+            <p className="text-[10px] mt-1" style={{ color: "var(--text-secondary)" }}>
+              Keyword that Facebook commenters type to order this product during a livestream
+            </p>
+          </div>
+          <div>
+            <label className="input-label">Default Qty</label>
+            <input
+              type="number" min={1}
+              value={streamQty}
+              onChange={(e) => setStreamQty(e.target.value)}
+              className="input-field"
+            />
+          </div>
+        </div>
+        <input type="hidden" name="stream_key" value={streamKey} />
+        <input type="hidden" name="stream_qty" value={streamQty} />
       </div>
 
       <div className="flex items-center gap-6">
