@@ -59,13 +59,13 @@ class DbWrapper {
 
   transaction<T>(fn: (...args: unknown[]) => T): (...args: unknown[]) => Promise<T> {
     return async (...args: unknown[]) => {
-      await this.client.execute("BEGIN");
+      await this.client.execute("SAVEPOINT sp");
       try {
         const result = await fn(...args);
-        await this.client.execute("COMMIT");
+        await this.client.execute("RELEASE sp");
         return result;
       } catch (e) {
-        await this.client.execute("ROLLBACK");
+        await this.client.execute("ROLLBACK TO sp");
         throw e;
       }
     };

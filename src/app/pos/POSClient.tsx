@@ -7,7 +7,8 @@ import {
   Search, ShoppingCart, Scan, Minus, Plus, Trash2,
   Image as ImageIcon, Barcode, Maximize2, Minimize2, User,
   Printer, Percent, BadgePercent, Package, Layers,
-  ClipboardPlus, ClipboardCheck, BarChart3, Truck, Gem, Radio
+  ClipboardPlus, ClipboardCheck, BarChart3, Truck, Gem, Radio,
+  QrCode,
 } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
 import ReceiptView from "./ReceiptView";
@@ -22,7 +23,7 @@ type LocationInfo = { id: number; name: string; address: string | null };
 type CartItem = { product: Product; qty: number; price: number; discount?: number; discountType?: string; promotionId?: number; variantId?: number; variantName?: string; batchId?: number; batchNo?: string; locationId?: number; locationName?: string };
 type ReceiptItem = { name: string; sku: string; price: number; qty: number; discount?: number };
 
-const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "credit"];
+const PAYMENT_METHODS = ["cash", "card", "bank_transfer", "credit", "khqr"];
 
 export default function POSClient({ products, customers, promotions, members, variants, batches, locations }: {
   products: Product[]; customers: Customer[]; promotions: Promotion[]; members: Member[];
@@ -807,13 +808,22 @@ export default function POSClient({ products, customers, promotions, members, va
                       </span>
                     )}
                     {p.image_url ? (
-                      <div className="w-full aspect-square rounded-lg overflow-hidden mb-2 bg-[var(--bg-main)]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={p.image_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                      <div className="w-full aspect-square rounded-lg overflow-hidden mb-2 bg-[var(--bg-main)] relative">
+                        <img src={p.image_url} alt="" className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+                        {stock.qty === 0 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                            <span className="text-red-400 font-bold text-xs tracking-wider uppercase">Out of Stock</span>
+                          </div>
+                        )}
                       </div>
                     ) : (
-                      <div className="w-full aspect-square rounded-lg mb-2 bg-[var(--bg-main)] flex items-center justify-center">
+                      <div className="w-full aspect-square rounded-lg mb-2 bg-[var(--bg-main)] flex items-center justify-center relative">
                         <ImageIcon className="size-6 text-[#9CA3AF]" />
+                        {stock.qty === 0 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-lg">
+                            <span className="text-red-400 font-bold text-xs tracking-wider uppercase">Out of Stock</span>
+                          </div>
+                        )}
                       </div>
                     )}
                     <p className="font-semibold text-[#111827] text-sm truncate">{p.name}</p>
@@ -966,7 +976,7 @@ export default function POSClient({ products, customers, promotions, members, va
                           ? "bg-[#111827] text-white border-[#111827]"
                           : "bg-white text-[#6B7280] border-[#E5E7EB] hover:border-[#9CA3AF]"
                       }`}>
-                      {m === "cash" ? "Cash" : m === "card" ? "Card" : m === "bank_transfer" ? "Bank" : "Credit"}
+                      {m === "cash" ? "Cash" : m === "card" ? "Card" : m === "bank_transfer" ? "Bank" : m === "khqr" ? <><QrCode className="size-3" /> KHQR</> : "Credit"}
                     </button>
                   ))}
                 </div>
@@ -1021,44 +1031,44 @@ export default function POSClient({ products, customers, promotions, members, va
         </div>
       </div>
 
-      <div className="fixed bottom-4 left-4 z-50 flex flex-wrap gap-1.5">
+      <div className="fixed bottom-4 left-4 z-50 flex flex-wrap gap-2">
         <button onClick={() => router.push("/")}
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
           Dashboard
         </button>
         <button onClick={() => router.push("/stock/purchase")} title="Purchase"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
-          <ClipboardPlus className="size-3.5" />
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <ClipboardPlus className="size-5" />
           Purchase
         </button>
         <button onClick={() => router.push("/stock")} title="Stock"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
-          <ClipboardCheck className="size-3.5" />
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <ClipboardCheck className="size-5" />
           Stock
         </button>
         <button onClick={() => router.push("/reports")} title="Reports"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
-          <BarChart3 className="size-3.5" />
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <BarChart3 className="size-5" />
           Reports
         </button>
         <button onClick={() => router.push("/delivery")} title="Delivery"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
-          <Truck className="size-3.5" />
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <Truck className="size-5" />
           Delivery
         </button>
         <button onClick={() => router.push("/promotions")} title="Promotions"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
-          <Percent className="size-3.5" />
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <Percent className="size-5" />
           Promo
         </button>
         <button onClick={() => router.push("/membership")} title="Membership"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
-          <Gem className="size-3.5" />
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <Gem className="size-5" />
           Member
         </button>
         <button onClick={() => router.push("/livestream")} title="Livestream"
-          className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-sm">
-          <Radio className="size-3.5" />
+          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <Radio className="size-5" />
           Livestream
         </button>
       </div>
