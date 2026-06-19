@@ -6,7 +6,7 @@ import { useTranslation } from "@/i18n/useTranslation";
 type ReceiptItem = { name: string; sku: string; price: number; qty: number; discount?: number };
 
 export default function ReceiptView({
-  items, total, storeName, storeAddress, storePhone, header, footer, onClose, discount, paymentMethod, customerName,
+  items, total, storeName, storeAddress, storePhone, header, footer, onClose,
 }: {
   items: ReceiptItem[];
   total: number;
@@ -16,9 +16,6 @@ export default function ReceiptView({
   header: string;
   footer: string;
   onClose: () => void;
-  discount?: number;
-  paymentMethod?: string;
-  customerName?: string;
 }) {
   const { t } = useTranslation();
   const print = () => {

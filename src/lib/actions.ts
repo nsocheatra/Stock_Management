@@ -578,14 +578,6 @@ export async function createCustomerOrder(formData: FormData) {
   redirect("/orders");
 }
 
-export async function updateOrderStatus(formData: FormData) {
-  const orderId = parseInt(formData.get("order_id") as string);
-  const status = formData.get("status") as string;
-  if (!orderId || !status) throw new Error("Missing fields");
-  await db.prepare("UPDATE customer_orders SET status = ? WHERE id = ?").run(status, orderId);
-  revalidatePath("/orders");
-}
-
 export async function convertOrderToSale(orderId: number) {
   const order = await db.prepare("SELECT * FROM customer_orders WHERE id = ?").get(orderId) as any;
   if (!order) return { error: "Order not found" };
@@ -952,4 +944,159 @@ export async function clearFacebookPage() {
   await requirePermission("livestream.manage");
   await db.prepare("DELETE FROM settings WHERE key LIKE 'facebook_%'").run();
   revalidatePath("/livestream");
+}
+
+// === LIVESTREAM DASHBOARD ===
+export async function createLivestream(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const title = formData.get("title") as string;
+  const description = formData.get("description") as string;
+  const facebookPageId = formData.get("facebook_page_id") as string;
+  const scheduledAt = formData.get("scheduled_at") as string;
+  if (!title?.trim()) return { error: "Title is required" };
+  await db.prepare(`
+    INSERT INTO livestreams (title, description, facebook_page_id, status, scheduled_at)
+    VALUES (?, ?, ?, 'draft', ?)
+  `).run(title.trim(), description?.trim() || null, facebookPageId?.trim() || null, scheduledAt || null);
+  revalidatePath("/livestream");
+}
+
+export async function startLivestream(id: number) {
+  await requirePermission("livestream.manage");
+  await db.prepare("UPDATE livestreams SET status = 'live', started_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(id);
+  revalidatePath("/livestream");
+}
+
+export async function endLivestream(id: number) {
+  await requirePermission("livestream.manage");
+  await db.prepare("UPDATE livestreams SET status = 'ended', ended_at = datetime('now'), updated_at = datetime('now') WHERE id = ?").run(id);
+  revalidatePath("/livestream");
+}
+
+export async function deleteLivestream(id: number) {
+  await requirePermission("livestream.manage");
+  await db.prepare("DELETE FROM livestreams WHERE id = ?").run(id);
+  revalidatePath("/livestream");
+}
+
+export async function addLiveProduct(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const livestreamId = parseInt(formData.get("livestream_id") as string);
+  const productId = parseInt(formData.get("product_id") as string);
+  const keyword = (formData.get("keyword") as string)?.trim().toUpperCase();
+  const priceOverride = formData.get("price_override") ? parseFloat(formData.get("price_override") as string) || null : null;
+  const maxQty = formData.get("max_quantity") ? parseInt(formData.get("max_quantity") as string) || null : null;
+  const priority = parseInt(formData.get("priority") as string) || 0;
+  const reserveStock = parseInt(formData.get("reserve_stock") as string) || 0;
+  if (!livestreamId || !productId || !keyword) return { error: "Missing required fields" };
+  try {
+    await db.prepare(`
+      INSERT INTO live_products (livestream_id, product_id, keyword, price_override, max_quantity, priority, reserve_stock)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).run(livestreamId, productId, keyword, priceOverride, maxQty, priority, reserveStock);
+  } catch {
+    return { error: "Duplicate keyword or invalid data" };
+  }
+  revalidatePath("/livestream");
+}
+
+export async function deleteLiveProduct(id: number) {
+  await requirePermission("livestream.manage");
+  await db.prepare("DELETE FROM live_products WHERE id = ?").run(id);
+  revalidatePath("/livestream");
+}
+
+export async function createOrderFromComment(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const commentId = parseInt(formData.get("comment_id") as string);
+  const customerName = formData.get("customer_name") as string;
+  const customerPhone = formData.get("customer_phone") as string;
+  const customerAddress = formData.get("customer_address") as string;
+
+  const comment = await db.prepare("SELECT * FROM live_comments WHERE id = ?").get(commentId) as any;
+  if (!comment) return { error: "Comment not found" };
+  if (comment.status === "ordered") return { error: "Order already created for this comment" };
+  if (!comment.matched_product_id) return { error: "No product matched" };
+
+  const product = await db.prepare("SELECT id, name, selling_price, price, quantity FROM products WHERE id = ?").get(comment.matched_product_id) as any;
+  if (!product) return { error: "Product not found" };
+
+  const price = product.selling_price || product.price;
+  const total = price * comment.detected_quantity;
+  const orderNumber = `LV-${Date.now()}`;
+
+  const orderResult = await db.prepare(`
+    INSERT INTO live_orders (livestream_id, order_number, customer_name, customer_phone, customer_address, facebook_comment_id, total, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, 'processing')
+  `).run(comment.livestream_id, orderNumber, customerName || comment.customer_name, customerPhone || null, customerAddress || null, comment.facebook_comment_id, total);
+
+  const orderId = Number(orderResult.lastInsertRowid);
+
+  await db.prepare(`
+    INSERT INTO live_order_items (order_id, product_id, product_name, quantity, price, total)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(orderId, product.id, product.name, comment.detected_quantity, price, total);
+
+  await db.prepare("UPDATE live_comments SET status = 'ordered' WHERE id = ?").run(commentId);
+  await db.prepare("UPDATE livestreams SET order_count = order_count + 1, revenue = revenue + ? WHERE id = ?").run(total, comment.livestream_id);
+
+  // Send Telegram notification
+  try {
+    const { sendOrderNotification } = await import("@/lib/livestream-telegram");
+    await sendOrderNotification({
+      order_number: orderNumber,
+      customer_name: customerName || comment.customer_name,
+      items: [{ product_name: product.name, quantity: comment.detected_quantity }],
+      total,
+      status: "processing",
+    });
+  } catch {}
+
+  revalidatePath("/livestream");
+  return { success: true, order_id: orderId, order_number: orderNumber };
+}
+
+export async function updateOrderStatus(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const id = parseInt(formData.get("id") as string);
+  const status = formData.get("status") as string;
+  const driverId = formData.get("driver_id") ? parseInt(formData.get("driver_id") as string) : null;
+  if (!id || !status) return { error: "Missing required fields" };
+
+  await db.prepare("UPDATE live_orders SET status = ?, driver_id = ?, updated_at = datetime('now') WHERE id = ?").run(status, driverId, id);
+
+  if (status === "cancelled") {
+    const items = await db.prepare("SELECT * FROM live_order_items WHERE order_id = ?").all(id) as any[];
+    for (const item of items) {
+      await db.prepare("UPDATE products SET quantity = quantity + ? WHERE id = ?").run(item.quantity, item.product_id);
+    }
+  }
+
+  revalidatePath("/livestream");
+}
+
+export async function ignoreComment(id: number) {
+  await requirePermission("livestream.manage");
+  await db.prepare("UPDATE live_comments SET status = 'ignored' WHERE id = ?").run(id);
+  revalidatePath("/livestream");
+}
+
+export async function blockCustomer(customerId: string) {
+  await requirePermission("livestream.manage");
+  await db.prepare("UPDATE live_comments SET status = 'blocked' WHERE customer_id = ? AND status = 'pending'").run(customerId);
+  revalidatePath("/livestream");
+}
+
+export async function updateViewerCount(formData: FormData) {
+  await requirePermission("livestream.manage");
+  const livestreamId = parseInt(formData.get("livestream_id") as string);
+  const count = parseInt(formData.get("count") as string);
+  if (!livestreamId || isNaN(count)) return;
+  await db.prepare("UPDATE livestreams SET viewer_count = ? WHERE id = ?").run(count, livestreamId);
+  revalidatePath("/livestream");
+}
+
+export async function getDrivers() {
+  const drivers = await db.prepare("SELECT id, name FROM users WHERE role = 'driver' OR role = 'admin' ORDER BY name ASC").all() as { id: number; name: string }[];
+  return drivers;
 }

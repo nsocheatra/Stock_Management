@@ -36,7 +36,7 @@ export default async function BatchesPage() {
   const expiredCount = batches.filter(b => b.expiry_date && b.expiry_date < today && b.quantity > 0).length;
   const nearExpiryCount = batches.filter(b => {
     if (!b.expiry_date || b.quantity <= 0) return false;
-    const daysLeft = (new Date(b.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    const daysLeft = (new Date(b.expiry_date).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24);
     return daysLeft > 0 && daysLeft <= 30;
   }).length;
 
@@ -95,7 +95,7 @@ export default async function BatchesPage() {
               <tbody className="divide-y divide-surface">
                 {batches.map((b) => {
                   const isExpired = b.expiry_date && b.expiry_date < today;
-                  const nearExpiry = b.expiry_date && !isExpired && (new Date(b.expiry_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24) <= 30;
+                  const nearExpiry = b.expiry_date && !isExpired && (new Date(b.expiry_date).getTime() - new Date(today).getTime()) / (1000 * 60 * 60 * 24) <= 30;
                   return (
                     <tr key={b.id} className="hover-surface transition-colors">
                       <td className="p-3 font-mono text-xs font-semibold text-default">{b.batch_no}</td>

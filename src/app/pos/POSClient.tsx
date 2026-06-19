@@ -36,8 +36,6 @@ export default function POSClient({ products, customers, promotions, members, va
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
   const [settings, setSettings] = useState<Record<string, string> | null>(null);
   const [receiptItems, setReceiptItems] = useState<ReceiptItem[] | null>(null);
-  const [receiptDiscount, setReceiptDiscount] = useState(0);
-  const [receiptPayment, setReceiptPayment] = useState("");
   const [saleTotal, setSaleTotal] = useState(0);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
@@ -51,7 +49,7 @@ export default function POSClient({ products, customers, promotions, members, va
   const [pickerProduct, setPickerProduct] = useState<Product | null>(null);
   const [pickerStep, setPickerStep] = useState<"variant" | "batch" | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
-  const [selectedBatch, setSelectedBatch] = useState<BatchInfo | null>(null);
+  const [_selectedBatch, setSelectedBatch] = useState<BatchInfo | null>(null);
 
   const searchRef = useRef<HTMLInputElement>(null);
   const qtyInputRef = useRef<HTMLInputElement>(null);
@@ -168,46 +166,6 @@ export default function POSClient({ products, customers, promotions, members, va
   }, [getProductPromotions, memberTier]);
 
   // ─── Variant/Batch Picker Flow ─────────────────────────────
-  const handleProductClick = useCallback((product: Product) => {
-    const prodVariants = variantsByProduct[product.id];
-    if (prodVariants && prodVariants.length > 0) {
-      setPickerProduct(product);
-      setPickerStep("variant");
-      setSelectedVariant(null);
-      setSelectedBatch(null);
-      return;
-    }
-    if (product.track_batches) {
-      const prodBatches = batchesByProduct[product.id];
-      if (prodBatches && prodBatches.length > 0) {
-        setPickerProduct(product);
-        setPickerStep("batch");
-        setSelectedVariant(null);
-        setSelectedBatch(null);
-        return;
-      }
-    }
-    addToCartDirect(product, undefined, undefined);
-  }, [variantsByProduct, batchesByProduct, effectivePrice, getItemDiscount]);
-
-  const handleVariantSelect = useCallback((variant: VariantInfo) => {
-    setSelectedVariant(variant);
-    const prodBatches = batchesByVariant[variant.id];
-    const product = pickerProduct!;
-    if (product.track_batches && prodBatches && prodBatches.length > 0) {
-      setPickerStep("batch");
-    } else {
-      addToCartDirect(product, variant, undefined);
-      closePicker();
-    }
-  }, [batchesByVariant, pickerProduct, effectivePrice, getItemDiscount]);
-
-  const handleBatchSelect = useCallback((batch: BatchInfo) => {
-    setSelectedBatch(batch);
-    addToCartDirect(pickerProduct!, selectedVariant ?? undefined, batch);
-    closePicker();
-  }, [pickerProduct, selectedVariant, effectivePrice, getItemDiscount]);
-
   const closePicker = useCallback(() => {
     setPickerProduct(null);
     setPickerStep(null);
@@ -251,6 +209,46 @@ export default function POSClient({ products, customers, promotions, members, va
     setSearch("");
     searchRef.current?.focus();
   }, [effectivePrice, getItemDiscount, locationMap]);
+
+  const handleProductClick = useCallback((product: Product) => {
+    const prodVariants = variantsByProduct[product.id];
+    if (prodVariants && prodVariants.length > 0) {
+      setPickerProduct(product);
+      setPickerStep("variant");
+      setSelectedVariant(null);
+      setSelectedBatch(null);
+      return;
+    }
+    if (product.track_batches) {
+      const prodBatches = batchesByProduct[product.id];
+      if (prodBatches && prodBatches.length > 0) {
+        setPickerProduct(product);
+        setPickerStep("batch");
+        setSelectedVariant(null);
+        setSelectedBatch(null);
+        return;
+      }
+    }
+    addToCartDirect(product, undefined, undefined);
+  }, [variantsByProduct, batchesByProduct, addToCartDirect]);
+
+  const handleVariantSelect = useCallback((variant: VariantInfo) => {
+    setSelectedVariant(variant);
+    const prodBatches = batchesByVariant[variant.id];
+    const product = pickerProduct!;
+    if (product.track_batches && prodBatches && prodBatches.length > 0) {
+      setPickerStep("batch");
+    } else {
+      addToCartDirect(product, variant, undefined);
+      closePicker();
+    }
+  }, [batchesByVariant, pickerProduct, addToCartDirect, closePicker]);
+
+  const handleBatchSelect = useCallback((batch: BatchInfo) => {
+    setSelectedBatch(batch);
+    addToCartDirect(pickerProduct!, selectedVariant ?? undefined, batch);
+    closePicker();
+  }, [pickerProduct, selectedVariant, addToCartDirect, closePicker]);
 
   // ─── Barcode Scanner ───────────────────────────────────────
   useEffect(() => {
@@ -299,6 +297,15 @@ export default function POSClient({ products, customers, promotions, members, va
   }, []);
 
   // ─── Camera Barcode Scanner ─────────────────────────────────
+  const stopScanner = useCallback(() => {
+    scanningRef.current = false;
+    if (scannerStreamRef.current) {
+      scannerStreamRef.current.getTracks().forEach((t) => t.stop());
+      scannerStreamRef.current = null;
+    }
+    setShowScanner(false);
+  }, []);
+
   const handleDetectedBarcode = useCallback((code: string) => {
     const found = products.find((p) => p.barcode === code);
     if (found) {
@@ -320,16 +327,7 @@ export default function POSClient({ products, customers, promotions, members, va
       }
     }
     return false;
-  }, [products, variants, variantsByProduct, handleProductClick, handleVariantSelect, addToCartDirect]);
-
-  const stopScanner = useCallback(() => {
-    scanningRef.current = false;
-    if (scannerStreamRef.current) {
-      scannerStreamRef.current.getTracks().forEach((t) => t.stop());
-      scannerStreamRef.current = null;
-    }
-    setShowScanner(false);
-  }, []);
+  }, [products, variants, variantsByProduct, handleProductClick, handleVariantSelect, addToCartDirect, stopScanner]);
 
   const startScanner = useCallback(async () => {
     if (!("BarcodeDetector" in window)) {
@@ -486,8 +484,6 @@ export default function POSClient({ products, customers, promotions, members, va
       discount: item.discount,
     }));
     setReceiptItems(items);
-    setReceiptDiscount(discountAmount);
-    setReceiptPayment(paymentMethod);
     setSaleTotal(total);
   };
 
@@ -522,8 +518,6 @@ export default function POSClient({ products, customers, promotions, members, va
       setSelectedCustomer(null);
       setMessage({ text: t("pos.saleSuccess"), ok: true });
       setReceiptItems(items);
-      setReceiptDiscount(discountAmount);
-      setReceiptPayment(paymentMethod);
       setSaleTotal(total);
       setTimeout(() => setMessage(null), 4000);
     }
@@ -560,9 +554,6 @@ export default function POSClient({ products, customers, promotions, members, va
         <ReceiptView
           items={receiptItems}
           total={saleTotal}
-          discount={receiptDiscount}
-          paymentMethod={receiptPayment}
-          customerName={selectedCustomer?.name}
           storeName={settings.store_name}
           storeAddress={settings.store_address}
           storePhone={settings.store_phone}
@@ -808,7 +799,6 @@ export default function POSClient({ products, customers, promotions, members, va
                     )}
                     {p.image_url ? (
                       <div className="w-full aspect-square rounded-lg overflow-hidden mb-2 bg-[var(--bg-main)]">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={p.image_url} alt="" className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
                       </div>
                     ) : (
