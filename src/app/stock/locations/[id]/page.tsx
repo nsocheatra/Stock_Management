@@ -1,7 +1,7 @@
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { notFound } from "next/navigation";
-import { Edit } from "lucide-react";
+import { Edit, MapPin } from "lucide-react";
 import LocationForm from "../LocationForm";
 
 export default async function EditLocationPage({ params }: { params: Promise<{ id: string }> }) {

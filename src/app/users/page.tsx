@@ -2,7 +2,7 @@ import { getUsers, getCurrentUser } from "@/lib/auth";
 import { PERMISSIONS } from "@/lib/permissions";
 import { redirect } from "next/navigation";
 import { T } from "@/components/T";
-import { Shield, User as UserIcon, KeyRound } from "lucide-react";
+import { Shield, User as UserIcon, KeyRound, Check, X as XIcon } from "lucide-react";
 import UserForm from "./UserForm";
 import DeleteButton from "./DeleteButton";
 

@@ -244,6 +244,7 @@ export default function ProductForm({
           </div>
           {imageUrl && !imageError && (
             <div className="mt-2 rounded-lg overflow-hidden border border-surface w-24 h-24">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={imageUrl}
                 alt="Preview"

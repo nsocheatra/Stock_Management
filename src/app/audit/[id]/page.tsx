@@ -65,6 +65,8 @@ export default async function AuditDetailPage({ params }: Props) {
   const counted = items.filter(i => i.actual_qty !== null).length;
   const discrepancies = items.filter(i => i.difference !== null && i.difference !== 0).length;
 
+  const statusIcon = audit.status === "completed" ? CheckCircle2 : audit.status === "cancelled" ? XCircle : Loader2;
+  const StatusIcon = statusIcon;
   const statusColors: Record<string, string> = {
     in_progress: "text-amber-400 bg-amber-500/10 border-amber-500/20",
     completed: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",

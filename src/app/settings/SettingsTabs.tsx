@@ -286,7 +286,7 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
               setClearing(true);
               try {
                 const cats = Object.entries(selectedCategories)
-                  .filter(([_k, v]) => v)
+                  .filter(([_, v]) => v)
                   .map(([k]) => k);
                 await clearAllData(cats);
                 router.refresh();
