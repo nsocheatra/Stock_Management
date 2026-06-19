@@ -241,6 +241,18 @@ class DbWrapper {
 
     await alterTable("ALTER TABLE users ADD COLUMN permissions TEXT DEFAULT '[]';");
 
+    // Fix users role CHECK constraint to include stock_manager
+    try {
+      const row = await this.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").get() as { sql: string } | undefined;
+      if (row && row.sql && !row.sql.includes("stock_manager")) {
+        await this.exec("CREATE TABLE users_new (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, email TEXT NOT NULL UNIQUE, password_hash TEXT NOT NULL, role TEXT NOT NULL CHECK(role IN ('admin', 'cashier', 'stock_manager')) DEFAULT 'cashier', pin TEXT, permissions TEXT DEFAULT '[]', active INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')))");
+        await this.exec("INSERT INTO users_new (id, name, email, password_hash, role, pin, permissions, active, created_at) SELECT id, name, email, password_hash, role, pin, COALESCE(permissions, '[]'), active, created_at FROM users");
+        await this.exec("DROP TABLE users");
+        await this.exec("ALTER TABLE users_new RENAME TO users");
+        // Re-add session foreign key relationship is preserved via RENAME
+      }
+    } catch {}
+
     await this.exec(`
       CREATE TABLE IF NOT EXISTS notifications (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

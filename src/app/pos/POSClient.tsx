@@ -8,9 +8,10 @@ import {
   Image as ImageIcon, Barcode, Maximize2, Minimize2, User,
   Printer, Percent, BadgePercent, Package, Layers,
   ClipboardPlus, ClipboardCheck, BarChart3, Truck, Gem, Radio,
-  QrCode,
+  QrCode, LayoutDashboard, LogOut,
 } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
+import { logout } from "@/lib/auth";
 import ReceiptView from "./ReceiptView";
 
 type Product = { id: number; name: string; sku: string; barcode: string | null; price: number; wholesale_price: number | null; selling_price: number | null; original_price: number | null; unit_price: number | null; price_per_case: number | null; quantity: number; image_url: string | null; category: string | null; has_variants: number; track_batches: number };
@@ -758,6 +759,11 @@ export default function POSClient({ products, customers, promotions, members, va
           >
             {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
           </button>
+          <button onClick={async () => { await logout(); router.push("/login"); router.refresh(); }}
+            className="flex items-center justify-center size-9 rounded-lg border border-[#E5E7EB] text-[#6B7280] hover:text-rose-400 hover:bg-rose-500/10 transition-all duration-150 cursor-pointer"
+            title="Logout">
+            <LogOut className="size-4" />
+          </button>
         </div>
       </div>
 
@@ -1046,6 +1052,7 @@ export default function POSClient({ products, customers, promotions, members, va
       <div className="fixed bottom-4 left-4 z-50 flex flex-wrap gap-2">
         <button onClick={() => router.push("/")}
           className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
+          <LayoutDashboard className="size-5" />
           Dashboard
         </button>
         <button onClick={() => router.push("/stock/purchase")} title="Purchase"

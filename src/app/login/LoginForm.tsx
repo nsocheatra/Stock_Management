@@ -23,7 +23,7 @@ export default function LoginForm() {
     const result = await loginWithPin(pin);
     setLoading(false);
     if (result.success) {
-      router.push("/pos");
+      router.push(result.user?.role === "cashier" ? "/pos" : "/");
       router.refresh();
     } else {
       setError(result.error || t("login.invalidPin"));
@@ -58,7 +58,7 @@ export default function LoginForm() {
             const idToken = await result.user.getIdToken();
             const res = await loginWithGoogle(idToken);
             if (res.success) {
-              router.push("/pos");
+              router.push(res.user?.role === "cashier" ? "/pos" : "/");
               router.refresh();
             } else {
               setError(res.error || "Google sign-in failed");

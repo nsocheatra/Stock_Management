@@ -58,7 +58,7 @@ export default function UserForm() {
         <label className="input-label">{t("users.fields.role")}</label>
         <select name="role" value={selectedRole} onChange={(e) => handleRoleChange(e.target.value)} className="input-field">
           <option value="cashier">{t("users.rolesDropdown.cashier")}</option>
-          <option value="stock_manager">Stock Manager</option>
+          <option value="stock_manager">{t("users.rolesDropdown.stock_manager")}</option>
           <option value="admin">{t("users.rolesDropdown.admin")}</option>
         </select>
       </div>

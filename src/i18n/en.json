@@ -500,7 +500,7 @@
   },
   "users": {
     "title": "User Management",
-    "subtitle": "Manage cashiers and administrators.",
+    "subtitle": "Manage cashiers, stock managers, and administrators.",
     "addUser": "Add User",
     "allUsers": "All Users",
     "usersCount": "{count} users",
@@ -509,6 +509,7 @@
     "roles": {
       "admin": "admin",
       "cashier": "cashier",
+      "stock_manager": "stock manager",
       "inactive": "Inactive"
     },
     "fields": {
@@ -524,11 +525,15 @@
     },
     "rolesDropdown": {
       "cashier": "Cashier",
+      "stock_manager": "Stock Manager",
       "admin": "Admin"
     },
     "pinLabel": "PIN: {pin}",
     "add": "Add User",
-    "failed": "Failed to create user"
+    "failed": "Failed to create user",
+    "editUser": "Edit User",
+    "save": "Save Changes",
+    "active": "Active"
   },
   "theme": {
     "toggle": "Toggle theme"

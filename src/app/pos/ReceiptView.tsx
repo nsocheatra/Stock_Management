@@ -130,24 +130,24 @@ export default function ReceiptView({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
+      <div className="bg-surface-blur border-surface rounded-2xl p-6 w-full max-w-sm shadow-2xl">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-sm font-semibold text-default">{t("receipt.title")}</h3>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-zinc-800 text-muted cursor-pointer">
+          <button onClick={onClose} className="p-1.5 rounded-lg hover-surface text-muted cursor-pointer">
             <X className="size-4" />
           </button>
         </div>
 
-        <div className="font-mono text-xs leading-relaxed bg-black/40 rounded-xl p-4 border border-zinc-800">
+        <div className="font-mono text-xs leading-relaxed bg-black/40 rounded-xl p-4 border border-surface">
           <div className="text-center mb-3">
             <p className="text-sm font-bold text-default">{storeName}</p>
             {storeAddress && <p className="text-faint">{storeAddress}</p>}
             {storePhone && <p className="text-faint">{t("receipt.tel", { phone: storePhone })}</p>}
             <p className="text-faint">{new Date().toLocaleString()}</p>
           </div>
-          <div className="border-t border-dashed border-zinc-700 my-2" />
+          <div className="border-t border-dashed border-surface my-2" />
           {header && <p className="text-center text-faint mb-2">{header}</p>}
-          <div className="border-t border-dashed border-zinc-700 my-2" />
+          <div className="border-t border-dashed border-surface my-2" />
           {items.map((item, i) => (
             <div key={i} className="flex justify-between py-0.5">
               <span className="truncate flex-1">{item.name}</span>
@@ -155,7 +155,7 @@ export default function ReceiptView({
               <span className="font-semibold">${(item.price * item.qty).toFixed(2)}</span>
             </div>
           ))}
-          <div className="border-t border-dashed border-zinc-700 my-2" />
+          <div className="border-t border-dashed border-surface my-2" />
           {discountAmount ? (
             <div className="flex justify-between text-xs text-emerald-400 mt-1">
               <span>Discount</span>
@@ -178,7 +178,7 @@ export default function ReceiptView({
               <span>{paymentMethod === "cash" ? "Cash" : paymentMethod === "card" ? "Card" : paymentMethod === "bank_transfer" ? "Bank Transfer" : paymentMethod === "khqr" ? "KHQR" : paymentMethod}</span>
             </div>
           ) : null}
-          <div className="border-t border-dashed border-zinc-700 my-2" />
+          <div className="border-t border-dashed border-surface my-2" />
           {footer && <p className="text-center text-faint mt-2">{footer}</p>}
           <p className="text-center text-faint mt-1">{t("receipt.thankYou")}</p>
         </div>
