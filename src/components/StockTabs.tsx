@@ -8,6 +8,7 @@ const tabs = [
   { href: "/stock/batches", label: "Batches" },
   { href: "/stock/locations", label: "Locations" },
   { href: "/stock/movements", label: "Movements" },
+  { href: "/stock/count", label: "Count" },
 ];
 
 export default function StockTabs() {

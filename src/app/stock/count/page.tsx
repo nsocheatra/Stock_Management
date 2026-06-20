@@ -16,7 +16,7 @@ interface AuditRow {
   discrepancies: number;
 }
 
-export default async function AuditListPage() {
+export default async function StockCountListPage() {
   await requirePermission("audit.manage");
   const audits = await db.prepare(`
     SELECT
@@ -53,7 +53,7 @@ export default async function AuditListPage() {
         <div className="flex items-center gap-3">
           <ClearAuditsButton />
           <Link
-            href="/audit/new"
+            href="/stock/count/new"
             className="flex items-center gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4.5 py-2.5 rounded-xl hover:from-violet-500 hover:to-indigo-500 active:scale-95 transition-all duration-200 shadow-lg shadow-violet-500/10 border border-violet-500/20"
           >
             <Plus className="size-4" />
@@ -68,7 +68,7 @@ export default async function AuditListPage() {
           return (
             <Link
               key={a.id}
-              href={`/audit/${a.id}`}
+              href={`/stock/count/${a.id}`}
               className="bg-surface-blur border-surface rounded-2xl p-5 shadow-lg hover:scale-[1.01] hover:-translate-y-0.5 transition-all duration-300 group"
             >
               <div className="flex items-center justify-between gap-4">
@@ -100,7 +100,7 @@ export default async function AuditListPage() {
           <div className="text-center py-20 text-faint bg-surface-blur border-surface rounded-2xl">
             <ClipboardCheck className="size-12 mx-auto mb-3 opacity-40" />
             <p className="text-sm"><T k="audit.empty" /></p>
-            <Link href="/audit/new" className="text-xs text-violet-400 hover:underline mt-2 inline-block"><T k="audit.emptyCta" /></Link>
+            <Link href="/stock/count/new" className="text-xs text-violet-400 hover:underline mt-2 inline-block"><T k="audit.emptyCta" /></Link>
           </div>
         )}
       </div>

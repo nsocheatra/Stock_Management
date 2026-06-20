@@ -2,7 +2,7 @@
 
 import { useOptimistic } from "react";
 import { useRouter } from "next/navigation";
-import { updateAuditItem, completeAudit, applyAuditCorrections } from "@/lib/actions";
+import { updateAuditItem, completeAudit, applyAuditCorrections, cancelAudit } from "@/lib/actions";
 import { CheckCircle2, Save, AlertTriangle, ClipboardCheck } from "lucide-react";
 import { useTranslation } from "@/i18n/useTranslation";
 
@@ -73,6 +73,19 @@ export default function AuditCountClient({
           <span className="text-xs text-faint font-medium">{counted}/{items.length} {t("audit.counted")}</span>
         </div>
         <div className="flex gap-2">
+          {auditStatus === "in_progress" && (
+            <form action={async (fd: FormData) => {
+              if (!confirm("Cancel this stock count?")) return;
+              fd.set("audit_id", String(auditId)); await cancelAudit(fd); router.refresh();
+            }}>
+              <button
+                type="submit"
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all cursor-pointer"
+              >
+                Cancel Count
+              </button>
+            </form>
+          )}
           {auditStatus === "in_progress" && allCounted && (
             <form action={async (fd: FormData) => {
               if (!confirm("Complete this stock count? This will lock all values.")) return;
@@ -158,7 +171,7 @@ export default function AuditCountClient({
                             type="number"
                             step="1"
                             min="0"
-                            defaultValue={item.actual_qty ?? ""}
+                            defaultValue={item.actual_qty ?? item.expected_qty}
                             placeholder={t("audit.count")}
                             disabled={auditStatus !== "in_progress"}
                             className="w-24 px-2.5 py-1.5 rounded-lg bg-surface border border-surface text-default text-right text-sm placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-violet-500/40 transition-all disabled:opacity-50"

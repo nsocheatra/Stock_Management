@@ -265,7 +265,7 @@ export async function saveSettings(formData: FormData) {
     "printer_ip", "printer_port",
     "telegram_bot_token", "telegram_chat_ids", "telegram_notify_low_stock",
     "telegram_notify_daily", "telegram_enabled",
-    "payment_default_method", "payment_khqr_account", "payment_methods_enabled",
+    "payment_default_method", "payment_methods_enabled",
     "tax_rate", "tax_label",
     ];
   const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
@@ -623,7 +623,7 @@ export async function clearAllAudits() {
     await deleteItems.run(a.id);
     await deleteAudit.run(a.id);
   }
-  revalidatePath("/audit");
+  revalidatePath("/stock/count");
 }
 
 export async function createAudit(formData: FormData) {
@@ -642,8 +642,10 @@ export async function createAudit(formData: FormData) {
     if (product.has_variants) {
       const variants = await getVariants.all(product.id) as { id: number }[];
       if (variants.length > 0) {
+        const getVariantQty = db.prepare("SELECT quantity FROM product_variants WHERE id = ?");
         for (const v of variants) {
-          await insertItem.run(auditId, product.id, v.id, 0);
+          const vRow = await getVariantQty.get(v.id) as { quantity: number } | undefined;
+          await insertItem.run(auditId, product.id, v.id, vRow?.quantity || 0);
         }
         continue;
       }
@@ -652,8 +654,8 @@ export async function createAudit(formData: FormData) {
     await insertItem.run(auditId, product.id, null, qty?.quantity || 0);
   }
 
-  revalidatePath("/audit");
-  redirect(`/audit/${auditId}`);
+  revalidatePath("/stock/count");
+  redirect(`/stock/count/${auditId}`);
 }
 
 export async function updateAuditItem(formData: FormData) {
@@ -669,7 +671,7 @@ export async function updateAuditItem(formData: FormData) {
   const note = formData.get("note") as string || null;
   await db.prepare("UPDATE physical_audit_items SET actual_qty = ?, difference = ?, note = ? WHERE id = ?")
     .run(actualQty, difference, note, itemId);
-  revalidatePath("/audit");
+  revalidatePath("/stock/count");
 }
 
 export async function completeAudit(formData: FormData) {
@@ -681,8 +683,8 @@ export async function completeAudit(formData: FormData) {
   if (uncounted.c > 0) throw new Error("All items must be counted before completing");
 
   await db.prepare("UPDATE physical_audits SET status = 'completed', completed_at = datetime('now') WHERE id = ?").run(auditId);
-  revalidatePath("/audit");
-  redirect("/audit");
+  revalidatePath("/stock/count");
+  redirect("/stock/count");
 }
 
 export async function applyAuditCorrections(formData: FormData) {
@@ -702,22 +704,29 @@ export async function applyAuditCorrections(formData: FormData) {
   const updateVariant = db.prepare("UPDATE product_variants SET quantity = ?, updated_at = datetime('now') WHERE id = ?");
   const insertMovement = db.prepare("INSERT INTO stock_movements (product_id, type, quantity, note) VALUES (?, ?, ?, ?)");
 
+  const getProductQty = db.prepare("SELECT quantity FROM products WHERE id = ?");
   for (const item of items) {
     const diff = item.actual_qty - item.expected_qty;
     const type = diff > 0 ? "IN" : "OUT";
-    await updateProduct.run(item.actual_qty, item.product_id);
-    await insertMovement.run(item.product_id, type, Math.abs(diff), `Stock count correction (audit #${auditId})`);
     if (item.variant_id) {
       const v = await db.prepare("SELECT quantity FROM product_variants WHERE id = ?").get(item.variant_id) as { quantity: number } | undefined;
       if (v) {
         const newVariantQty = Math.max(0, v.quantity + diff);
         await updateVariant.run(newVariantQty, item.variant_id);
       }
+      const p = await getProductQty.get(item.product_id) as { quantity: number } | undefined;
+      if (p) {
+        const newProductQty = Math.max(0, p.quantity + diff);
+        await updateProduct.run(newProductQty, item.product_id);
+      }
+    } else {
+      await updateProduct.run(item.actual_qty, item.product_id);
     }
+    await insertMovement.run(item.product_id, type, Math.abs(diff), `Stock count correction (audit #${auditId})`);
   }
 
-  revalidatePath("/audit");
-  redirect(`/audit/${auditId}`);
+  revalidatePath("/stock/count");
+  redirect(`/stock/count/${auditId}`);
 }
 
 export async function cancelAudit(formData: FormData) {
@@ -725,8 +734,8 @@ export async function cancelAudit(formData: FormData) {
   const auditId = parseInt(formData.get("audit_id") as string);
   if (isNaN(auditId)) throw new Error("Invalid audit ID");
   await db.prepare("UPDATE physical_audits SET status = 'cancelled' WHERE id = ?").run(auditId);
-  revalidatePath("/audit");
-  redirect("/audit");
+  revalidatePath("/stock/count");
+  redirect("/stock/count");
 }
 
 // === CUSTOMER ORDERS ===

@@ -8,7 +8,7 @@ import {
   Image as ImageIcon, Barcode, Maximize2, Minimize2, User,
   Printer, Percent, BadgePercent, Package, Layers,
   ClipboardPlus, ClipboardCheck, BarChart3, Truck, Gem, Radio,
-  QrCode, LayoutDashboard, LogOut,
+  LayoutDashboard, LogOut,
 } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
 import { logout } from "@/lib/auth";
@@ -24,7 +24,7 @@ type LocationInfo = { id: number; name: string; address: string | null };
 type CartItem = { product: Product; qty: number; price: number; discount?: number; discountType?: string; promotionId?: number; variantId?: number; variantName?: string; batchId?: number; batchNo?: string; locationId?: number; locationName?: string };
 type ReceiptItem = { name: string; sku: string; price: number; qty: number; discount?: number };
 
-const ALL_METHODS = ["cash", "card", "bank_transfer", "credit", "khqr"];
+const ALL_METHODS = ["cash", "bank_transfer"];
 
 export default function POSClient({ products, customers, promotions, members, variants, batches, locations }: {
   products: Product[]; customers: Customer[]; promotions: Promotion[]; members: Member[];
@@ -994,7 +994,7 @@ export default function POSClient({ products, customers, promotions, members, va
                           ? "bg-[#111827] text-white border-[#111827]"
                           : "bg-white text-[#6B7280] border-[#E5E7EB] hover:border-[#9CA3AF]"
                       }`}>
-                      {m === "cash" ? "Cash" : m === "card" ? "Card" : m === "bank_transfer" ? "Bank" : m === "khqr" ? <><QrCode className="size-3" /> KHQR</> : "Credit"}
+                      {m === "cash" ? "Cash" : "Bank Transfer"}
                     </button>
                   ))}
                 </div>

@@ -2,7 +2,7 @@ import { createAudit } from "@/lib/actions";
 import { requirePermission } from "@/lib/auth";
 import { T } from "@/components/T";
 
-export default async function NewAuditPage() {
+export default async function NewStockCountPage() {
   await requirePermission("audit.manage");
   return (
     <div className="space-y-6 animate-in fade-in duration-500 max-w-lg mx-auto pt-12">

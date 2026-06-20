@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
-import { cancelAudit } from "@/lib/actions";
 import AuditCountClient from "./AuditCountClient";
 import { T } from "@/components/T";
 import { CheckCircle2, Loader2, XCircle, ArrowLeft } from "lucide-react";
@@ -75,7 +74,7 @@ export default async function AuditDetailPage({ params }: Props) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <Link href="/audit" className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-default transition-colors mb-2">
+      <Link href="/stock/count" className="inline-flex items-center gap-1.5 text-xs text-muted hover:text-default transition-colors mb-2">
         <ArrowLeft className="size-3.5" />
         Back to Stock Counts
       </Link>
@@ -99,16 +98,6 @@ export default async function AuditDetailPage({ params }: Props) {
           {discrepancies > 0 && <p className="text-rose-400 font-semibold mt-0.5"><T k="audit.discrepancies" />: {discrepancies}</p>}
         </div>
       </div>
-
-      {audit.status === "in_progress" && (
-        <form action={cancelAudit}>
-          <input type="hidden" name="audit_id" value={audit.id} />
-          <button type="submit" className="px-4 py-2 rounded-xl text-sm font-semibold bg-rose-500/10 text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 transition-all cursor-pointer"
-            onClick={(e) => { if (!confirm("Cancel this stock count?")) e.preventDefault(); }}>
-            Cancel Count
-          </button>
-        </form>
-      )}
 
       <AuditCountClient items={items} auditId={audit.id} auditStatus={audit.status} />
     </div>

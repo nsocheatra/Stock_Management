@@ -35,7 +35,7 @@ export default function ReceiptView({
   const [printing, setPrinting] = useState(false);
   const [printError, setPrintError] = useState("");
 
-  const pmLabel = paymentMethod === "cash" ? "Cash" : paymentMethod === "card" ? "Card" : paymentMethod === "bank_transfer" ? "Bank Transfer" : paymentMethod === "khqr" ? "KHQR" : paymentMethod || "";
+  const pmLabel = paymentMethod === "cash" ? "Cash" : paymentMethod === "bank_transfer" ? "Bank Transfer" : paymentMethod || "";
 
   const browserPrint = () => {
     const printWin = window.open("", "_blank");
@@ -175,7 +175,7 @@ export default function ReceiptView({
           {paymentMethod ? (
             <div className="flex justify-between text-xs text-faint mt-1">
               <span>Payment</span>
-              <span>{paymentMethod === "cash" ? "Cash" : paymentMethod === "card" ? "Card" : paymentMethod === "bank_transfer" ? "Bank Transfer" : paymentMethod === "khqr" ? "KHQR" : paymentMethod}</span>
+              <span>{paymentMethod === "cash" ? "Cash" : paymentMethod === "bank_transfer" ? "Bank Transfer" : paymentMethod}</span>
             </div>
           ) : null}
           <div className="border-t border-dashed border-surface my-2" />

@@ -51,7 +51,7 @@ const navItems = [
   { href: "/customers", label: "Customers", icon: "customers", permission: "customers.manage" as const },
   { href: "/products", label: "Products", icon: "products", permission: "products.manage" as const },
   { href: "/stock", label: "Inventory", icon: "stock", permission: "stock.manage" as const },
-  { href: "/audit", label: "Stock Count", icon: "audit", permission: "audit.manage" as const },
+  { href: "/stock/count", label: "Stock Count", icon: "audit", permission: "audit.manage" as const },
   { href: "/orders", label: "Orders", icon: "orders", permission: "orders.manage" as const },
   { href: "/debts", label: "Debts", icon: "debts", permission: "debts.manage" as const },
   { href: "/cash-flow", label: "Cash Flow", icon: "cashflow", permission: "cashflow.manage" as const },

@@ -183,8 +183,6 @@ class DbWrapper {
     await alterTable("ALTER TABLE stock_movements ADD COLUMN location_id INTEGER REFERENCES locations(id) ON DELETE SET NULL;");
     await alterTable("ALTER TABLE stock_movements ADD COLUMN batch_id INTEGER REFERENCES batches(id) ON DELETE SET NULL;");
     await alterTable("ALTER TABLE stock_movements ADD COLUMN variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL;");
-    await alterTable("ALTER TABLE physical_audit_items ADD COLUMN variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL;");
-    await alterTable("ALTER TABLE physical_audit_items ADD COLUMN batch_id INTEGER REFERENCES batches(id) ON DELETE SET NULL;");
     await alterTable("ALTER TABLE sales ADD COLUMN payment_method TEXT DEFAULT 'cash';");
     await alterTable("ALTER TABLE sales ADD COLUMN discount REAL DEFAULT 0;");
     await alterTable("ALTER TABLE sales ADD COLUMN discount_type TEXT;");
@@ -214,8 +212,7 @@ class DbWrapper {
     await upsertSetting2.run("telegram_notify_daily", "1");
     await upsertSetting2.run("telegram_enabled", "0");
     await upsertSetting2.run("payment_default_method", "cash");
-    await upsertSetting2.run("payment_khqr_account", "");
-    await upsertSetting2.run("payment_methods_enabled", "cash,card,bank_transfer,credit,khqr");
+    await upsertSetting2.run("payment_methods_enabled", "cash,bank_transfer");
     await upsertSetting2.run("tax_rate", "0");
     await upsertSetting2.run("tax_label", "Tax");
     await this.exec(`
@@ -323,6 +320,9 @@ class DbWrapper {
         difference INTEGER,
         note TEXT
       );
+
+    await alterTable("ALTER TABLE physical_audit_items ADD COLUMN variant_id INTEGER REFERENCES product_variants(id) ON DELETE SET NULL;");
+    await alterTable("ALTER TABLE physical_audit_items ADD COLUMN batch_id INTEGER REFERENCES batches(id) ON DELETE SET NULL;");
 
       CREATE TABLE IF NOT EXISTS cash_flow (
         id INTEGER PRIMARY KEY AUTOINCREMENT,

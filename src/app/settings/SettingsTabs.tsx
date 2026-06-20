@@ -184,23 +184,15 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
             <label className="input-label">Default Payment Method</label>
             <select name="payment_default_method" defaultValue={settings.payment_default_method} className="input-field">
               <option value="cash">Cash</option>
-              <option value="card">Card</option>
               <option value="bank_transfer">Bank Transfer</option>
-              <option value="credit">Credit</option>
-              <option value="khqr">KHQR</option>
             </select>
-          </div>
-
-          <div>
-            <label className="input-label">KHQR Account Name / ID</label>
-            <input name="payment_khqr_account" defaultValue={settings.payment_khqr_account} className="input-field" placeholder="e.g. CAMNAKA Co." />
           </div>
 
           <div>
             <label className="input-label">Enabled Payment Methods</label>
             <p className="text-xs text-faint mb-2">Comma-separated list of active payment methods</p>
-            <input name="payment_methods_enabled" defaultValue={settings.payment_methods_enabled} className="input-field" placeholder="cash,card,bank_transfer,credit,khqr" />
-            <p className="text-xs text-faint mt-1">Options: cash, card, bank_transfer, credit, khqr</p>
+            <input name="payment_methods_enabled" defaultValue={settings.payment_methods_enabled} className="input-field" placeholder="cash,bank_transfer" />
+            <p className="text-xs text-faint mt-1">Options: cash, bank_transfer</p>
           </div>
 
           <div className="border-t border-surface pt-4 space-y-4">
