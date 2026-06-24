@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireApiAuth } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
+  const { error } = await requireApiAuth();
+  if (error) return error;
+
   const body = await req.json();
   const { livestream_id, facebook_comment_id, customer_name, customer_avatar, customer_id, message } = body;
   if (!livestream_id || !facebook_comment_id || !customer_name || !customer_id || !message) {

@@ -1,13 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requireApiPermission } from "@/lib/api-auth";
 
 export async function GET() {
+  const { error } = await requireApiPermission("livestream.manage");
+  if (error) return error;
+
   const streams = await db.prepare("SELECT * FROM livestreams ORDER BY created_at DESC").all();
   return NextResponse.json(streams);
 }
 
 export async function POST(req: NextRequest) {
+  const { error } = await requireApiPermission("livestream.manage");
+  if (error) return error;
+
   const body = await req.json();
   const { title, description, facebook_page_id, scheduled_at } = body;
   if (!title) return NextResponse.json({ error: "Title is required" }, { status: 400 });

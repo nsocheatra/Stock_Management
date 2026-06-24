@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { revalidatePath } from "next/cache";
+import { requireApiPermission } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error } = await requireApiPermission("livestream.manage");
+  if (error) return error;
+
   const { id } = await params;
   const stream = await db.prepare("SELECT * FROM livestreams WHERE id = ?").get(parseInt(id));
   if (!stream) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -18,6 +22,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error } = await requireApiPermission("livestream.manage");
+  if (error) return error;
+
   const { id } = await params;
   const body = await req.json();
   const fields: string[] = [];
@@ -37,6 +44,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { error } = await requireApiPermission("livestream.manage");
+  if (error) return error;
+
   const { id } = await params;
   await db.prepare("DELETE FROM livestreams WHERE id = ?").run(parseInt(id));
   revalidatePath("/livestream");

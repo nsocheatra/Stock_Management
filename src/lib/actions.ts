@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import net from "net";
 import { db } from "./db";
-import { requirePermission } from "@/lib/auth";
+import { requireAuth, requirePermission } from "@/lib/auth";
+import { getSecret, isSecretKey } from "@/lib/secrets";
 import {
   generateStockNotificationsData,
   getNotifications as getNotificationsData,
@@ -15,6 +16,7 @@ import {
 } from "./notifications-data";
 
 export async function createProduct(formData: FormData) {
+  await requirePermission("products.manage");
   const track_batches = formData.get("track_batches") === "1" ? 1 : 0;
   const stmt = db.prepare(`
     INSERT INTO products (name, sku, price, cost_price, selling_price, original_price, unit_price, price_per_case, quantity, description, category, min_stock, supplier_id, barcode, image_url, track_batches)
@@ -52,6 +54,7 @@ export async function createProduct(formData: FormData) {
 }
 
 export async function updateProduct(id: number, formData: FormData) {
+  await requirePermission("products.manage");
   const track_batches = formData.get("track_batches") === "1" ? 1 : 0;
   const stmt = db.prepare(`
     UPDATE products SET name=?, sku=?, price=?, cost_price=?, selling_price=?, original_price=?, unit_price=?, price_per_case=?, quantity=?, description=?, category=?, min_stock=?, supplier_id=?, barcode=?, image_url=?, track_batches=?, updated_at=datetime('now')
@@ -92,6 +95,7 @@ export async function updateProduct(id: number, formData: FormData) {
 }
 
 export async function deleteProduct(id: number) {
+  await requirePermission("products.manage");
   await db.prepare("DELETE FROM stock_movements WHERE product_id = ?").run(id);
   await db.prepare("DELETE FROM products WHERE id = ?").run(id);
   revalidatePath("/products");
@@ -99,6 +103,7 @@ export async function deleteProduct(id: number) {
 }
 
 export async function createStockMovement(formData: FormData) {
+  await requirePermission("stock.manage");
   const productId = parseInt(formData.get("productId") as string);
   const type = formData.get("type") as string;
   const quantity = parseInt(formData.get("quantity") as string);
@@ -140,6 +145,7 @@ export async function createStockMovement(formData: FormData) {
 }
 
 export async function processPOS(formData: FormData) {
+  await requirePermission("pos.access");
   const itemsJson = formData.get("items") as string;
   if (!itemsJson) return { error: "No items provided" };
   let items: Array<{ productId: number; quantity: number; price: number; discount?: number; discountType?: string; promotionId?: number; variantId?: number; batchId?: number; locationId?: number }>;
@@ -239,7 +245,8 @@ export async function processPOS(formData: FormData) {
   try {
     saleResult = await sale();
   } catch (e) {
-    return { error: (e as Error).message };
+    console.error("processPOS error:", (e as Error).message);
+    return { error: "Failed to process sale" };
   }
 
   revalidatePath("/pos");
@@ -252,19 +259,23 @@ export async function processPOS(formData: FormData) {
 
 // ─── Settings ────────────────────────────────────────────────
 export async function getSettings() {
+  await requireAuth();
   const rows = await db.prepare("SELECT key, value FROM settings").all() as Array<{ key: string; value: string }>;
   const s: Record<string, string> = {};
-  for (const row of rows) s[row.key] = row.value;
+  for (const row of rows) {
+    if (!isSecretKey(row.key)) s[row.key] = row.value;
+  }
   return s;
 }
 
 export async function saveSettings(formData: FormData) {
+  await requirePermission("settings.manage");
   const keys = [
     "printer_type", "paper_width", "receipt_header", "receipt_footer",
     "receipt_copies", "auto_print", "store_name", "store_address", "store_phone",
     "printer_ip", "printer_port",
-    "telegram_bot_token", "telegram_chat_ids", "telegram_notify_low_stock",
-    "telegram_notify_daily", "telegram_enabled",
+    "telegram_notify_low_stock",
+    "telegram_notify_daily",
     "payment_default_method", "payment_methods_enabled",
     "tax_rate", "tax_label",
     ];
@@ -389,6 +400,7 @@ export async function printReceipt(data: {
   paperWidth: number;
   copies: number;
 }) {
+  await requireAuth();
   if (data.printerType === "browser") {
     return { success: true, method: "browser" };
   }
@@ -446,6 +458,7 @@ export async function printReceipt(data: {
 
 // ─── Receipts ────────────────────────────────────────────────
 export async function saveReceipt(formData: FormData) {
+  await requireAuth();
   const data = formData.get("data") as string;
   const total = parseFloat(formData.get("total") as string);
   const count = parseInt(formData.get("count") as string);
@@ -455,18 +468,21 @@ export async function saveReceipt(formData: FormData) {
 }
 
 export async function getReceipts(limit = 50) {
+  await requireAuth();
   return await db.prepare("SELECT * FROM receipts ORDER BY created_at DESC LIMIT ?").all(limit);
 }
 
 // ─── Telegram ────────────────────────────────────────────────
 export async function sendTelegramNotification(message: string) {
-  const token = (await db.prepare("SELECT value FROM settings WHERE key = 'telegram_bot_token'").get() as { value: string } | undefined)?.value;
-  const chatIds = (await db.prepare("SELECT value FROM settings WHERE key = 'telegram_chat_ids'").get() as { value: string } | undefined)?.value;
-  const enabled = (await db.prepare("SELECT value FROM settings WHERE key = 'telegram_enabled'").get() as { value: string } | undefined)?.value === "1";
-  if (!token || !chatIds || !enabled) return;
+  await requireAuth();
+  const token = await getSecret("telegram_bot_token");
+  const chatIdsRaw = await getSecret("telegram_chat_ids");
+  const enabled = (await getSecret("telegram_enabled")) === "1";
+  if (!token || !chatIdsRaw || !enabled) return;
+  const chatIds = chatIdsRaw.split(",").map((s: string) => s.trim()).filter(Boolean);
+  if (chatIds.length === 0) return;
 
-  for (const chatId of chatIds.split(",").map((s: string) => s.trim())) {
-    if (!chatId) continue;
+  for (const chatId of chatIds) {
     try {
       await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: "POST",
@@ -479,6 +495,7 @@ export async function sendTelegramNotification(message: string) {
 
 
 export async function createSupplier(formData: FormData) {
+  await requirePermission("suppliers.manage");
   await db.prepare("INSERT INTO suppliers (name, email, phone, address) VALUES (?, ?, ?, ?)").run(
     formData.get("name"),
     formData.get("email"),
@@ -490,6 +507,7 @@ export async function createSupplier(formData: FormData) {
 }
 
 export async function updateSupplier(id: number, formData: FormData) {
+  await requirePermission("suppliers.manage");
   await db.prepare("UPDATE suppliers SET name=?, email=?, phone=?, address=?, updated_at=datetime('now') WHERE id=?").run(
     formData.get("name"),
     formData.get("email"),
@@ -502,6 +520,7 @@ export async function updateSupplier(id: number, formData: FormData) {
 }
 
 export async function deleteSupplier(id: number) {
+  await requirePermission("suppliers.manage");
   await db.prepare("UPDATE products SET supplier_id = NULL WHERE supplier_id = ?").run(id);
   await db.prepare("DELETE FROM suppliers WHERE id = ?").run(id);
   revalidatePath("/suppliers");
@@ -509,6 +528,7 @@ export async function deleteSupplier(id: number) {
 }
 
 export async function getCustomers() {
+  await requireAuth();
   return await db.prepare("SELECT * FROM customers ORDER BY name ASC").all() as Array<{
     id: number; name: string; phone: string | null; email: string | null; address: string | null;
     customer_type: string; credit: number; created_at: string; updated_at: string;
@@ -516,6 +536,7 @@ export async function getCustomers() {
 }
 
 export async function getCustomer(id: number) {
+  await requireAuth();
   return await db.prepare("SELECT * FROM customers WHERE id = ?").get(id) as {
     id: number; name: string; phone: string | null; email: string | null; address: string | null;
     customer_type: string; credit: number; created_at: string; updated_at: string;
@@ -523,6 +544,7 @@ export async function getCustomer(id: number) {
 }
 
 export async function saveCustomer(formData: FormData) {
+  await requirePermission("customers.manage");
   const id = formData.get("id") ? parseInt(formData.get("id") as string) : null;
   const name = (formData.get("name") as string).trim();
   const phone = (formData.get("phone") as string).trim() || null;
@@ -547,12 +569,14 @@ export async function saveCustomer(formData: FormData) {
 }
 
 export async function deleteCustomer(id: number) {
+  await requirePermission("customers.manage");
   await db.prepare("DELETE FROM customers WHERE id = ?").run(id);
   revalidatePath("/customers");
   redirect("/customers");
 }
 
 export async function getSales(limit = 100) {
+  await requireAuth();
   return await db.prepare(`
     SELECT s.*, c.name as customer_name
     FROM sales s
@@ -565,6 +589,7 @@ export async function getSales(limit = 100) {
 }
 
 export async function getSaleItems(saleId: number) {
+  await requireAuth();
   return await db.prepare("SELECT * FROM sale_items WHERE sale_id = ?").all(saleId) as Array<{
     id: number; sale_id: number; product_id: number; product_name: string;
     sku: string | null; price: number; quantity: number;
@@ -573,6 +598,7 @@ export async function getSaleItems(saleId: number) {
 
 // === DEBTS ===
 export async function createDebt(formData: FormData) {
+  await requirePermission("debts.manage");
   const type = formData.get("type") as string;
   const reference_id = parseInt(formData.get("reference_id") as string);
   const amount = parseFloat(formData.get("amount") as string);
@@ -585,6 +611,7 @@ export async function createDebt(formData: FormData) {
 }
 
 export async function addDebtPayment(formData: FormData) {
+  await requirePermission("debts.manage");
   const debt_id = parseInt(formData.get("debt_id") as string);
   const amount = parseFloat(formData.get("amount") as string);
   if (!debt_id || !amount) throw new Error("Missing fields");
@@ -603,6 +630,7 @@ export async function addDebtPayment(formData: FormData) {
 
 // === CASH FLOW ===
 export async function createCashFlowEntry(formData: FormData) {
+  await requirePermission("cashflow.manage");
   const type = formData.get("type") as string;
   const category = formData.get("category") as string;
   const amount = parseFloat(formData.get("amount") as string);
@@ -740,6 +768,7 @@ export async function cancelAudit(formData: FormData) {
 
 // === CUSTOMER ORDERS ===
 export async function createCustomerOrder(formData: FormData) {
+  await requirePermission("orders.manage");
   const customer_id = formData.get("customer_id") ? parseInt(formData.get("customer_id") as string) : null;
   const delivery_address = formData.get("delivery_address") as string || null;
   const delivery_fee = parseFloat(formData.get("delivery_fee") as string) || 0;
@@ -760,6 +789,7 @@ export async function createCustomerOrder(formData: FormData) {
 }
 
 export async function updateOrderStatus(formData: FormData) {
+  await requirePermission("orders.manage");
   const orderId = parseInt(formData.get("order_id") as string);
   const status = formData.get("status") as string;
   if (!orderId || !status) throw new Error("Missing fields");
@@ -768,6 +798,7 @@ export async function updateOrderStatus(formData: FormData) {
 }
 
 export async function convertOrderToSale(orderId: number) {
+  await requirePermission("orders.manage");
   const order = await db.prepare("SELECT * FROM customer_orders WHERE id = ?").get(orderId) as any;
   if (!order) return { error: "Order not found" };
   if (order.sale_id) return { error: "Already converted to sale" };
@@ -802,7 +833,8 @@ export async function convertOrderToSale(orderId: number) {
       await db.prepare("UPDATE customer_orders SET sale_id = ?, status = 'delivered' WHERE id = ?").run(saleId, orderId);
     })();
   } catch (e) {
-    return { error: (e as Error).message };
+    console.error("deliverOrder error:", (e as Error).message);
+    return { error: "Failed to deliver order" };
   }
 
   revalidatePath("/orders");
@@ -811,6 +843,7 @@ export async function convertOrderToSale(orderId: number) {
 }
 
 export async function getCustomerOrderReceipt(orderId: number) {
+  await requireAuth();
   const order = await db.prepare(`
     SELECT co.*, c.name as customer_name
     FROM customer_orders co
@@ -824,6 +857,7 @@ export async function getCustomerOrderReceipt(orderId: number) {
 
 // === DELIVERY PARTNERS ===
 export async function createDeliveryPartner(formData: FormData) {
+  await requirePermission("delivery.manage");
   const name = formData.get("name") as string;
   const phone = formData.get("phone") as string || null;
   const commission_type = formData.get("commission_type") as string || "fixed";
@@ -835,6 +869,7 @@ export async function createDeliveryPartner(formData: FormData) {
 }
 
 export async function createDelivery(formData: FormData) {
+  await requirePermission("delivery.manage");
   const order_id = formData.get("order_id") ? parseInt(formData.get("order_id") as string) : null;
   const partner_id = formData.get("partner_id") ? parseInt(formData.get("partner_id") as string) : null;
   const fee = parseFloat(formData.get("fee") as string) || 0;
@@ -846,6 +881,7 @@ export async function createDelivery(formData: FormData) {
 
 // === PROMOTIONS ===
 export async function createPromotion(formData: FormData) {
+  await requirePermission("promotions.manage");
   const name = formData.get("name") as string;
   const type = formData.get("type") as string;
   const value = parseFloat(formData.get("value") as string) || 0;
@@ -864,6 +900,7 @@ export async function createPromotion(formData: FormData) {
 
 // === MEMBERSHIP ===
 export async function createMembershipTier(formData: FormData) {
+  await requirePermission("membership.manage");
   const name = formData.get("name") as string;
   const min_spend = parseFloat(formData.get("min_spend") as string) || 0;
   const discount_percent = parseFloat(formData.get("discount_percent") as string) || 0;
@@ -875,6 +912,7 @@ export async function createMembershipTier(formData: FormData) {
 }
 
 export async function enrollMember(formData: FormData) {
+  await requirePermission("membership.manage");
   const customer_id = parseInt(formData.get("customer_id") as string);
   const tier_id = formData.get("tier_id") ? parseInt(formData.get("tier_id") as string) : null;
   if (!customer_id) return { error: "Customer required" };
@@ -884,6 +922,7 @@ export async function enrollMember(formData: FormData) {
 
 // === LOCATIONS ===
 export async function createLocation(formData: FormData) {
+  await requirePermission("stock.manage");
   const name = formData.get("name") as string;
   const address = formData.get("address") as string || null;
   if (!name) throw new Error("Name required");
@@ -897,6 +936,7 @@ export async function createLocation(formData: FormData) {
 }
 
 export async function updateLocation(id: number, formData: FormData) {
+  await requirePermission("stock.manage");
   const name = formData.get("name") as string;
   const address = formData.get("address") as string || null;
   if (!name) throw new Error("Name required");
@@ -909,12 +949,14 @@ export async function updateLocation(id: number, formData: FormData) {
 }
 
 export async function deleteLocation(id: number) {
+  await requirePermission("stock.manage");
   await db.prepare("DELETE FROM locations WHERE id = ?").run(id);
   revalidatePath("/stock");
 }
 
 // === PRODUCT VARIANTS ===
 export async function createVariant(formData: FormData) {
+  await requirePermission("products.manage");
   const product_id = parseInt(formData.get("product_id") as string);
   const name = formData.get("name") as string;
   const sku = formData.get("sku") as string || null;
@@ -929,6 +971,7 @@ export async function createVariant(formData: FormData) {
 }
 
 export async function updateVariant(id: number, formData: FormData) {
+  await requirePermission("products.manage");
   const name = formData.get("name") as string;
   const sku = formData.get("sku") as string || null;
   const barcode = formData.get("barcode") as string || null;
@@ -941,6 +984,7 @@ export async function updateVariant(id: number, formData: FormData) {
 }
 
 export async function deleteVariant(id: number) {
+  await requirePermission("products.manage");
   const v = await db.prepare("SELECT product_id FROM product_variants WHERE id = ?").get(id) as { product_id: number } | undefined;
   await db.prepare("DELETE FROM product_variants WHERE id = ?").run(id);
   if (v) {
@@ -955,6 +999,7 @@ export async function deleteVariant(id: number) {
 
 // === BATCHES ===
 export async function createBatch(formData: FormData) {
+  await requirePermission("stock.manage");
   const product_id = parseInt(formData.get("product_id") as string);
   const variant_id = formData.get("variant_id") ? parseInt(formData.get("variant_id") as string) : null;
   const batch_no = formData.get("batch_no") as string;
@@ -971,6 +1016,7 @@ export async function createBatch(formData: FormData) {
 }
 
 export async function deleteBatch(id: number) {
+  await requirePermission("stock.manage");
   await db.prepare("DELETE FROM batches WHERE id = ?").run(id);
   revalidatePath("/stock");
 }
@@ -982,24 +1028,29 @@ export async function generateStockNotifications() {
 }
 
 export async function getNotifications() {
+  await requireAuth();
   return getNotificationsData();
 }
 
 export async function getUnreadNotificationCount() {
+  await requireAuth();
   return getUnreadNotificationCountData();
 }
 
 export async function markNotificationRead(id: number) {
+  await requireAuth();
   await markNotificationReadData(id);
   revalidatePath("/notifications");
 }
 
 export async function markAllNotificationsRead() {
+  await requireAuth();
   await markAllNotificationsReadData();
   revalidatePath("/notifications");
 }
 
 export async function clearAllNotifications() {
+  await requireAuth();
   await clearAllNotificationsData();
   revalidatePath("/notifications");
 }
@@ -1040,57 +1091,39 @@ export async function clearAllData(categories?: string[]) {
 }
 
 // === LIVESTREAM ===
-export async function createKeyword(formData: FormData) {
-  await requirePermission("livestream.manage");
-  const keyword = (formData.get("keyword") as string)?.trim().toLowerCase();
-  const productId = parseInt(formData.get("productId") as string);
-  const quantity = parseInt(formData.get("quantity") as string) || 1;
-  if (!keyword || !productId) return { error: "Keyword and product are required" };
-
-  const product = await db.prepare("SELECT id, name, selling_price, price FROM products WHERE id = ?").get(productId) as any;
-  if (!product) return { error: "Product not found" };
-
-  try {
-    await db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(keyword, productId, quantity);
-  } catch {
-    return { error: "Keyword already exists" };
-  }
-  revalidatePath("/livestream");
-}
-
-export async function deleteKeyword(id: number) {
-  await requirePermission("livestream.manage");
-  await db.prepare("DELETE FROM fb_keywords WHERE id = ?").run(id);
-  revalidatePath("/livestream");
-}
-
 export async function simulateOrder(formData: FormData) {
   await requirePermission("livestream.manage");
   const keyword = (formData.get("keyword") as string)?.trim().toLowerCase();
   const customerName = (formData.get("customerName") as string)?.trim() || "Facebook User";
-  if (!keyword) return { error: "Keyword is required" };
+  if (!keyword) return { success: false, error: "Keyword is required" };
 
   const mapping = await db.prepare(`
     SELECT fk.*, p.name as product_name, p.selling_price, p.price
     FROM fb_keywords fk JOIN products p ON fk.product_id = p.id
     WHERE fk.keyword = ?
   `).get(keyword) as any;
-  if (!mapping) return { error: `No product mapped to keyword "${keyword}"` };
+  if (!mapping) return { success: false, error: `No product mapped to keyword "${keyword}"` };
 
   const price = mapping.selling_price || mapping.price;
   const total = price * mapping.quantity;
 
-  const product = await db.prepare("SELECT quantity FROM products WHERE id = ?").get(mapping.product_id) as { quantity: number } | undefined;
-  if (!product || product.quantity < mapping.quantity) return { error: "Insufficient stock" };
+  const result = await db.transaction(async () => {
+    const product = await db.prepare("SELECT quantity FROM products WHERE id = ?").get(mapping.product_id) as { quantity: number } | undefined;
+    if (!product || product.quantity < mapping.quantity) return { success: false, error: "Insufficient stock" };
 
-  await db.prepare("UPDATE products SET quantity = quantity - ? WHERE id = ?").run(mapping.quantity, mapping.product_id);
-  await db.prepare(`
-    INSERT INTO fb_orders (keyword, customer_name, product_id, product_name, quantity, total)
-    VALUES (?, ?, ?, ?, ?, ?)
-  `).run(keyword, customerName, mapping.product_id, mapping.product_name, mapping.quantity, total);
+    const updated = await db.prepare("UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?").run(mapping.quantity, mapping.product_id, mapping.quantity);
+    if (updated.changes === 0) return { success: false, error: "Insufficient stock" };
+
+    await db.prepare(`
+      INSERT INTO fb_orders (keyword, customer_name, product_id, product_name, quantity, total)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(keyword, customerName, mapping.product_id, mapping.product_name, mapping.quantity, total);
+
+    return { success: true, product_name: mapping.product_name, quantity: mapping.quantity, total };
+  })();
 
   revalidatePath("/livestream");
-  return { success: true, product_name: mapping.product_name, quantity: mapping.quantity, total };
+  return result;
 }
 
 export async function processOrder(formData: FormData) {
@@ -1103,25 +1136,18 @@ export async function processOrder(formData: FormData) {
 
 export async function clearOrders() {
   await requirePermission("livestream.manage");
-  await db.prepare("DELETE FROM fb_orders").run();
-  revalidatePath("/livestream");
-}
-
-export async function saveStreamUrl(url: string) {
-  await requirePermission("livestream.manage");
-  const existing = await db.prepare("SELECT key FROM settings WHERE key = 'livestream_url'").get();
-  if (existing) {
-    await db.prepare("UPDATE settings SET value = ? WHERE key = 'livestream_url'").run(url);
-  } else {
-    await db.prepare("INSERT INTO settings (key, value) VALUES ('livestream_url', ?)").run(url);
+  const orders = await db.prepare("SELECT product_id, quantity FROM fb_orders WHERE processed = 0").all() as any[];
+  for (const o of orders) {
+    await db.prepare("UPDATE products SET quantity = quantity + ? WHERE id = ?").run(o.quantity, o.product_id);
   }
+  await db.prepare("DELETE FROM fb_orders").run();
   revalidatePath("/livestream");
 }
 
 export async function saveFacebookPage(formData: FormData) {
   await requirePermission("livestream.manage");
   const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
-  const fields = ["facebook_page_url", "facebook_page_name", "facebook_page_id", "facebook_business_id", "facebook_access_token", "facebook_app_id", "facebook_app_secret"];
+  const fields = ["facebook_page_url", "facebook_page_name", "facebook_page_id", "facebook_business_id", "facebook_access_token", "facebook_app_id"];
   for (const key of fields) {
     const val = formData.get(key) as string;
     if (val !== null) await upsert.run(key, val.trim());

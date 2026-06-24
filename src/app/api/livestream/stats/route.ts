@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireApiPermission } from "@/lib/api-auth";
 
 export async function GET(req: NextRequest) {
+  const { error } = await requireApiPermission("livestream.manage");
+  if (error) return error;
   const { searchParams } = new URL(req.url);
   const livestream_id = searchParams.get("livestream_id");
   if (!livestream_id) return NextResponse.json({ error: "livestream_id required" }, { status: 400 });

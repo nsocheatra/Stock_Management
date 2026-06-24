@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireApiAuth } from "@/lib/api-auth";
 
 export async function GET() {
+  const { error } = await requireApiAuth();
+  if (error) return error;
   const orders = await db.prepare(`
     SELECT lo.*, u.name as driver_name
     FROM live_orders lo LEFT JOIN users u ON lo.driver_id = u.id
@@ -12,6 +15,9 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
+  const { error } = await requireApiAuth();
+  if (error) return error;
+
   const body = await req.json();
   const { id, driver_id, status } = body;
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
