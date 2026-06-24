@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getSecret } from "@/lib/secrets";
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
       reply = "Unknown command. Type /help for available commands.";
     }
 
-    const token = (await db.prepare("SELECT value FROM settings WHERE key = 'telegram_bot_token'").get() as { value: string } | undefined)?.value;
+    const token = await getSecret("telegram_bot_token");
     if (token) {
       await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
         method: "POST",

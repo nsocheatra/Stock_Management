@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import { requirePermission } from "@/lib/auth";
 import POSClient from "./POSClient";
 
 interface ProductRow {
@@ -73,6 +74,7 @@ interface LocationRow {
 }
 
 export default async function POSPage() {
+  await requirePermission("pos.access");
   const products: ProductRow[] = JSON.parse(JSON.stringify(
     await db.prepare("SELECT id, name, sku, barcode, price, wholesale_price, selling_price, original_price, unit_price, price_per_case, quantity, image_url, category, has_variants, track_batches FROM products ORDER BY name ASC").all()
   ));

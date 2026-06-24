@@ -1,11 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const publicPaths = ["/login", "/api/telegram-webhook", "/api/upload"];
+const publicPaths = [
+  "/login",
+  "/api/telegram-webhook",
+  "/api/livestream/comments",
+  "/_next/static",
+  "/_next/image",
+  "/favicon.ico",
+  "/icon-",
+  "/manifest.json",
+  "/sw.js",
+];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (publicPaths.some((p) => pathname.startsWith(p))) return NextResponse.next();
-  if (pathname.startsWith("/_next") || pathname.startsWith("/favicon") || pathname === "/sw.js" || pathname === "/manifest.json" || pathname.startsWith("/icon-")) return NextResponse.next();
+
+  const response = NextResponse.next();
+
+  response.headers.set("X-Content-Type-Options", "nosniff");
+  response.headers.set("X-Frame-Options", "DENY");
+  response.headers.set("X-XSS-Protection", "1; mode=block");
+  response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  response.headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+
+  if (publicPaths.some((p) => pathname.startsWith(p))) return response;
+  if (pathname.startsWith("/_next") || pathname === "/favicon.ico") return response;
 
   const session = request.cookies.get("session")?.value;
   if (!session) {
@@ -13,9 +32,12 @@ export function proxy(request: NextRequest) {
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
   }
-  return NextResponse.next();
+
+  return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|icon-|manifest.json|sw.js).*)",
+  ],
 };

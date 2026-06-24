@@ -84,8 +84,12 @@ export default function EditUserModal({ user, onClose }: {
         </select>
           </div>
           <div>
+            <label className="input-label">{t("users.fields.password")}</label>
+            <input name="password" type="password" className="input-field" placeholder={t("users.placeholders.passwordNew")} />
+          </div>
+          <div>
             <label className="input-label">{t("users.fields.pin")}</label>
-            <input name="pin" defaultValue={user.pin || ""} className="input-field" placeholder={t("users.placeholders.pin")} pattern="[0-9]{6}" maxLength={6} />
+            <input name="pin" defaultValue={user.pin || ""} className="input-field" placeholder={t("users.placeholders.pin")} pattern="[0-9]{4,}" maxLength={10} />
           </div>
 
           <label className="flex items-center gap-2 cursor-pointer">

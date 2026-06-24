@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslation } from "@/i18n/useTranslation";
-import { Printer, Bot, AlertTriangle, Save, Package, Warehouse, ShoppingCart, Users, Truck, HandCoins, Wallet, Percent, Gem, ClipboardList, Bell, CreditCard, QrCode } from "lucide-react";
+import { Printer, Bot, AlertTriangle, Save, Package, Warehouse, ShoppingCart, Users, Truck, HandCoins, Wallet, Percent, Gem, ClipboardList, Bell, CreditCard } from "lucide-react";
 import { saveSettings, sendTelegramNotification, clearAllData } from "@/lib/actions";
 
 export default function SettingsTabs({ settings, isAdmin }: { settings: Record<string, string>; isAdmin: boolean }) {
@@ -340,7 +340,7 @@ export default function SettingsTabs({ settings, isAdmin }: { settings: Record<s
               setClearing(true);
               try {
                 const cats = Object.entries(selectedCategories)
-                  .filter(([_, v]) => v)
+                  .filter(([, v]) => v)
                   .map(([k]) => k);
                 await clearAllData(cats);
                 router.refresh();

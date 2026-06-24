@@ -63,8 +63,12 @@ export default function UserForm() {
         </select>
       </div>
       <div>
+        <label className="input-label">{t("users.fields.password")}</label>
+        <input name="password" type="password" required className="input-field" placeholder={t("users.placeholders.password")} />
+      </div>
+      <div>
         <label className="input-label">{t("users.fields.pin")}</label>
-        <input name="pin" className="input-field" placeholder={t("users.placeholders.pin")} pattern="[0-9]{6}" maxLength={6} />
+        <input name="pin" className="input-field" placeholder={t("users.placeholders.pin")} pattern="[0-9]{4,}" maxLength={10} />
       </div>
 
       {/* Permissions */}

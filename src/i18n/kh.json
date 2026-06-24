@@ -515,11 +515,14 @@
       "name": "ឈ្មោះ",
       "email": "អ៊ីមែល",
       "role": "តួនាទី",
+      "password": "ពាក្យសម្ងាត់",
       "pin": "PIN (សម្រាប់ចូលប្រើរហ័ស)"
     },
     "placeholders": {
       "name": "ឈ្មោះពេញ",
       "email": "email@example.com",
+      "password": "ពាក្យសម្ងាត់",
+      "passwordNew": "ពាក្យសម្ងាត់ថ្មី (ទុកឲ្យទទេដើម្បីរក្សាពាក្យសម្ងាត់ចាស់)",
       "pin": "PIN ៦ ខ្ទង់"
     },
     "rolesDropdown": {

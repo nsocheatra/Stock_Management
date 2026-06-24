@@ -516,11 +516,14 @@
       "name": "Name",
       "email": "Email",
       "role": "Role",
+      "password": "Password",
       "pin": "PIN (for quick login)"
     },
     "placeholders": {
       "name": "Full name",
       "email": "email@example.com",
+      "password": "Password",
+      "passwordNew": "New password (leave blank to keep)",
       "pin": "6-digit PIN"
     },
     "rolesDropdown": {

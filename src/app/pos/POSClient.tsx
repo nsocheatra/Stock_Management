@@ -54,7 +54,7 @@ export default function POSClient({ products, customers, promotions, members, va
   const [pickerProduct, setPickerProduct] = useState<Product | null>(null);
   const [pickerStep, setPickerStep] = useState<"variant" | "batch" | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<VariantInfo | null>(null);
-  const [selectedBatch, setSelectedBatch] = useState<BatchInfo | null>(null);
+  const [, setSelectedBatch] = useState<BatchInfo | null>(null);
 
   const searchRef = useRef<HTMLInputElement>(null);
   const qtyInputRef = useRef<HTMLInputElement>(null);
@@ -171,46 +171,6 @@ export default function POSClient({ products, customers, promotions, members, va
   }, [getProductPromotions, memberTier]);
 
   // ─── Variant/Batch Picker Flow ─────────────────────────────
-  const handleProductClick = useCallback((product: Product) => {
-    const prodVariants = variantsByProduct[product.id];
-    if (prodVariants && prodVariants.length > 0) {
-      setPickerProduct(product);
-      setPickerStep("variant");
-      setSelectedVariant(null);
-      setSelectedBatch(null);
-      return;
-    }
-    if (product.track_batches) {
-      const prodBatches = batchesByProduct[product.id];
-      if (prodBatches && prodBatches.length > 0) {
-        setPickerProduct(product);
-        setPickerStep("batch");
-        setSelectedVariant(null);
-        setSelectedBatch(null);
-        return;
-      }
-    }
-    addToCartDirect(product, undefined, undefined);
-  }, [variantsByProduct, batchesByProduct, effectivePrice, getItemDiscount]);
-
-  const handleVariantSelect = useCallback((variant: VariantInfo) => {
-    setSelectedVariant(variant);
-    const prodBatches = batchesByVariant[variant.id];
-    const product = pickerProduct!;
-    if (product.track_batches && prodBatches && prodBatches.length > 0) {
-      setPickerStep("batch");
-    } else {
-      addToCartDirect(product, variant, undefined);
-      closePicker();
-    }
-  }, [batchesByVariant, pickerProduct, effectivePrice, getItemDiscount]);
-
-  const handleBatchSelect = useCallback((batch: BatchInfo) => {
-    setSelectedBatch(batch);
-    addToCartDirect(pickerProduct!, selectedVariant ?? undefined, batch);
-    closePicker();
-  }, [pickerProduct, selectedVariant, effectivePrice, getItemDiscount]);
-
   const closePicker = useCallback(() => {
     setPickerProduct(null);
     setPickerStep(null);
@@ -254,6 +214,46 @@ export default function POSClient({ products, customers, promotions, members, va
     setSearch("");
     searchRef.current?.focus();
   }, [effectivePrice, getItemDiscount, locationMap]);
+
+  const handleProductClick = useCallback((product: Product) => {
+    const prodVariants = variantsByProduct[product.id];
+    if (prodVariants && prodVariants.length > 0) {
+      setPickerProduct(product);
+      setPickerStep("variant");
+      setSelectedVariant(null);
+      setSelectedBatch(null);
+      return;
+    }
+    if (product.track_batches) {
+      const prodBatches = batchesByProduct[product.id];
+      if (prodBatches && prodBatches.length > 0) {
+        setPickerProduct(product);
+        setPickerStep("batch");
+        setSelectedVariant(null);
+        setSelectedBatch(null);
+        return;
+      }
+    }
+    addToCartDirect(product, undefined, undefined);
+  }, [variantsByProduct, batchesByProduct, addToCartDirect]);
+
+  const handleVariantSelect = useCallback((variant: VariantInfo) => {
+    setSelectedVariant(variant);
+    const prodBatches = batchesByVariant[variant.id];
+    const product = pickerProduct!;
+    if (product.track_batches && prodBatches && prodBatches.length > 0) {
+      setPickerStep("batch");
+    } else {
+      addToCartDirect(product, variant, undefined);
+      closePicker();
+    }
+  }, [batchesByVariant, pickerProduct, addToCartDirect, closePicker]);
+
+  const handleBatchSelect = useCallback((batch: BatchInfo) => {
+    setSelectedBatch(batch);
+    addToCartDirect(pickerProduct!, selectedVariant ?? undefined, batch);
+    closePicker();
+  }, [pickerProduct, selectedVariant, addToCartDirect, closePicker]);
 
   // ─── Barcode Scanner ───────────────────────────────────────
   useEffect(() => {
@@ -302,6 +302,15 @@ export default function POSClient({ products, customers, promotions, members, va
   }, []);
 
   // ─── Camera Barcode Scanner ─────────────────────────────────
+  const stopScanner = useCallback(() => {
+    scanningRef.current = false;
+    if (scannerStreamRef.current) {
+      scannerStreamRef.current.getTracks().forEach((t) => t.stop());
+      scannerStreamRef.current = null;
+    }
+    setShowScanner(false);
+  }, []);
+
   const handleDetectedBarcode = useCallback((code: string) => {
     const found = products.find((p) => p.barcode === code);
     if (found) {
@@ -323,16 +332,7 @@ export default function POSClient({ products, customers, promotions, members, va
       }
     }
     return false;
-  }, [products, variants, variantsByProduct, handleProductClick, handleVariantSelect, addToCartDirect]);
-
-  const stopScanner = useCallback(() => {
-    scanningRef.current = false;
-    if (scannerStreamRef.current) {
-      scannerStreamRef.current.getTracks().forEach((t) => t.stop());
-      scannerStreamRef.current = null;
-    }
-    setShowScanner(false);
-  }, []);
+  }, [products, variants, variantsByProduct, handleProductClick, handleVariantSelect, addToCartDirect, stopScanner]);
 
   const startScanner = useCallback(async () => {
     if (!("BarcodeDetector" in window)) {
