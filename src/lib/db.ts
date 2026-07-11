@@ -116,7 +116,7 @@ class DbWrapper {
   }
 
   private async init() {
-    this.pool = new Pool({ connectionString: getDbUrl() });
+    this.pool = new Pool({ connectionString: getDbUrl(), ssl: { rejectUnauthorized: false } });
     try {
       await this.pool.query("SELECT 1");
       await this.initSchema("pg");
