@@ -485,106 +485,12 @@ class DbWrapper {
         location_id INTEGER REFERENCES locations(id) ON DELETE SET NULL
       );
 
-      CREATE TABLE IF NOT EXISTS fb_keywords (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        keyword TEXT NOT NULL UNIQUE,
-        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        quantity INTEGER NOT NULL DEFAULT 1,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS fb_orders (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        keyword TEXT NOT NULL,
-        customer_name TEXT NOT NULL DEFAULT 'Facebook User',
-        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        product_name TEXT NOT NULL,
-        quantity INTEGER NOT NULL DEFAULT 1,
-        total ${pg ? "DOUBLE PRECISION" : "REAL"} NOT NULL DEFAULT 0,
-        processed INTEGER DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
       CREATE TABLE IF NOT EXISTS settings (
         key TEXT PRIMARY KEY,
         value TEXT
       );
 
-      CREATE TABLE IF NOT EXISTS livestreams (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        title TEXT NOT NULL,
-        description TEXT,
-        facebook_page_id TEXT,
-        status TEXT DEFAULT 'scheduled',
-        scheduled_at TIMESTAMP,
-        viewer_count INTEGER DEFAULT 0,
-        comment_count INTEGER DEFAULT 0,
-        order_count INTEGER DEFAULT 0,
-        revenue ${pg ? "DOUBLE PRECISION" : "REAL"} DEFAULT 0,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
 
-      CREATE TABLE IF NOT EXISTS live_comments (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        livestream_id INTEGER NOT NULL REFERENCES livestreams(id) ON DELETE CASCADE,
-        facebook_comment_id TEXT,
-        customer_name TEXT,
-        customer_avatar TEXT,
-        customer_id TEXT,
-        message TEXT,
-        detected_keyword TEXT,
-        detected_quantity INTEGER DEFAULT 1,
-        matched_product_id INTEGER,
-        matched_product_name TEXT,
-        status TEXT DEFAULT 'new',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS live_orders (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        livestream_id INTEGER NOT NULL REFERENCES livestreams(id) ON DELETE CASCADE,
-        order_number TEXT,
-        customer_name TEXT,
-        customer_phone TEXT,
-        customer_address TEXT,
-        facebook_comment_id TEXT,
-        total ${pg ? "DOUBLE PRECISION" : "REAL"} DEFAULT 0,
-        status TEXT DEFAULT 'pending',
-        driver_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
-
-      CREATE TABLE IF NOT EXISTS live_order_items (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        order_id INTEGER NOT NULL REFERENCES live_orders(id) ON DELETE CASCADE,
-        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        product_name TEXT NOT NULL,
-        quantity INTEGER NOT NULL,
-        price ${pg ? "DOUBLE PRECISION" : "REAL"} NOT NULL,
-        total ${pg ? "DOUBLE PRECISION" : "REAL"} NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS live_products (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        livestream_id INTEGER NOT NULL REFERENCES livestreams(id) ON DELETE CASCADE,
-        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        keyword TEXT NOT NULL,
-        price_override ${pg ? "DOUBLE PRECISION" : "REAL"},
-        max_quantity INTEGER,
-        priority INTEGER DEFAULT 0,
-        reserve_stock INTEGER DEFAULT 0
-      );
-
-      CREATE TABLE IF NOT EXISTS inventory_reservations (
-        id ${pg ? "SERIAL" : "INTEGER"} PRIMARY KEY${pg ? "" : " AUTOINCREMENT"},
-        product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
-        order_id INTEGER NOT NULL REFERENCES live_orders(id) ON DELETE CASCADE,
-        quantity INTEGER NOT NULL DEFAULT 1,
-        status TEXT DEFAULT 'active',
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-      );
     `;
 
     await this.exec(ddl);

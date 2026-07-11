@@ -24,8 +24,6 @@ import {
   Layers,
   MapPin,
   Bell,
-  Radio,
-
 } from "lucide-react";
 
 const iconMap: Record<string, typeof LayoutDashboard> = {
@@ -48,7 +46,6 @@ const iconMap: Record<string, typeof LayoutDashboard> = {
   batches: Layers,
   locations: MapPin,
   notifications: Bell,
-  livestream: Radio,
 };
 
 interface NavItem {

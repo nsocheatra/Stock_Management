@@ -7,7 +7,7 @@ import {
   Search, ShoppingCart, Scan, Minus, Plus, Trash2,
   Image as ImageIcon, Barcode, Maximize2, Minimize2, User,
   Printer, Percent, BadgePercent, Package, Layers,
-  ClipboardPlus, ClipboardCheck, BarChart3, Truck, Gem, Radio,
+  ClipboardPlus, ClipboardCheck, BarChart3, Truck, Gem,
   LayoutDashboard, LogOut,
 } from "lucide-react";
 import { processPOS, getSettings } from "@/lib/actions";
@@ -1085,11 +1085,7 @@ export default function POSClient({ products, customers, promotions, members, va
           <Gem className="size-5" />
           Member
         </button>
-        <button onClick={() => router.push("/livestream")} title="Livestream"
-          className="flex items-center gap-2.5 px-6 py-3.5 rounded-2xl text-base font-bold border border-[#E5E7EB] bg-white text-[#6B7280] hover:text-[#111827] hover:bg-[var(--bg-main)] transition-all cursor-pointer shadow-md">
-          <Radio className="size-5" />
-          Livestream
-        </button>
+
       </div>
     </div>
   );

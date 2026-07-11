@@ -15,7 +15,6 @@ export const PERMISSIONS = {
   "membership.manage": "Manage Membership",
   "cashflow.manage": "Manage Cash Flow",
   "notifications.view": "View Notifications",
-  "livestream.manage": "Manage Livestream",
 } as const;
 
 export type Permission = keyof typeof PERMISSIONS;

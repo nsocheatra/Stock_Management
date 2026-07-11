@@ -3,7 +3,6 @@ import { NextRequest, NextResponse } from "next/server";
 const publicPaths = [
   "/login",
   "/api/telegram-webhook",
-  "/api/livestream/comments",
   "/_next/static",
   "/_next/image",
   "/favicon.ico",

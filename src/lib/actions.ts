@@ -40,15 +40,6 @@ export async function createProduct(formData: FormData) {
     formData.get("image_url") || null,
     track_batches,
   );
-  const streamKey = (formData.get("stream_key") as string)?.trim().toLowerCase();
-  if (streamKey) {
-    const streamQty = parseInt(formData.get("stream_qty") as string) || 1;
-    try {
-      await db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(streamKey, Number(result.lastInsertRowid), streamQty);
-    } catch {
-      // keyword already exists, skip
-    }
-  }
   revalidatePath("/products");
   redirect("/products");
 }
@@ -79,18 +70,7 @@ export async function updateProduct(id: number, formData: FormData) {
     track_batches,
     id,
   );
-  const streamKey = (formData.get("stream_key") as string)?.trim().toLowerCase();
-  await db.prepare("DELETE FROM fb_keywords WHERE product_id = ?").run(id);
-  if (streamKey) {
-    const streamQty = parseInt(formData.get("stream_qty") as string) || 1;
-    try {
-      await db.prepare("INSERT INTO fb_keywords (keyword, product_id, quantity) VALUES (?, ?, ?)").run(streamKey, id, streamQty);
-    } catch {
-      // keyword already exists, skip
-    }
-  }
   revalidatePath("/products");
-  revalidatePath("/livestream");
   redirect("/products");
 }
 
@@ -1090,73 +1070,4 @@ export async function clearAllData(categories?: string[]) {
   revalidatePath("/");
 }
 
-// === LIVESTREAM ===
-export async function simulateOrder(formData: FormData) {
-  await requirePermission("livestream.manage");
-  const keyword = (formData.get("keyword") as string)?.trim().toLowerCase();
-  const customerName = (formData.get("customerName") as string)?.trim() || "Facebook User";
-  if (!keyword) return { success: false, error: "Keyword is required" };
 
-  const mapping = await db.prepare(`
-    SELECT fk.*, p.name as product_name, p.selling_price, p.price
-    FROM fb_keywords fk JOIN products p ON fk.product_id = p.id
-    WHERE fk.keyword = ?
-  `).get(keyword) as any;
-  if (!mapping) return { success: false, error: `No product mapped to keyword "${keyword}"` };
-
-  const price = mapping.selling_price || mapping.price;
-  const total = price * mapping.quantity;
-
-  const result = await db.transaction(async () => {
-    const product = await db.prepare("SELECT quantity FROM products WHERE id = ?").get(mapping.product_id) as { quantity: number } | undefined;
-    if (!product || product.quantity < mapping.quantity) return { success: false, error: "Insufficient stock" };
-
-    const updated = await db.prepare("UPDATE products SET quantity = quantity - ? WHERE id = ? AND quantity >= ?").run(mapping.quantity, mapping.product_id, mapping.quantity);
-    if (updated.changes === 0) return { success: false, error: "Insufficient stock" };
-
-    await db.prepare(`
-      INSERT INTO fb_orders (keyword, customer_name, product_id, product_name, quantity, total)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(keyword, customerName, mapping.product_id, mapping.product_name, mapping.quantity, total);
-
-    return { success: true, product_name: mapping.product_name, quantity: mapping.quantity, total };
-  })();
-
-  revalidatePath("/livestream");
-  return result;
-}
-
-export async function processOrder(formData: FormData) {
-  await requirePermission("livestream.manage");
-  const id = parseInt(formData.get("id") as string);
-  if (!id || isNaN(id)) return { error: "Invalid order ID" };
-  await db.prepare("UPDATE fb_orders SET processed = 1 WHERE id = ? AND processed = 0").run(id);
-  revalidatePath("/livestream");
-}
-
-export async function clearOrders() {
-  await requirePermission("livestream.manage");
-  const orders = await db.prepare("SELECT product_id, quantity FROM fb_orders WHERE processed = 0").all() as any[];
-  for (const o of orders) {
-    await db.prepare("UPDATE products SET quantity = quantity + ? WHERE id = ?").run(o.quantity, o.product_id);
-  }
-  await db.prepare("DELETE FROM fb_orders").run();
-  revalidatePath("/livestream");
-}
-
-export async function saveFacebookPage(formData: FormData) {
-  await requirePermission("livestream.manage");
-  const upsert = db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)");
-  const fields = ["facebook_page_url", "facebook_page_name", "facebook_page_id", "facebook_business_id", "facebook_access_token", "facebook_app_id"];
-  for (const key of fields) {
-    const val = formData.get(key) as string;
-    if (val !== null) await upsert.run(key, val.trim());
-  }
-  revalidatePath("/livestream");
-}
-
-export async function clearFacebookPage() {
-  await requirePermission("livestream.manage");
-  await db.prepare("DELETE FROM settings WHERE key LIKE 'facebook_%'").run();
-  revalidatePath("/livestream");
-}
