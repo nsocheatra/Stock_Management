@@ -1,16 +1,16 @@
 services:
   app:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: stock-management
     ports:
       - "3000:3000"
     env_file:
-      - .env.local
+      - ../.env.local
     environment:
       - NODE_ENV=production
     volumes:
-      - ./dev.db:/app/dev.db
-      - ./dev.db-shm:/app/dev.db-shm
-      - ./dev.db-wal:/app/dev.db-wal
+      - ../dev.db:/app/dev.db
+      - ../dev.db-shm:/app/dev.db-shm
+      - ../dev.db-wal:/app/dev.db-wal
