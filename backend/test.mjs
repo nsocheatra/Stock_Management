@@ -1,0 +1,11 @@
+console.log("starting...");
+import Database from "better-sqlite3";
+console.log("better-sqlite3 loaded");
+const db = new Database("test.db");
+console.log("db created");
+db.pragma("journal_mode = WAL");
+console.log("pragma set");
+const r = db.prepare("SELECT 1 as val").get();
+console.log("query result:", r);
+db.close();
+console.log("done");
